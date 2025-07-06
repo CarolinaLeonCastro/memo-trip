@@ -1,5 +1,5 @@
 import User from '../models/User.js';
-import { Parser } from 'json2csv';
+import csv from 'fast-csv';
 
 // POST /api/users
 export async function createUser(req, res, next) {
@@ -69,12 +69,20 @@ export async function exportUserCSV(req, res, next) {
 		const user = await User.findById(req.params.id).select('-password').lean();
 		if (!user) return res.status(404).json({ message: 'User not found' });
 
-		const parser = new Parser();
-		const csv = parser.parse([user]);
+		// Conversion avec fast-csv
+		const csvString = await csv.writeToString([user], {
+			headers: true,
+			transform: (row) => ({
+				id: row._id,
+				name: row.name,
+				email: row.email,
+				created_at: row.created_at
+			})
+		});
 
 		res.header('Content-Type', 'text/csv');
 		res.attachment(`user-${user._id}.csv`);
-		res.send(csv);
+		res.send(csvString);
 	} catch (err) {
 		next(err);
 	}
@@ -85,12 +93,20 @@ export async function exportAllUsersCSV(req, res, next) {
 	try {
 		const users = await User.find().select('-password').lean();
 
-		const parser = new Parser();
-		const csv = parser.parse(users);
+		// Conversion avec fast-csv
+		const csvString = await csv.writeToString(users, {
+			headers: true,
+			transform: (row) => ({
+				id: row._id,
+				name: row.name,
+				email: row.email,
+				created_at: row.created_at
+			})
+		});
 
 		res.header('Content-Type', 'text/csv');
 		res.attachment(`users-${Date.now()}.csv`);
-		res.send(csv);
+		res.send(csvString);
 	} catch (err) {
 		next(err);
 	}
