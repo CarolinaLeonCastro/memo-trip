@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const photoSchema = new mongoose.Schema({
-	place: { type: mongoose.Schema.Types.ObjectId, ref: 'Place', index: true },
+	place_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Place', required: true, index: true },
 	url: { type: String, required: true },
-	caption: String,
-	uploadedAt: { type: Date, default: Date.now }
+	caption: { type: String },
+	uploaded_at: { type: Date, default: Date.now }
 });
 
 export default mongoose.model('Photo', photoSchema);

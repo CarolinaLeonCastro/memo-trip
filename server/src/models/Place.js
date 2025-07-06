@@ -2,14 +2,14 @@ import mongoose from 'mongoose';
 
 const placeSchema = new mongoose.Schema(
 	{
-		user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+		user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 		name: { type: String, required: true },
-		description: String,
+		description: { type: String },
 		location: {
 			type: { type: String, enum: ['Point'], default: 'Point' },
-			coordinates: { type: [Number], required: true } // [lng, lat]
+			coordinates: { type: [Number], required: true } // [longitude, latitude]
 		},
-		dateVisited: Date
+		date_visited: { type: Date }
 	},
 	{
 		timestamps: true
