@@ -35,13 +35,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <Box
       sx={{
         width: 300,
-        height: '100vh',
+        height: 'auto',
         backgroundColor: 'background.paper',
         borderRight: '1px solid',
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
-        pt: 8, // Pour compenser l'AppBar
+        pt: 6, // Pour compenser l'AppBar
       }}
     >
       {/* Header de la sidebar */}

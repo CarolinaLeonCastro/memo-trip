@@ -1,7 +1,7 @@
 import React from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import theme from '../theme';
+import m3Theme from '../theme/m3-theme';
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   return (
-    <MuiThemeProvider theme={theme}>
+    <MuiThemeProvider theme={m3Theme}>
       <CssBaseline />
       {children}
     </MuiThemeProvider>
