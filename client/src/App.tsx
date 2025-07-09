@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Box } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ThemeProvider from './providers/ThemeProvider';
 import AppHeader from './components/Layout/AppHeader';
 import Sidebar from './components/Layout/Sidebar';
 import Dashboard from './components/Dashboard/Dashboard';
 import PlaceDetail from './components/PlaceDetail/PlaceDetail';
+import Home from './pages/Home';
+import AllPlaces from './pages/AllPlaces';
 
 // Interfaces
 interface Place {
@@ -91,37 +94,44 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Box
-        sx={{
-          display: 'flex',
-          minHeight: '100vh',
-          backgroundColor: 'background.default',
-        }}
-      >
+      <Router>
         <AppHeader />
-        <Sidebar
-          places={sidebarPlaces}
-          selectedPlace={selectedPlace}
-          onPlaceSelect={handlePlaceSelect}
-          onAddPlace={handleAddPlace}
-        />
-        <Box sx={{ flex: 1, ml: '300px', pt: 8 }}>
-          {currentView === 'dashboard' ? (
-            <Dashboard
-              places={mockPlaces}
-              onAddPlace={handleAddPlace}
-              onPlaceClick={handlePlaceClick}
-            />
-          ) : (
-            selectedPlaceData && (
-              <PlaceDetail
-                place={selectedPlaceData}
-                onDownload={handleDownload}
+        <Box
+          sx={{
+            display: 'flex',
+            minHeight: '100vh',
+            backgroundColor: 'background.default',
+          }}
+        >
+          <Sidebar
+            places={sidebarPlaces}
+            selectedPlace={selectedPlace}
+            onPlaceSelect={handlePlaceSelect}
+            onAddPlace={handleAddPlace}
+          />
+          <Box sx={{ flex: 1, ml: '300px', pt: 8 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/places" element={<AllPlaces />} />
+              {/* Ajoute ici la route pour la page de détail si besoin */}
+            </Routes>
+            {currentView === 'dashboard' ? (
+              <Dashboard
+                places={mockPlaces}
+                onAddPlace={handleAddPlace}
+                onPlaceClick={handlePlaceClick}
               />
-            )
-          )}
+            ) : (
+              selectedPlaceData && (
+                <PlaceDetail
+                  place={selectedPlaceData}
+                  onDownload={handleDownload}
+                />
+              )
+            )}
+          </Box>
         </Box>
-      </Box>
+      </Router>
     </ThemeProvider>
   );
 }

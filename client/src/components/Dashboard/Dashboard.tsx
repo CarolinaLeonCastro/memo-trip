@@ -8,7 +8,6 @@ import {
   Paper,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
-import PlaceCard from './PlaceCard';
 
 interface Place {
   id: string;
@@ -24,7 +23,7 @@ interface DashboardProps {
   onPlaceClick: (place: Place) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({
+const Dashboard: React.FC<DashboardProps> = ({
   places,
   onAddPlace,
   onPlaceClick,
@@ -65,15 +64,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   onClick={onAddPlace}
                   sx={{
                     backgroundColor: '#4A90E2',
-                    '&:hover': {
-                      backgroundColor: '#357ABD',
-                    },
+                    '&:hover': { backgroundColor: '#357ABD' },
                   }}
                 >
                   Add A New Place
                 </Button>
               </Box>
-
               {/* Carte interactive placeholder */}
               <Paper
                 sx={{
@@ -93,7 +89,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </CardContent>
           </Card>
         </Box>
-
         {/* Section Recent places */}
         <Box sx={{ flex: 1 }}>
           <Box sx={{ mb: 3 }}>
@@ -112,20 +107,62 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 View all
               </Button>
             </Box>
-
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {recentPlaces.map((place) => (
-                <PlaceCard
-                  key={place.id}
-                  title={place.title}
-                  location={place.location}
-                  images={place.images}
-                  onClick={() => onPlaceClick(place)}
-                />
+                <Card key={place.id} variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {place.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {place.location}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                      {[1, 2, 3].map((i) => (
+                        <Paper
+                          key={i}
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            background: '#e0e0e0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{ color: '#bdbdbd', fontSize: 32 }}
+                          >
+                            <svg
+                              width="32"
+                              height="32"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <rect
+                                width="32"
+                                height="32"
+                                rx="4"
+                                fill="#E0E0E0"
+                              />
+                              <path
+                                d="M10 20l4-4 4 4M12 16l2-2 2 2"
+                                stroke="#BDBDBD"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </Box>
+                        </Paper>
+                      ))}
+                    </Box>
+                  </CardContent>
+                </Card>
               ))}
             </Box>
           </Box>
-
           {/* Statistiques */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Card sx={{ flex: 1 }}>

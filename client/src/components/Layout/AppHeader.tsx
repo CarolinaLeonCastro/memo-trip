@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppBar, Toolbar, Avatar, Box, IconButton } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
+import logo from '../../assets/logo.svg';
 
 export const AppHeader: React.FC = () => {
   return (
@@ -16,14 +17,10 @@ export const AppHeader: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {/* Logo et nom de l'app */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                backgroundColor: 'primary.main',
-                mr: 2,
-              }}
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: 32, height: 32, marginRight: 16 }}
             />
             <Box
               sx={{
