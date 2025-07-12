@@ -1,27 +1,110 @@
 import User from '../models/User.js';
 import Place from '../models/Place.js';
-import Note from '../models/Note.js';
-import Photo from '../models/Photo.js';
+import Journal from '../models/Journal.js';
 
-// GET /api/dashboard/stats - Statistiques générales
+// GET /api/dashboard/recent-places?user_id=123&limit=6
+export async function getRecentPlaces(req, res, next) {
+	try {
+		const { user_id, limit = 6 } = req.query;
+
+		if (!user_id) {
+			return res.status(400).json({ message: 'user_id is required' });
+		}
+
+		const recentPlaces = await Place.find({ user_id })
+			.populate('journal_id', 'title')
+			.sort({ date_visited: -1 })
+			.limit(Number(limit))
+			.select('name location.city location.country photos date_visited rating');
+
+		res.json({
+			data: recentPlaces,
+			meta: {
+				total: recentPlaces.length,
+				limit: Number(limit)
+			}
+		});
+	} catch (err) {
+		next(err);
+	}
+}
+
+// GET /api/dashboard/stats?user_id=123
 export async function getDashboardStats(req, res, next) {
 	try {
-		const [userCount, placeCount, noteCount, photoCount] = await Promise.all([
-			User.countDocuments(),
-			Place.countDocuments(),
-			Note.countDocuments(),
-			Photo.countDocuments()
-		]);
+		const { user_id } = req.query;
 
-		const stats = {
-			users: userCount,
-			places: placeCount,
-			notes: noteCount,
-			photos: photoCount,
-			total_content: placeCount + noteCount + photoCount
-		};
+		if (!user_id) {
+			return res.status(400).json({ message: 'user_id is required' });
+		}
 
-		res.json(stats);
+		// Compter les lieux
+		const totalPlaces = await Place.countDocuments({ user_id });
+
+		// Compter les pays uniques
+		const countries = await Place.distinct('location.country', { user_id });
+		const totalCountries = countries.filter((country) => country).length;
+
+		// Compter les journaux
+		const totalJournals = await Journal.countDocuments({ user_id });
+
+		// Photos totales
+		const placesWithPhotos = await Place.find({ user_id }).select('photos');
+		const totalPhotos = placesWithPhotos.reduce((acc, place) => {
+			return acc + (place.photos ? place.photos.length : 0);
+		}, 0);
+
+		res.json({
+			stats: {
+				total_places: totalPlaces,
+				total_countries: totalCountries,
+				total_journals: totalJournals,
+				total_photos: totalPhotos
+			}
+		});
+	} catch (err) {
+		next(err);
+	}
+}
+
+// GET /api/dashboard/map-places?user_id=123&journal_id=456
+export async function getMapPlaces(req, res, next) {
+	try {
+		const { user_id, journal_id } = req.query;
+
+		if (!user_id) {
+			return res.status(400).json({ message: 'user_id is required' });
+		}
+
+		const filter = { user_id };
+		if (journal_id) filter.journal_id = journal_id;
+
+		const places = await Place.find(filter)
+			.populate('journal_id', 'title')
+			.select('name location date_visited photos rating description')
+			.sort({ date_visited: -1 });
+
+		// Formater pour la carte
+		const mapData = places.map((place) => ({
+			id: place._id,
+			name: place.name,
+			coordinates: place.location.coordinates,
+			address: place.location.address,
+			city: place.location.city,
+			country: place.location.country,
+			date_visited: place.date_visited,
+			photos: place.photos,
+			rating: place.rating,
+			description: place.description,
+			journal: place.journal_id
+		}));
+
+		res.json({
+			data: mapData,
+			meta: {
+				total: mapData.length
+			}
+		});
 	} catch (err) {
 		next(err);
 	}
@@ -133,61 +216,28 @@ export async function getPlaceStats(req, res, next) {
 	}
 }
 
-// GET /api/dashboard/content/stats - Statistiques du contenu (notes + photos)
+// GET /api/dashboard/content/stats - Statistiques du contenu (photos seulement)
 export async function getContentStats(req, res, next) {
 	try {
 		const { userId, startDate, endDate } = req.query;
-		const matchStage = {};
+		const matchStage = { user_id: userId };
 
 		if (startDate || endDate) {
-			matchStage.created_at = {};
-			if (startDate) matchStage.created_at.$gte = new Date(startDate);
-			if (endDate) matchStage.created_at.$lte = new Date(endDate);
+			matchStage.createdAt = {};
+			if (startDate) matchStage.createdAt.$gte = new Date(startDate);
+			if (endDate) matchStage.createdAt.$lte = new Date(endDate);
 		}
 
-		// Statistiques des notes
-		const notePipeline = [
-			...(Object.keys(matchStage).length > 0 ? [{ $match: matchStage }] : []),
-			{
-				$lookup: {
-					from: 'places',
-					localField: 'place_id',
-					foreignField: '_id',
-					as: 'place'
-				}
-			},
-			{ $unwind: '$place' },
-			...(userId ? [{ $match: { 'place.user_id': userId } }] : []),
-			{
-				$group: {
-					_id: {
-						year: { $year: '$created_at' },
-						month: { $month: '$created_at' }
-					},
-					count: { $sum: 1 }
-				}
-			},
-			{ $sort: { '_id.year': 1, '_id.month': 1 } }
-		];
-
-		// Statistiques des photos
+		// Statistiques des photos intégrées dans les places
 		const photoPipeline = [
-			...(Object.keys(matchStage).length > 0 ? [{ $match: { uploaded_at: matchStage.created_at } }] : []),
-			{
-				$lookup: {
-					from: 'places',
-					localField: 'place_id',
-					foreignField: '_id',
-					as: 'place'
-				}
-			},
-			{ $unwind: '$place' },
-			...(userId ? [{ $match: { 'place.user_id': userId } }] : []),
+			{ $match: matchStage },
+			{ $unwind: { path: '$photos', preserveNullAndEmptyArrays: true } },
+			{ $match: { photos: { $exists: true } } },
 			{
 				$group: {
 					_id: {
-						year: { $year: '$uploaded_at' },
-						month: { $month: '$uploaded_at' }
+						year: { $year: '$photos.uploaded_at' },
+						month: { $month: '$photos.uploaded_at' }
 					},
 					count: { $sum: 1 }
 				}
@@ -195,18 +245,17 @@ export async function getContentStats(req, res, next) {
 			{ $sort: { '_id.year': 1, '_id.month': 1 } }
 		];
 
-		const [noteStats, photoStats, totalNotes, totalPhotos] = await Promise.all([
-			Note.aggregate(notePipeline),
-			Photo.aggregate(photoPipeline),
-			Note.countDocuments(),
-			Photo.countDocuments()
+		// Compter le total des photos
+		const totalPhotosResult = await Place.aggregate([
+			{ $match: matchStage },
+			{ $project: { photoCount: { $size: { $ifNull: ['$photos', []] } } } },
+			{ $group: { _id: null, total: { $sum: '$photoCount' } } }
 		]);
 
+		const totalPhotos = totalPhotosResult.length > 0 ? totalPhotosResult[0].total : 0;
+		const photoStats = await Place.aggregate(photoPipeline);
+
 		res.json({
-			notes: {
-				total: totalNotes,
-				byMonth: noteStats
-			},
 			photos: {
 				total: totalPhotos,
 				byMonth: photoStats

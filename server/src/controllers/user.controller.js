@@ -1,5 +1,4 @@
 import User from '../models/User.js';
-import csv from 'fast-csv';
 
 // POST /api/users
 export async function createUser(req, res, next) {
@@ -58,55 +57,6 @@ export async function deleteUser(req, res, next) {
 		const result = await User.deleteOne({ _id: req.params.id });
 		if (result.deletedCount === 0) return res.status(404).json({ message: 'User not found' });
 		res.status(204).end();
-	} catch (err) {
-		next(err);
-	}
-}
-
-// GET /api/users/:id/export - Export utilisateur en CSV
-export async function exportUserCSV(req, res, next) {
-	try {
-		const user = await User.findById(req.params.id).select('-password').lean();
-		if (!user) return res.status(404).json({ message: 'User not found' });
-
-		// Conversion avec fast-csv
-		const csvString = await csv.writeToString([user], {
-			headers: true,
-			transform: (row) => ({
-				id: row._id,
-				name: row.name,
-				email: row.email,
-				created_at: row.created_at
-			})
-		});
-
-		res.header('Content-Type', 'text/csv');
-		res.attachment(`user-${user._id}.csv`);
-		res.send(csvString);
-	} catch (err) {
-		next(err);
-	}
-}
-
-// GET /api/users/export - Export tous les utilisateurs en CSV
-export async function exportAllUsersCSV(req, res, next) {
-	try {
-		const users = await User.find().select('-password').lean();
-
-		// Conversion avec fast-csv
-		const csvString = await csv.writeToString(users, {
-			headers: true,
-			transform: (row) => ({
-				id: row._id,
-				name: row.name,
-				email: row.email,
-				created_at: row.created_at
-			})
-		});
-
-		res.header('Content-Type', 'text/csv');
-		res.attachment(`users-${Date.now()}.csv`);
-		res.send(csvString);
 	} catch (err) {
 		next(err);
 	}

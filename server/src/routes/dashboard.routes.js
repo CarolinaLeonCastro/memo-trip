@@ -1,18 +1,11 @@
 import express from 'express';
-import * as dashboardCtrl from '../controllers/dashboard.controller.js';
+import { getRecentPlaces, getDashboardStats, getMapPlaces } from '../controllers/dashboard.controller.js';
 
 const router = express.Router();
 
-// Statistiques générales
-router.get('/stats', dashboardCtrl.getDashboardStats);
-
-// Statistiques des utilisateurs
-router.get('/users/stats', dashboardCtrl.getUserStats);
-
-// Statistiques des lieux
-router.get('/places/stats', dashboardCtrl.getPlaceStats);
-
-// Statistiques du contenu (notes + photos)
-router.get('/content/stats', dashboardCtrl.getContentStats);
+// Routes spécifiques pour le dashboard du front-end
+router.get('/recent-places', getRecentPlaces);
+router.get('/stats', getDashboardStats);
+router.get('/map-places', getMapPlaces);
 
 export default router;
