@@ -13,7 +13,7 @@
 
 - **CORS** configuré pour accepter le client local (http://localhost:5173)
 - **Helmet** pour la sécurité des headers HTTP avec CSP
-- **Rate Limiting** : 
+- **Rate Limiting** :
   - Général : 100 req/15min
   - Strict : 20 req/15min (auth)
   - Upload : 10 req/15min (uploads)
@@ -40,18 +40,19 @@ avatar: file.jpg
 ```
 
 **Réponse :**
+
 ```json
 {
-  "message": "Avatar mis à jour avec succès",
-  "user": {
-    "id": "userId",
-    "name": "User Name",
-    "avatar": {
-      "url": "/uploads/avatar-timestamp-random.jpg",
-      "filename": "avatar-timestamp-random.jpg",
-      "uploadedAt": "2025-07-13T17:00:00.000Z"
-    }
-  }
+	"message": "Avatar mis à jour avec succès",
+	"user": {
+		"id": "userId",
+		"name": "User Name",
+		"avatar": {
+			"url": "/uploads/avatar-timestamp-random.jpg",
+			"filename": "avatar-timestamp-random.jpg",
+			"uploadedAt": "2025-07-13T17:00:00.000Z"
+		}
+	}
 }
 ```
 
@@ -67,25 +68,26 @@ captions: ["Description 1", "Description 2", ...]  # Optionnel, format JSON arra
 ```
 
 **Réponse :**
+
 ```json
 {
-  "message": "Photos ajoutées avec succès",
-  "place": {
-    "id": "placeId",
-    "name": "Nom du lieu",
-    "photos": [
-      {
-        "url": "/uploads/photo-timestamp-random.jpg",
-        "filename": "photo-timestamp-random.jpg",
-        "caption": "Belle vue",
-        "size": 123456,
-        "mimetype": "image/jpeg",
-        "uploadedAt": "2025-07-13T17:00:00.000Z",
-        "_id": "photoId"
-      }
-    ],
-    "total_photos": 3
-  }
+	"message": "Photos ajoutées avec succès",
+	"place": {
+		"id": "placeId",
+		"name": "Nom du lieu",
+		"photos": [
+			{
+				"url": "/uploads/photo-timestamp-random.jpg",
+				"filename": "photo-timestamp-random.jpg",
+				"caption": "Belle vue",
+				"size": 123456,
+				"mimetype": "image/jpeg",
+				"uploadedAt": "2025-07-13T17:00:00.000Z",
+				"_id": "photoId"
+			}
+		],
+		"total_photos": 3
+	}
 }
 ```
 
@@ -122,8 +124,9 @@ DELETE /api/places/:placeId/photos/:photoId
 ### Test upload d'avatar
 
 1. **Créer un utilisateur :**
+
 ```bash
-POST http://localhost:30000/api/users
+POST http://localhost:3000/api/users
 Content-Type: application/json
 
 {
@@ -134,6 +137,7 @@ Content-Type: application/json
 ```
 
 2. **Uploader l'avatar :**
+
 ```bash
 PUT http://localhost:3000/api/users/{USER_ID}/avatar
 Content-Type: multipart/form-data
@@ -145,6 +149,7 @@ Body:
 ### Test upload de photos pour un lieu
 
 1. **Créer un lieu :**
+
 ```bash
 POST http://localhost:3000/api/places
 Content-Type: application/json
@@ -161,6 +166,7 @@ Content-Type: application/json
 ```
 
 2. **Uploader photos avec captions :**
+
 ```bash
 POST http://localhost:3000/api/places/{PLACE_ID}/photos
 Content-Type: multipart/form-data
@@ -179,15 +185,18 @@ GET http://localhost:3000/api/places/{PLACE_ID}/photos
 ## ⚠️ Validations et limites
 
 ### Validation des fichiers
+
 - **Types autorisés :** JPG, JPEG, PNG, GIF, WebP
 - **Taille maximale :** 5MB par fichier
 - **Nombre maximum :** 5 photos par lieu, 1 avatar par utilisateur
 
 ### Validation des ObjectId
+
 - Tous les IDs de paramètres URL sont validés comme ObjectId MongoDB valides
 - Erreur 400 si l'ID n'est pas au bon format
 
 ### Gestion des erreurs upload
+
 - Suppression automatique des fichiers si échec
 - Nettoyage des anciens fichiers lors du remplacement
 - Vérification que le total de photos ne dépasse pas 5
@@ -195,7 +204,9 @@ GET http://localhost:3000/api/places/{PLACE_ID}/photos
 ## 🔄 Problèmes résolus
 
 ### ✅ Routing corrigé
+
 Les routes sont maintenant dans le bon ordre pour éviter les conflits :
+
 ```javascript
 // Routes spécifiques AVANT les routes avec :id
 router.get('/nearby', ...)
@@ -207,10 +218,12 @@ router.get('/:id', ...)
 ```
 
 ### ✅ Cohérence des champs
+
 - Tous les champs utilisent `uploadedAt` (camelCase)
 - Métadonnées complètes : url, filename, caption, size, mimetype, uploadedAt
 
 ### ✅ Validation ObjectId
+
 - Validation des IDs avant les requêtes MongoDB
 - Messages d'erreur explicites
 
@@ -223,11 +236,12 @@ Les endpoints ont des limites différentes :
 - **Strict** : 20 requêtes / 15 minutes / IP (pour les routes sensibles)
 
 Messages d'erreur quand la limite est atteinte :
+
 ```json
 {
-  "error": "Too many requests",
-  "message": "Trop de requêtes, réessayez dans 15 minutes",
-  "retryAfter": "15 minutes"
+	"error": "Too many requests",
+	"message": "Trop de requêtes, réessayez dans 15 minutes",
+	"retryAfter": "15 minutes"
 }
 ```
 
@@ -275,18 +289,19 @@ PORT=3000
 
 ```javascript
 // Taille max fichier : 5MB (images)
-fileSize: 5 * 1024 * 1024
+fileSize: 5 * 1024 * 1024;
 
 // Types autorisés
-allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 // Nombre max de fichiers
-maxCount: 5 (photos), 1 (avatar)
+maxCount: 5(photos), 1(avatar);
 ```
 
 ## 🚨 Gestion d'erreurs
 
 ### Erreurs automatiquement gérées :
+
 - **Validation des fichiers :** Type, taille, nombre
 - **Validation des ObjectId :** Format MongoDB
 - **Limite de photos :** Maximum 5 par lieu
@@ -327,18 +342,19 @@ maxCount: 5 (photos), 1 (avatar)
 
 ```bash
 # Tous les logs
-dans logs 
+dans logs
 ```
 
 ### Logs des uploads :
+
 ```json
 {
-  "level": "info",
-  "message": "Photos added to place",
-  "placeId": "60f7b3b3b3b3b3b3b3b3b3b3",
-  "photoCount": 2,
-  "filenames": ["photo-123456789.jpg", "photo-987654321.png"],
-  "timestamp": "2025-07-13T17:00:00.000Z"
+	"level": "info",
+	"message": "Photos added to place",
+	"placeId": "60f7b3b3b3b3b3b3b3b3b3b3",
+	"photoCount": 2,
+	"filenames": ["photo-123456789.jpg", "photo-987654321.png"],
+	"timestamp": "2025-07-13T17:00:00.000Z"
 }
 ```
 
@@ -347,7 +363,7 @@ dans logs
 Le serveur inclut maintenant toutes les sécurités et fonctionnalités nécessaires :
 
 - ✅ Logging complet avec Winston
-- ✅ Sécurité CORS & Helmet  
+- ✅ Sécurité CORS & Helmet
 - ✅ Rate limiting configurable
 - ✅ Upload sécurisé avec validation
 - ✅ Gestion d'erreurs robuste
