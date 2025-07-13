@@ -1,16 +1,38 @@
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 import database from './database.config.js';
+import logger, { logHTTP } from './logger.config.js';
+import { corsOptions, helmetOptions, generalLimiter } from './security.config.js';
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware de sécurité
+app.use(helmet(helmetOptions));
+app.use(cors(corsOptions));
+
+// Rate limiting global
+app.use(generalLimiter);
+
+// Middleware de logging
+app.use(logHTTP);
+
+// Middleware pour le parsing des requêtes
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Servir les fichiers statiques (uploads)
+app.use('/uploads', express.static('uploads'));
+
+// Trust proxy pour obtenir la vraie IP derrière un reverse proxy
+app.set('trust proxy', 1);
+
 database
 	.then(() => {
-		console.log('Connected to database');
+		logger.info('Connected to database');
 	})
 	.catch((err) => {
-		console.log('Error connecting to database', err);
+		logger.error('Error connecting to database', { error: err.message, stack: err.stack });
 	});
 
 export default app;

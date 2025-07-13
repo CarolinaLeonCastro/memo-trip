@@ -1,13 +1,20 @@
 import Place from '../models/Place.js';
+import logger from '../config/logger.config.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Ajouter une photo à un lieu
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ajouter des photos à un lieu (avec upload)
 export const addPhotoToPlace = async (req, res, next) => {
 	try {
 		const { id } = req.params;
-		const { url, caption } = req.body;
+		const { captions } = req.body; // Array de captions pour chaque photo
 
-		if (!url) {
-			return res.status(400).json({ message: 'Photo URL is required' });
+		if (!req.files || req.files.length === 0) {
+			return res.status(400).json({ message: 'Aucune photo uploadée' });
 		}
 
 		const place = await Place.findById(id);
@@ -15,21 +22,46 @@ export const addPhotoToPlace = async (req, res, next) => {
 			return res.status(404).json({ message: 'Place not found' });
 		}
 
-		const newPhoto = {
-			url,
-			caption: caption || '',
-			uploaded_at: new Date()
-		};
+		// Traiter chaque fichier uploadé
+		const newPhotos = req.files.map((file, index) => ({
+			url: `/uploads/${file.filename}`,
+			filename: file.filename,
+			caption: captions && captions[index] ? captions[index] : '',
+			uploadedAt: new Date(),
+			size: file.size,
+			mimetype: file.mimetype
+		}));
 
-		place.photos.push(newPhoto);
+		// Ajouter les photos au lieu
+		place.photos.push(...newPhotos);
 		await place.save();
 
+		logger.info('Photos added to place', {
+			placeId: id,
+			photoCount: newPhotos.length,
+			filenames: newPhotos.map((p) => p.filename)
+		});
+
 		res.status(201).json({
-			message: 'Photo added successfully',
-			photo: newPhoto,
+			message: 'Photos ajoutées avec succès',
+			photos: newPhotos,
 			total_photos: place.photos.length
 		});
 	} catch (err) {
+		// En cas d'erreur, supprimer les fichiers uploadés
+		if (req.files) {
+			req.files.forEach((file) => {
+				const filePath = path.join(__dirname, '../../uploads', file.filename);
+				fs.unlink(filePath, (unlinkErr) => {
+					if (unlinkErr) {
+						logger.error('Error deleting uploaded file', {
+							filename: file.filename,
+							error: unlinkErr.message
+						});
+					}
+				});
+			});
+		}
 		next(err);
 	}
 };
@@ -44,11 +76,37 @@ export const removePhotoFromPlace = async (req, res, next) => {
 			return res.status(404).json({ message: 'Place not found' });
 		}
 
+		// Trouver la photo à supprimer pour récupérer le nom du fichier
+		const photoToRemove = place.photos.find((photo) => photo._id.toString() === photoId);
+
+		if (!photoToRemove) {
+			return res.status(404).json({ message: 'Photo not found' });
+		}
+
+		// Supprimer le fichier physique
+		if (photoToRemove.filename) {
+			const filePath = path.join(__dirname, '../../uploads', photoToRemove.filename);
+			fs.unlink(filePath, (unlinkErr) => {
+				if (unlinkErr) {
+					logger.error('Error deleting photo file', {
+						filename: photoToRemove.filename,
+						error: unlinkErr.message
+					});
+				} else {
+					logger.info('Photo file deleted successfully', {
+						filename: photoToRemove.filename,
+						placeId: id
+					});
+				}
+			});
+		}
+
+		// Supprimer la photo de la base de données
 		place.photos = place.photos.filter((photo) => photo._id.toString() !== photoId);
 		await place.save();
 
 		res.json({
-			message: 'Photo removed successfully',
+			message: 'Photo supprimée avec succès',
 			total_photos: place.photos.length
 		});
 	} catch (err) {
@@ -141,7 +199,17 @@ export const getPlaces = async (req, res, next) => {
 // GET /api/places/:id
 export const getPlaceById = async (req, res, next) => {
 	try {
-		const place = await Place.findById(req.params.id).populate('user_id', 'name email').populate('journal_id', 'title');
+		const { id } = req.params;
+
+		// Validation simple de l'ObjectId
+		if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+			return res.status(400).json({
+				message: 'Invalid place ID format',
+				error: 'Place ID must be a valid MongoDB ObjectId'
+			});
+		}
+
+		const place = await Place.findById(id).populate('user_id', 'name email').populate('journal_id', 'title');
 		if (!place) return res.status(404).json({ message: 'Place not found' });
 		res.json(place);
 	} catch (err) {

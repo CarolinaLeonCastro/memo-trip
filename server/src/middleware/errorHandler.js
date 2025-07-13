@@ -1,7 +1,18 @@
+import logger from '../config/logger.config.js';
+
 // Middleware de gestion d'erreurs
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-	console.error(err.stack);
+	// Logger l'erreur avec le contexte de la requête
+	logger.error('Error in request', {
+		error: err.message,
+		stack: err.stack,
+		method: req.method,
+		url: req.originalUrl,
+		ip: req.ip,
+		userAgent: req.get('User-Agent'),
+		timestamp: new Date().toISOString()
+	});
 
 	// Erreur de validation Mongoose
 	if (err.name === 'ValidationError') {

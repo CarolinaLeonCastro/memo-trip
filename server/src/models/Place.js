@@ -16,9 +16,31 @@ const placeSchema = new mongoose.Schema(
 		date_visited: { type: Date, required: true },
 		photos: [
 			{
-				url: { type: String, required: true },
-				caption: { type: String, trim: true },
-				uploaded_at: { type: Date, default: Date.now }
+				url: {
+					type: String,
+					required: false
+				},
+				filename: {
+					type: String,
+					required: false
+				},
+				caption: {
+					type: String,
+					trim: true,
+					required: false
+				},
+				size: {
+					type: Number,
+					required: false
+				},
+				mimetype: {
+					type: String,
+					required: false
+				},
+				uploadedAt: {
+					type: Date,
+					default: Date.now
+				}
 			}
 		],
 		rating: { type: Number, min: 1, max: 5 }, // Note sur 5
