@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ThemeProvider from './providers/ThemeProvider';
 import { Box } from '@mui/material';
+import Layout from './components/Layouts/Layout';
 
 function App() {
   return (
@@ -9,7 +10,10 @@ function App() {
         <Router>
           <Routes>
             {/* me routes vont içi */}
-            <Route path="/" element={<div>Home Page</div>} />
+            <Route path="/" element={<Layout />}>
+              <Route path="journals" element={<div>Mes Voyages</div>} />
+              <Route path="profile" element={<div>Profil</div>} />
+            </Route>
           </Routes>
         </Router>
       </Box>
