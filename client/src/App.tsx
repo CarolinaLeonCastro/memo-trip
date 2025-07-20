@@ -1,12 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ThemeProvider from './providers/ThemeProvider';
+//import ThemeProvider from './providers/ThemeProvider';
 import { Box } from '@mui/material';
 import Layout from './components/Layouts/Layout';
 import Home from './pages/Home';
+import { JournalProvider } from './context/JournalContext';
 
 function App() {
   return (
-    <ThemeProvider>
+    <JournalProvider>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Router>
           <Routes>
@@ -19,7 +20,7 @@ function App() {
           </Routes>
         </Router>
       </Box>
-    </ThemeProvider>
+    </JournalProvider>
   );
 }
 
