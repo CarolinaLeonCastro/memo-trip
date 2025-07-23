@@ -14,6 +14,7 @@ import {
   ListItemText,
   useMediaQuery,
   useTheme,
+  Tooltip,
 } from '@mui/material';
 import {
   Explore as ExploreIcon,
@@ -21,13 +22,17 @@ import {
   Book as BookIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from '@mui/icons-material';
+import { useThemeMode } from '../../context/ThemeContext';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useThemeMode();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -78,6 +83,22 @@ const Navbar: React.FC = () => {
             />
           </ListItem>
         ))}
+        {/* Dark mode toggle in mobile drawer */}
+        <ListItem>
+          <ListItemIcon>
+            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+          </ListItemIcon>
+          <ListItemText primary="Mode sombre" />
+          <IconButton
+            onClick={toggleDarkMode}
+            sx={{
+              ml: 'auto',
+              color: 'text.primary',
+            }}
+          >
+            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
+        </ListItem>
       </List>
     </Box>
   );
@@ -125,14 +146,30 @@ const Navbar: React.FC = () => {
           </Link>
 
           {isMobile ? (
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-            >
-              <MenuIcon />
-            </IconButton>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Dark mode toggle for mobile */}
+              <Tooltip title={isDarkMode ? 'Mode clair' : 'Mode sombre'}>
+                <IconButton
+                  onClick={toggleDarkMode}
+                  sx={{
+                    color: 'text.primary',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                </IconButton>
+              </Tooltip>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
           ) : (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {navigationItems.map((item) => (
@@ -159,6 +196,21 @@ const Navbar: React.FC = () => {
                   {item.label}
                 </Button>
               ))}
+              {/* Dark mode toggle for desktop */}
+              <Tooltip title={isDarkMode ? 'Mode clair' : 'Mode sombre'}>
+                <IconButton
+                  onClick={toggleDarkMode}
+                  sx={{
+                    ml: 1,
+                    color: 'text.primary',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                </IconButton>
+              </Tooltip>
             </Box>
           )}
         </Toolbar>
