@@ -201,7 +201,7 @@ const Home: React.FC = () => {
                   <Button
                     variant="contained"
                     startIcon={<VisibilityIcon />}
-                    onClick={() => navigate('/map')}
+                    onClick={() => navigate('journals/map')}
                     sx={{
                       position: 'absolute',
                       top: 16,
