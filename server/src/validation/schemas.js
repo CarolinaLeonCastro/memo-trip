@@ -5,6 +5,42 @@ const objectIdSchema = Joi.string()
 	.regex(/^[0-9a-fA-F]{24}$/)
 	.message('Invalid ObjectId format');
 
+// Schéma de validation pour l'authentification
+export const authValidation = {
+	// Inscription
+	register: Joi.object({
+		name: Joi.string().trim().min(2).max(50).required().messages({
+			'string.min': 'Le nom doit contenir au moins 2 caractères',
+			'string.max': 'Le nom ne peut pas dépasser 50 caractères',
+			'any.required': 'Le nom est obligatoire'
+		}),
+		email: Joi.string().email().lowercase().required().messages({
+			'string.email': "Format d'email invalide",
+			'any.required': "L'email est obligatoire"
+		}),
+		password: Joi.string().min(6).max(100).required().messages({
+			'string.min': 'Le mot de passe doit contenir au moins 6 caractères',
+			'string.max': 'Le mot de passe ne peut pas dépasser 100 caractères',
+			'any.required': 'Le mot de passe est obligatoire'
+		}),
+		confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
+			'any.only': 'Les mots de passe ne correspondent pas',
+			'any.required': 'La confirmation du mot de passe est obligatoire'
+		})
+	}),
+
+	// Connexion
+	login: Joi.object({
+		email: Joi.string().email().required().messages({
+			'string.email': "Format d'email invalide",
+			'any.required': "L'email est obligatoire"
+		}),
+		password: Joi.string().required().messages({
+			'any.required': 'Le mot de passe est obligatoire'
+		})
+	})
+};
+
 // Schéma de validation pour User
 export const userValidation = {
 	// Création d'un utilisateur

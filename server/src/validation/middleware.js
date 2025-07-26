@@ -1,4 +1,4 @@
-import { userValidation, journalValidation, placeValidation, geoValidation } from './schemas.js';
+import { userValidation, journalValidation, placeValidation, geoValidation, authValidation } from './schemas.js';
 import logger from '../config/logger.config.js';
 
 // Middleware générique pour valider les données
@@ -65,6 +65,10 @@ export const validate = (schema, source = 'body') => {
 };
 
 // Middlewares spécifiques pour chaque modèle
+
+// Auth validation
+export const validateRegister = validate(authValidation.register);
+export const validateLogin = validate(authValidation.login);
 
 // User validation
 export const validateUserCreate = validate(userValidation.create);

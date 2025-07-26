@@ -1,6 +1,13 @@
 export interface User {
   id: string;
   email: string;
+  name: string;
+  avatar?: {
+    url?: string;
+    filename?: string;
+    uploadedAt?: string;
+  };
+  created_at?: string;
 }
 
 export interface Journal {

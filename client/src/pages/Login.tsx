@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -23,19 +23,65 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error } = useAuth();
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const { login, isLoading, error, clearError, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Récupérer la page d'origine depuis le state de navigation
-  const from = location.state?.from?.pathname || '/journals';
+  const from = location.state?.from?.pathname || '/';
+
+  // Rediriger si déjà connecté
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
+
+  // Nettoyer l'erreur quand l'utilisateur tape
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [email, password, clearError, error]);
+
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    // Validation email
+    if (!email) {
+      errors.email = "L'email est obligatoire";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Format email invalide';
+    }
+
+    // Validation mot de passe
+    if (!password) {
+      errors.password = 'Le mot de passe est obligatoire';
+    } else if (password.length < 6) {
+      errors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     const success = await login(email, password);
     if (success) {
       navigate(from, { replace: true });
@@ -106,9 +152,7 @@ const Login: React.FC = () => {
                 <Alert
                   severity="error"
                   sx={{ mb: 3, borderRadius: 2 }}
-                  onClose={() => {
-                    /* TODO: Gérer la fermeture de l'erreur */
-                  }}
+                  onClose={clearError}
                 >
                   {error}
                 </Alert>
@@ -122,6 +166,8 @@ const Login: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                error={!!formErrors.email}
+                helperText={formErrors.email}
                 sx={{ mb: 3 }}
                 InputProps={{
                   startAdornment: (
@@ -141,6 +187,8 @@ const Login: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                error={!!formErrors.password}
+                helperText={formErrors.password}
                 sx={{ mb: 4 }}
                 InputProps={{
                   startAdornment: (

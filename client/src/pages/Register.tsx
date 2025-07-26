@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -23,27 +23,104 @@ import {
   VisibilityOff,
   Explore as ExploreIcon,
   LockOutlined as LockOutlinedIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  terms?: string;
+}
+
 const Register: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const { register, isLoading, error } = useAuth();
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const { register, isLoading, error, clearError, user } = useAuth();
   const navigate = useNavigate();
+
+  // Rediriger si déjà connecté
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Nettoyer l'erreur quand l'utilisateur tape
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [name, email, password, confirmPassword, clearError, error]);
+
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    // Validation nom
+    if (!name.trim()) {
+      errors.name = 'Le nom est obligatoire';
+    } else if (name.trim().length < 2) {
+      errors.name = 'Le nom doit contenir au moins 2 caractères';
+    } else if (name.trim().length > 50) {
+      errors.name = 'Le nom ne peut pas dépasser 50 caractères';
+    }
+
+    // Validation email
+    if (!email) {
+      errors.email = "L'email est obligatoire";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Format email invalide';
+    }
+
+    // Validation mot de passe
+    if (!password) {
+      errors.password = 'Le mot de passe est obligatoire';
+    } else if (password.length < 6) {
+      errors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    } else if (password.length > 100) {
+      errors.password = 'Le mot de passe ne peut pas dépasser 100 caractères';
+    }
+
+    // Validation confirmation mot de passe
+    if (!confirmPassword) {
+      errors.confirmPassword =
+        'La confirmation du mot de passe est obligatoire';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
+
+    // Validation des conditions
+    if (!acceptTerms) {
+      errors.terms = "Vous devez accepter les conditions d'utilisation";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!acceptTerms) {
+
+    if (!validateForm()) {
       return;
     }
-    const success = await register(email, password, confirmPassword);
+
+    const success = await register(
+      name.trim(),
+      email,
+      password,
+      confirmPassword
+    );
     if (success) {
-      navigate('/journals');
+      navigate('/', { replace: true });
     }
   };
 
@@ -54,8 +131,6 @@ const Register: React.FC = () => {
   const handleToggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
-
-  const isFormValid = email && password && confirmPassword && acceptTerms;
 
   return (
     <Box
@@ -117,13 +192,31 @@ const Register: React.FC = () => {
                 <Alert
                   severity="error"
                   sx={{ mb: 3, borderRadius: 2 }}
-                  onClose={() => {
-                    /* TODO: Gérer la fermeture de l'erreur */
-                  }}
+                  onClose={clearError}
                 >
                   {error}
                 </Alert>
               )}
+
+              <TextField
+                fullWidth
+                label="Nom complet"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={isLoading}
+                error={!!formErrors.name}
+                helperText={formErrors.name}
+                sx={{ mb: 3 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Votre nom complet"
+              />
 
               <TextField
                 fullWidth
@@ -133,6 +226,10 @@ const Register: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                error={!!formErrors.email}
+                helperText={
+                  formErrors.email || "Nous n'enverrons pas de spam, promis !"
+                }
                 sx={{ mb: 3 }}
                 InputProps={{
                   startAdornment: (
@@ -142,7 +239,6 @@ const Register: React.FC = () => {
                   ),
                 }}
                 placeholder="exemple@email.com"
-                helperText="Nous n'enverrons pas de spam, promis !"
               />
 
               <TextField
@@ -153,6 +249,8 @@ const Register: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                error={!!formErrors.password}
+                helperText={formErrors.password}
                 sx={{ mb: 3 }}
                 InputProps={{
                   startAdornment: (
@@ -173,7 +271,6 @@ const Register: React.FC = () => {
                   ),
                 }}
                 placeholder="Au moins 6 caractères"
-                helperText="Minimum 6 caractères"
               />
 
               <TextField
@@ -184,6 +281,8 @@ const Register: React.FC = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                error={!!formErrors.confirmPassword}
+                helperText={formErrors.confirmPassword}
                 sx={{ mb: 3 }}
                 InputProps={{
                   startAdornment: (
@@ -208,12 +307,6 @@ const Register: React.FC = () => {
                   ),
                 }}
                 placeholder="Répétez votre mot de passe"
-                error={confirmPassword !== '' && password !== confirmPassword}
-                helperText={
-                  confirmPassword !== '' && password !== confirmPassword
-                    ? 'Les mots de passe ne correspondent pas'
-                    : 'Doit correspondre au mot de passe ci-dessus'
-                }
               />
 
               <FormControlLabel
@@ -245,15 +338,39 @@ const Register: React.FC = () => {
                     </Typography>
                   </Typography>
                 }
-                sx={{ mb: 3, alignItems: 'flex-start' }}
+                sx={{
+                  mb: 3,
+                  alignItems: 'flex-start',
+                  ...(formErrors.terms && {
+                    '& .MuiFormControlLabel-label': {
+                      color: 'error.main',
+                    },
+                  }),
+                }}
               />
+              {formErrors.terms && (
+                <Typography
+                  variant="caption"
+                  color="error"
+                  sx={{ mb: 2, display: 'block' }}
+                >
+                  {formErrors.terms}
+                </Typography>
+              )}
 
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={isLoading || !isFormValid}
+                disabled={
+                  isLoading ||
+                  !name.trim() ||
+                  !email ||
+                  !password ||
+                  !confirmPassword ||
+                  !acceptTerms
+                }
                 sx={{
                   py: 1.5,
                   mb: 3,

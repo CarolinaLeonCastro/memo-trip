@@ -1,4 +1,5 @@
 import app from './src/config/app.config.js';
+import authRoutes from './src/routes/auth.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import journalRoutes from './src/routes/journal.routes.js';
 import placeRoutes from './src/routes/place.routes.js';
@@ -9,6 +10,7 @@ import logger from './src/config/logger.config.js';
 import geocodingRoutes from './src/routes/geocoding.routes.js';
 
 // Configuration des routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/journals', journalRoutes);
 app.use('/api/places', placeRoutes);

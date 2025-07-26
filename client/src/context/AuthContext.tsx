@@ -6,11 +6,17 @@ import React, {
   type ReactNode,
 } from 'react';
 import type { User } from '../types';
+import {
+  authService,
+  type LoginRequest,
+  type RegisterRequest,
+} from '../services/auth.service';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (
+    name: string,
     email: string,
     password: string,
     confirmPassword: string
@@ -18,9 +24,12 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export { AuthContext };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -39,18 +48,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const clearError = () => {
+    setError(null);
+  };
+
   // Vérifier si l'utilisateur est connecté au chargement
   useEffect(() => {
-    const savedUser = localStorage.getItem('memotrip-user');
-    if (savedUser) {
+    const initAuth = async () => {
       try {
-        setUser(JSON.parse(savedUser));
+        // Vérifier s'il y a des données dans sessionStorage
+        const storedUser = authService.getUser();
+        const token = authService.getToken();
+
+        if (storedUser && token) {
+          // Vérifier la validité du token auprès du serveur
+          try {
+            const response = await authService.getCurrentUser();
+            setUser(response.user);
+          } catch {
+            // Token invalide, nettoyer les données
+            authService.clearAuth();
+            setUser(null);
+          }
+        }
       } catch (error) {
-        console.error("Erreur lors du parsing de l'utilisateur sauvé:", error);
-        localStorage.removeItem('memotrip-user');
+        console.error(
+          "Erreur lors de l'initialisation de l'authentification:",
+          error
+        );
+        authService.clearAuth();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -58,26 +91,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // TODO: Remplacer par un vrai appel API
-      // Simulation d'appel API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const credentials: LoginRequest = { email, password };
+      const response = await authService.login(credentials);
 
-      // Validation simple pour la démo
-      if (email && password.length >= 6) {
-        const userData: User = {
-          id: Date.now().toString(),
-          email: email,
-        };
+      // Sauvegarder le token et les données utilisateur
+      authService.setToken(response.token);
+      authService.setUser(response.user);
+      setUser(response.user);
 
-        setUser(userData);
-        localStorage.setItem('memotrip-user', JSON.stringify(userData));
-        return true;
-      } else {
-        setError('Email ou mot de passe invalide');
-        return false;
-      }
-    } catch {
-      setError('Erreur lors de la connexion');
+      return true;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erreur lors de la connexion';
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
@@ -85,6 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (
+    name: string,
     email: string,
     password: string,
     confirmPassword: string
@@ -93,46 +120,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Validation
-      if (!email || !email.includes('@')) {
-        setError('Email invalide');
-        return false;
-      }
-
-      if (password.length < 6) {
-        setError('Le mot de passe doit contenir au moins 6 caractères');
-        return false;
-      }
-
-      if (password !== confirmPassword) {
-        setError('Les mots de passe ne correspondent pas');
-        return false;
-      }
-
-      // TODO: Remplacer par un vrai appel API
-      // Simulation d'appel API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const userData: User = {
-        id: Date.now().toString(),
-        email: email,
+      const userData: RegisterRequest = {
+        name,
+        email,
+        password,
+        confirmPassword,
       };
+      const response = await authService.register(userData);
 
-      setUser(userData);
-      localStorage.setItem('memotrip-user', JSON.stringify(userData));
+      // Sauvegarder le token et les données utilisateur
+      authService.setToken(response.token);
+      authService.setUser(response.user);
+      setUser(response.user);
+
       return true;
-    } catch {
-      setError("Erreur lors de l'inscription");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erreur lors de l'inscription";
+      setError(errorMessage);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('memotrip-user');
-    setError(null);
+  const logout = async () => {
+    try {
+      // Notifier le serveur de la déconnexion
+      await authService.logout();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion côté serveur:', error);
+    } finally {
+      // Nettoyer les données locales dans tous les cas
+      authService.clearAuth();
+      setUser(null);
+      setError(null);
+    }
   };
 
   const value: AuthContextType = {
@@ -142,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isLoading,
     error,
+    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
