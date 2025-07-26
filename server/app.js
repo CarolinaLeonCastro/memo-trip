@@ -6,11 +6,13 @@ import searchRoutes from './src/routes/search.routes.js';
 import dashboardRoutes from './src/routes/dashboard.routes.js';
 import errorHandler from './src/middleware/errorHandler.js';
 import logger from './src/config/logger.config.js';
+import geocodingRoutes from './src/routes/geocoding.routes.js';
 
 // Configuration des routes
 app.use('/api/users', userRoutes);
 app.use('/api/journals', journalRoutes);
 app.use('/api/places', placeRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
@@ -18,6 +20,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use(errorHandler);
 
 // Démarrage du serveur
-app.listen(3000, () => {
-	logger.info('Server is running on port 3000');
+app.listen(process.env.PORT, () => {
+	logger.info(`Server is running on port ${process.env.PORT}`);
 });

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import MONGO_URI from './dotenv.config.js';
+import env from './dotenv.config.js';
 
-const database = mongoose.connect(MONGO_URI);
+const database = mongoose.connect(env.MONGODB_URI);
 
 export default database;
