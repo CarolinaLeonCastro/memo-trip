@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+//import { fr } from 'date-fns/locale';
 import { useJournals } from '../context/JournalContext';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -183,10 +183,7 @@ const MapView: React.FC = () => {
                           {place.description}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Visité le{' '}
-                          {format(place.dateVisited, 'dd MMM yyyy', {
-                            locale: fr,
-                          })}
+                          Visité le {format(place.dateVisited, 'dd MMM yyyy')}
                         </Typography>
                         {place.photos.length > 0 && (
                           <Box
@@ -242,9 +239,7 @@ const MapView: React.FC = () => {
                           {place.description}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {format(place.dateVisited, 'dd MMM yyyy', {
-                            locale: fr,
-                          })}
+                          {format(place.dateVisited, 'dd MMM yyyy')}
                         </Typography>
                       </CardContent>
                     </Card>

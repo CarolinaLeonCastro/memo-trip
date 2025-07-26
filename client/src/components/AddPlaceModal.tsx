@@ -17,8 +17,11 @@ import {
   Close as CloseIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
+  LocationOn as LocationIcon,
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
+import PlaceSearchInput from './PlaceSearchInput';
+import type { GeocodingResult } from '../services/geocoding.service';
 
 interface AddPlaceModalProps {
   open: boolean;
@@ -32,17 +35,33 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    latitude: '',
-    longitude: '',
     dateVisited: new Date().toISOString().split('T')[0],
     photos: [''],
   });
+  const [selectedPlace, setSelectedPlace] = useState<GeocodingResult | null>(
+    null
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handlePlaceSelect = (place: GeocodingResult) => {
+    setSelectedPlace(place);
+    // Pré-remplir le nom si l'utilisateur n'en a pas saisi
+    if (!formData.name.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        name: place.name,
+      }));
+    }
+    // Effacer l'erreur de lieu si elle existe
+    if (errors.place) {
+      setErrors((prev) => ({ ...prev, place: '' }));
     }
   };
 
@@ -66,20 +85,16 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!selectedPlace) {
+      newErrors.place = 'Veuillez sélectionner un lieu';
+    }
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Place name is required';
+      newErrors.name = 'Le nom du lieu est requis';
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
-    if (!formData.latitude || isNaN(Number(formData.latitude))) {
-      newErrors.latitude = 'Valid latitude is required';
-    }
-
-    if (!formData.longitude || isNaN(Number(formData.longitude))) {
-      newErrors.longitude = 'Valid longitude is required';
+      newErrors.description = 'La description est requise';
     }
 
     setErrors(newErrors);
@@ -95,17 +110,15 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
     const journalId = journals[0]?.id;
 
     if (!journalId) {
-      // Si aucun journal n'existe, on peut soit créer un journal par défaut
-      // ou demander à l'utilisateur de créer un journal d'abord
-      alert('Please create a journal first before adding places');
+      alert("Veuillez créer un journal avant d'ajouter des lieux");
       return;
     }
 
     addPlace(journalId, {
       name: formData.name.trim(),
       description: formData.description.trim(),
-      latitude: Number(formData.latitude),
-      longitude: Number(formData.longitude),
+      latitude: selectedPlace!.coordinates.latitude,
+      longitude: selectedPlace!.coordinates.longitude,
       dateVisited: new Date(formData.dateVisited),
       photos: validPhotos,
     });
@@ -114,11 +127,10 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
     setFormData({
       name: '',
       description: '',
-      latitude: '',
-      longitude: '',
       dateVisited: new Date().toISOString().split('T')[0],
       photos: [''],
     });
+    setSelectedPlace(null);
     setErrors({});
 
     onClose();
@@ -148,7 +160,7 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
         }}
       >
         <Typography variant="h5" fontWeight={600}>
-          Add A New Place
+          Ajouter un nouveau lieu
         </Typography>
         <IconButton onClick={onClose} size="large">
           <CloseIcon />
@@ -157,18 +169,65 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}>
         <Grid container spacing={3}>
+          {/* Recherche de lieu */}
+          <Grid size={12}>
+            <PlaceSearchInput
+              onPlaceSelect={handlePlaceSelect}
+              placeholder="Rechercher un lieu (ex: Tour Eiffel, Paris)"
+              label="Rechercher un lieu *"
+              error={!!errors.place}
+              helperText={
+                errors.place || 'Tapez au moins 3 caractères pour rechercher'
+              }
+            />
+            {selectedPlace && (
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  bgcolor: 'success.50',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'success.200',
+                }}
+              >
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
+                >
+                  <LocationIcon sx={{ color: 'success.main', fontSize: 20 }} />
+                  <Typography
+                    variant="body2"
+                    color="success.main"
+                    fontWeight={600}
+                  >
+                    Lieu sélectionné
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  {selectedPlace.display_name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Coordonnées: {selectedPlace.coordinates.latitude.toFixed(4)},{' '}
+                  {selectedPlace.coordinates.longitude.toFixed(4)}
+                </Typography>
+              </Box>
+            )}
+          </Grid>
+
+          {/* Nom du lieu */}
           <Grid size={12}>
             <TextField
               fullWidth
-              label="Place Name *"
+              label="Nom du lieu *"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               error={!!errors.name}
               helperText={errors.name}
-              placeholder="e.g., Eiffel Tower, Paris, France"
+              placeholder="ex: Tour Eiffel"
             />
           </Grid>
 
+          {/* Description */}
           <Grid size={12}>
             <TextField
               fullWidth
@@ -179,42 +238,15 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
               onChange={(e) => handleChange('description', e.target.value)}
               error={!!errors.description}
               helperText={errors.description}
-              placeholder="Describe this amazing place..."
+              placeholder="Décrivez ce lieu magnifique..."
             />
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label="Latitude *"
-              type="number"
-              inputProps={{ step: 'any' }}
-              value={formData.latitude}
-              onChange={(e) => handleChange('latitude', e.target.value)}
-              error={!!errors.latitude}
-              helperText={errors.latitude}
-              placeholder="48.8584"
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label="Longitude *"
-              type="number"
-              inputProps={{ step: 'any' }}
-              value={formData.longitude}
-              onChange={(e) => handleChange('longitude', e.target.value)}
-              error={!!errors.longitude}
-              helperText={errors.longitude}
-              placeholder="2.2945"
-            />
-          </Grid>
-
+          {/* Date de visite */}
           <Grid size={12}>
             <TextField
               fullWidth
-              label="Date Visited"
+              label="Date de visite"
               type="date"
               value={formData.dateVisited}
               onChange={(e) => handleChange('dateVisited', e.target.value)}
@@ -222,6 +254,7 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
             />
           </Grid>
 
+          {/* Photos */}
           <Grid size={12}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
               Photos (URLs)
@@ -255,7 +288,7 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
               sx={{ color: 'info.main', fontWeight: 600 }}
               size="small"
             >
-              Ajoute une photo
+              Ajouter une photo
             </Button>
           </Grid>
         </Grid>
@@ -274,7 +307,7 @@ const AddPlaceModal: React.FC<AddPlaceModalProps> = ({ open, onClose }) => {
           fullWidth={isMobile}
           size="large"
         >
-          Cancel
+          Annuler
         </Button>
         <Button
           onClick={handleSubmit}

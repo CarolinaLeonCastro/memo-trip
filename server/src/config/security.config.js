@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import logger from './logger.config.js';
+import env from './dotenv.config.js';
 
 // Configuration CORS
 const corsOptions = {
@@ -8,7 +9,7 @@ const corsOptions = {
 		const allowedOrigins = [
 			'http://localhost:3000',
 			'http://localhost:5173', // Vite dev server
-			process.env.CLIENT_URL
+			env.FRONTEND_URLS
 		].filter(Boolean);
 
 		// Autoriser les requêtes sans origine (mobile apps, Postman)
