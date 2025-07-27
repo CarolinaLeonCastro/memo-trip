@@ -111,36 +111,18 @@ export function logout(req, res, next) {
 }
 
 // GET /api/auth/me
-export async function getCurrentUser(req, res, next) {
+export function getCurrentUser(req, res, next) {
 	try {
-		// Vérifier le token JWT
-		const authHeader = req.headers.authorization;
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return res.status(401).json({ message: "Token d'authentification manquant" });
-		}
+		// L'utilisateur est déjà disponible via le middleware authenticateToken
+		const userResponse = {
+			id: req.user._id,
+			email: req.user.email,
+			name: req.user.name,
+			avatar: req.user.avatar,
+			created_at: req.user.created_at
+		};
 
-		const token = authHeader.substring(7); // Enlever 'Bearer '
-
-		try {
-			const decoded = jwt.verify(token, env.JWT_SECRET);
-			const user = await User.findById(decoded.userId).select('-password');
-
-			if (!user) {
-				return res.status(401).json({ message: 'Utilisateur non trouvé' });
-			}
-
-			const userResponse = {
-				id: user._id,
-				email: user.email,
-				name: user.name,
-				avatar: user.avatar,
-				created_at: user.created_at
-			};
-
-			res.json({ user: userResponse });
-		} catch {
-			return res.status(401).json({ message: 'Token invalide ou expiré' });
-		}
+		res.json({ user: userResponse });
 	} catch (err) {
 		logger.error('Error getting current user', { error: err.message });
 		next(err);

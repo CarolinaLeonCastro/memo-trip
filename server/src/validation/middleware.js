@@ -53,10 +53,12 @@ export const validate = (schema, source = 'body') => {
 				req.body = value;
 				break;
 			case 'params':
-				req.params = value;
+				// Ne pas écraser req.params car c'est géré par Express
+				Object.assign(req.params, value);
 				break;
 			case 'query':
-				req.query = value;
+				// Ne pas écraser req.query car c'est en lecture seule
+				Object.assign(req.query, value);
 				break;
 		}
 

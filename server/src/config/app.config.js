@@ -11,6 +11,10 @@ const app = express();
 app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
 
+// Protection contre les injections NoSQL et la pollution des paramètres
+// app.use(mongoSanitizeConfig);
+// app.use(hppConfig);
+
 // Rate limiting global
 app.use(generalLimiter);
 

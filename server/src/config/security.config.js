@@ -1,4 +1,6 @@
 import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 import logger from './logger.config.js';
 import env from './dotenv.config.js';
 
@@ -109,4 +111,25 @@ const uploadLimiter = rateLimit({
 	}
 });
 
-export { corsOptions, helmetOptions, generalLimiter, strictLimiter, uploadLimiter };
+// Middleware de sécurité MongoDB
+const mongoSanitizeConfig = mongoSanitize({
+	onSanitize: ({ req, key }) => {
+		logger.warn(`Sanitized request data`, {
+			ip: req.ip,
+			sanitizedKey: key,
+			url: req.originalUrl
+		});
+	}
+});
+
+// Middleware protection contre la pollution des paramètres HTTP
+const hppConfig = hpp({
+	whitelist: [
+		// Paramètres autorisés à avoir plusieurs valeurs
+		'tags',
+		'categories',
+		'sort'
+	]
+});
+
+export { corsOptions, helmetOptions, generalLimiter, strictLimiter, uploadLimiter, mongoSanitizeConfig, hppConfig };
