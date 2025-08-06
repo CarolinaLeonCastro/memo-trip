@@ -151,8 +151,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Erreur lors de la déconnexion côté serveur:', error);
     } finally {
-      // Nettoyer les données locales dans tous les cas
-      authService.clearAuth();
+      // Nettoyer complètement toutes les données de stockage
+      authService.clearAllStorage();
       setUser(null);
       setError(null);
     }

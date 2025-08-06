@@ -122,6 +122,41 @@ class AuthService {
     sessionStorage.removeItem('memotrip-token');
   }
 
+  // Méthode pour nettoyer complètement le stockage (utile pour le debug)
+  clearAllStorage(): void {
+    // Nettoyer sessionStorage
+    sessionStorage.removeItem('memotrip-token');
+    sessionStorage.removeItem('memotrip-user');
+
+    // Nettoyer localStorage (au cas où il y aurait des données résiduelles)
+    localStorage.removeItem('memotrip-token');
+    localStorage.removeItem('memotrip-user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    console.log('🧹 Stockage complètement nettoyé');
+  }
+
+  // Méthode de diagnostic pour voir l'état du stockage
+  diagnoseStorage(): void {
+    console.log('🔍 Diagnostic du stockage:');
+    console.log('SessionStorage:');
+    console.log(
+      '  - memotrip-token:',
+      sessionStorage.getItem('memotrip-token')
+    );
+    console.log('  - memotrip-user:', sessionStorage.getItem('memotrip-user'));
+    console.log('LocalStorage:');
+    console.log('  - memotrip-token:', localStorage.getItem('memotrip-token'));
+    console.log('  - memotrip-user:', localStorage.getItem('memotrip-user'));
+    console.log('  - token (legacy):', localStorage.getItem('token'));
+    console.log('  - user (legacy):', localStorage.getItem('user'));
+    console.log(
+      '  - memotrip-dark-mode (thème):',
+      localStorage.getItem('memotrip-dark-mode')
+    );
+  }
+
   // Gestion des données utilisateur dans sessionStorage
   getUser(): AuthResponse['user'] | null {
     const userData = sessionStorage.getItem('memotrip-user');
