@@ -19,7 +19,8 @@ const corsOptions = {
 			/^https:\/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
 			/^https:\/\/[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
 			/^https:\/\/.*\.webcontainer-api\.io$/,
-			/^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/
+			/^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/,
+			/^https:\/\/zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--96435430\.local-credentialless\.webcontainer-api\.io$/
 		];
 
 		// Autoriser les requêtes sans origine (mobile apps, Postman)
