@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -15,6 +15,10 @@ import {
   useMediaQuery,
   useTheme,
   Tooltip,
+  Menu,
+  MenuItem,
+  Avatar,
+  Divider,
 } from '@mui/material';
 import {
   Explore as ExploreIcon,
@@ -24,18 +28,41 @@ import {
   Close as CloseIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
+  Logout as LogoutIcon,
+  ExpandMore as ExpandMoreIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { useThemeMode } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
+    null
+  );
   const { isDarkMode, toggleDarkMode } = useThemeMode();
+  const { user, logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+    navigate('/login');
   };
 
   const navigationItems = [
@@ -49,6 +76,15 @@ const Navbar: React.FC = () => {
       path: '/profile',
       icon: <PersonIcon />,
     },
+    ...(user?.role === 'admin'
+      ? [
+          {
+            label: 'Administration',
+            path: '/admin',
+            icon: <AdminIcon />,
+          },
+        ]
+      : []),
   ];
 
   const drawer = (
@@ -98,6 +134,36 @@ const Navbar: React.FC = () => {
           >
             {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
+        </ListItem>
+
+        <Divider sx={{ my: 1 }} />
+
+        {/* User info in mobile drawer */}
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Connecté en tant que
+          </Typography>
+          <Typography variant="body2" fontWeight={600} color="text.primary">
+            {user?.email}
+          </Typography>
+        </Box>
+
+        <ListItem
+          onClick={() => {
+            handleLogout();
+            handleDrawerToggle();
+          }}
+          sx={{
+            color: 'error.main',
+            '&:hover': {
+              bgcolor: 'action.hover',
+            },
+          }}
+        >
+          <ListItemIcon>
+            <LogoutIcon sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText primary="Se déconnecter" />
         </ListItem>
       </List>
     </Box>
@@ -196,6 +262,7 @@ const Navbar: React.FC = () => {
                   {item.label}
                 </Button>
               ))}
+
               {/* Dark mode toggle for desktop */}
               <Tooltip title={isDarkMode ? 'Mode clair' : 'Mode sombre'}>
                 <IconButton
@@ -211,6 +278,33 @@ const Navbar: React.FC = () => {
                   {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
                 </IconButton>
               </Tooltip>
+
+              {/* Menu utilisateur */}
+              <Button
+                onClick={handleUserMenuOpen}
+                startIcon={
+                  <Avatar
+                    sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}
+                  >
+                    {user?.email?.charAt(0).toUpperCase()}
+                  </Avatar>
+                }
+                endIcon={<ExpandMoreIcon />}
+                sx={{
+                  ml: 1,
+                  color: 'text.primary',
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                  {user?.email}
+                </Box>
+              </Button>
             </Box>
           )}
         </Toolbar>
@@ -231,6 +325,52 @@ const Navbar: React.FC = () => {
       >
         {drawer}
       </Drawer>
+
+      {/* Menu utilisateur */}
+      <Menu
+        anchorEl={userMenuAnchor}
+        open={Boolean(userMenuAnchor)}
+        onClose={handleUserMenuClose}
+        sx={{
+          mt: 1,
+          '& .MuiPaper-root': {
+            borderRadius: 2,
+            minWidth: 200,
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <Box sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="body2" color="text.secondary">
+            Connecté en tant que
+          </Typography>
+          <Typography variant="body2" fontWeight={600} color="text.primary">
+            {user?.email}
+          </Typography>
+        </Box>
+
+        <MenuItem
+          component={Link}
+          to="/profile"
+          onClick={handleUserMenuClose}
+          sx={{ py: 1.5 }}
+        >
+          <ListItemIcon>
+            <PersonIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Mon profil" />
+        </MenuItem>
+
+        <Divider />
+
+        <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
+          </ListItemIcon>
+          <ListItemText primary="Se déconnecter" />
+        </MenuItem>
+      </Menu>
     </>
   );
 };

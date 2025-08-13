@@ -1,4 +1,4 @@
-import { userValidation, journalValidation, placeValidation, geoValidation } from './schemas.js';
+import { userValidation, journalValidation, placeValidation, geoValidation, authValidation } from './schemas.js';
 import logger from '../config/logger.config.js';
 
 // Middleware générique pour valider les données
@@ -53,10 +53,12 @@ export const validate = (schema, source = 'body') => {
 				req.body = value;
 				break;
 			case 'params':
-				req.params = value;
+				// Ne pas écraser req.params car c'est géré par Express
+				Object.assign(req.params, value);
 				break;
 			case 'query':
-				req.query = value;
+				// Ne pas écraser req.query car c'est en lecture seule
+				Object.assign(req.query, value);
 				break;
 		}
 
@@ -65,6 +67,10 @@ export const validate = (schema, source = 'body') => {
 };
 
 // Middlewares spécifiques pour chaque modèle
+
+// Auth validation
+export const validateRegister = validate(authValidation.register);
+export const validateLogin = validate(authValidation.login);
 
 // User validation
 export const validateUserCreate = validate(userValidation.create);

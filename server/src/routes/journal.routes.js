@@ -8,14 +8,16 @@ import {
 	exportJournalPDF
 } from '../controllers/journal.controller.js';
 import { validateJournalCreate, validateJournalUpdate, validateJournalParams } from '../validation/middleware.js';
+import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/', validateJournalCreate, createJournal);
-router.get('/', getJournals);
-router.get('/:id', validateJournalParams, getJournalById);
-router.put('/:id', validateJournalParams, validateJournalUpdate, updateJournal);
-router.delete('/:id', validateJournalParams, deleteJournal);
-router.get('/:id/export-pdf', validateJournalParams, exportJournalPDF);
+// Toutes les routes de journaux nécessitent une authentification
+router.post('/', authenticateToken, validateJournalCreate, createJournal);
+router.get('/', authenticateToken, getJournals);
+router.get('/:id', authenticateToken, validateJournalParams, getJournalById);
+router.put('/:id', authenticateToken, validateJournalParams, validateJournalUpdate, updateJournal);
+router.delete('/:id', authenticateToken, validateJournalParams, deleteJournal);
+router.get('/:id/export-pdf', authenticateToken, validateJournalParams, exportJournalPDF);
 
 export default router;

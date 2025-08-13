@@ -15,19 +15,32 @@ const seedData = async () => {
 	// Crée des utilisateurs avec mots de passe simples
 	const users = await User.create([
 		{
+			email: 'admin@memotrip.com',
+			password: 'Admin123!',
+			name: 'Administrateur MemoTrip',
+			role: 'admin',
+			status: 'active'
+		},
+		{
 			email: 'alice.martin@example.com',
 			password: 'password123',
-			name: 'Alice Martin'
+			name: 'Alice Martin',
+			role: 'user',
+			status: 'active'
 		},
 		{
 			email: 'bob.dubois@example.com',
 			password: 'password123',
-			name: 'Bob Dubois'
+			name: 'Bob Dubois',
+			role: 'user',
+			status: 'active'
 		},
 		{
 			email: 'astrid.leon@example.com',
 			password: 'password123',
-			name: 'Astrid Leon'
+			name: 'Astrid Leon',
+			role: 'user',
+			status: 'active'
 		}
 	]);
 
@@ -42,7 +55,7 @@ const seedData = async () => {
 			cover_image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52',
 			status: 'published',
 			tags: ['romantique', 'paris', 'weekend', 'culture'],
-			user_id: users[0]._id,
+			user_id: users[2]._id,
 			places: [], // Sera mis à jour après création des places
 			stats: {
 				total_places: 0, // Sera calculé automatiquement
@@ -58,7 +71,7 @@ const seedData = async () => {
 			cover_image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e',
 			status: 'published',
 			tags: ['provence', 'roadtrip', 'nature', 'lavande'],
-			user_id: users[1]._id,
+			user_id: users[2]._id,
 			places: [], // Sera mis à jour après création des places
 			stats: {
 				total_places: 0, // Sera calculé automatiquement
@@ -89,7 +102,7 @@ const seedData = async () => {
 	const places = await Place.create([
 		// Journal 1 - Paris (Alice)
 		{
-			user_id: users[0]._id,
+			user_id: users[2]._id,
 			journal_id: journals[0]._id,
 			name: 'Tour Eiffel',
 			description: 'Visite du monument emblématique de Paris au coucher du soleil',
@@ -122,7 +135,7 @@ const seedData = async () => {
 			notes: 'Absolument magique au coucher du soleil. Prévoir du temps pour les photos !'
 		},
 		{
-			user_id: users[0]._id,
+			user_id: users[2]._id,
 			journal_id: journals[0]._id,
 			name: 'Musée du Louvre',
 			description: "Découverte des chefs-d'œuvre de l'art mondial",
@@ -155,7 +168,7 @@ const seedData = async () => {
 			notes: 'Immense ! Impossible de tout voir en une journée. La Joconde était bondée.'
 		},
 		{
-			user_id: users[0]._id,
+			user_id: users[2]._id,
 			journal_id: journals[0]._id,
 			name: 'Montmartre et Sacré-Cœur',
 			description: 'Balade dans les ruelles pittoresques de Montmartre',
@@ -183,7 +196,7 @@ const seedData = async () => {
 			notes: 'Ambiance bohème incroyable. Les artistes de rue sont talentueux !'
 		},
 		{
-			user_id: users[0]._id,
+			user_id: users[2]._id,
 			journal_id: journals[0]._id,
 			name: 'Seine et Pont des Arts',
 			description: 'Promenade romantique le long de la Seine',
@@ -213,7 +226,7 @@ const seedData = async () => {
 
 		// Journal 2 - Provence (Bob)
 		{
-			user_id: users[1]._id,
+			user_id: users[2]._id,
 			journal_id: journals[1]._id,
 			name: 'Champs de lavande de Valensole',
 			description: 'Promenade dans les champs de lavande en fleurs',
@@ -246,7 +259,7 @@ const seedData = async () => {
 			notes: 'Réveil très tôt pour éviter la foule. Le parfum de lavande est enivrant !'
 		},
 		{
-			user_id: users[1]._id,
+			user_id: users[2]._id,
 			journal_id: journals[1]._id,
 			name: 'Village de Gordes',
 			description: 'Découverte du plus beau village de France perché',
@@ -276,7 +289,7 @@ const seedData = async () => {
 
 		// Journal 3 - Tokyo (Astrid)
 		{
-			user_id: users[2]._id,
+			user_id: users[3]._id,
 			journal_id: journals[2]._id,
 			name: 'Sanctuaire Senso-ji',
 			description: "Temple bouddhiste traditionnel dans le quartier d'Asakusa",
@@ -309,7 +322,7 @@ const seedData = async () => {
 			notes: 'Très spirituel et paisible malgré la foule de touristes.'
 		},
 		{
-			user_id: users[2]._id,
+			user_id: users[3]._id,
 			journal_id: journals[2]._id,
 			name: 'Quartier de Shibuya',
 			description: 'Immersion dans le Tokyo moderne et animé',
@@ -371,10 +384,11 @@ const seedData = async () => {
 		}))
 	);
 
-	console.log(' Informations de connexion :');
-	console.log('Email: alice.martin@example.com | Mot de passe: password123');
-	console.log('Email: bob.dubois@example.com | Mot de passe: password123');
-	console.log('Email: charlie.leroy@example.com | Mot de passe: password123');
+	console.log('🔐 Informations de connexion :');
+	console.log('ADMIN: admin@memotrip.com | Mot de passe: Admin123!');
+	console.log('USER: alice.martin@example.com | Mot de passe: password123');
+	console.log('USER: bob.dubois@example.com | Mot de passe: password123');
+	console.log('USER: astrid.leon@example.com | Mot de passe: password123');
 };
 
 // Connexion à MongoDB + exécution du seed
