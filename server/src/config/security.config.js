@@ -14,10 +14,13 @@ const corsOptions = {
 			env.FRONTEND_URLS
 		].filter(Boolean);
 
+		// Autoriser les URLs WebContainer dynamiques
+		const webContainerPattern = /^https:\/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/;
+
 		// Autoriser les requêtes sans origine (mobile apps, Postman)
 		if (!origin) return callback(null, true);
 
-		if (allowedOrigins.indexOf(origin) !== -1) {
+		if (allowedOrigins.indexOf(origin) !== -1 || webContainerPattern.test(origin)) {
 			callback(null, true);
 		} else {
 			logger.warn(`CORS: Origin ${origin} not allowed`);
