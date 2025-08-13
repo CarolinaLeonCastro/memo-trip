@@ -11,6 +11,7 @@ const corsOptions = {
 		const allowedOrigins = [
 			'http://localhost:3000',
 			'http://localhost:5173', // Vite dev server
+			'https://zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--96435430.local-credentialless.webcontainer-api.io',
 			...(env.FRONTEND_URLS ? env.FRONTEND_URLS.split(',') : [])
 		].filter(Boolean);
 
@@ -19,8 +20,7 @@ const corsOptions = {
 			/^https:\/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
 			/^https:\/\/[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
 			/^https:\/\/.*\.webcontainer-api\.io$/,
-			/^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/,
-			/^https:\/\/zp1v56uxy8rdx5ypatb0ockcb9tr6a-oci3--3000--96435430\.local-credentialless\.webcontainer-api\.io$/
+			/^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/
 		];
 
 		// Autoriser les requêtes sans origine (mobile apps, Postman)
@@ -33,7 +33,13 @@ const corsOptions = {
 			callback(null, true);
 		} else {
 			logger.warn(`CORS: Origin ${origin} not allowed`);
-			callback(new Error('Not allowed by CORS'));
+			// En mode développement, autoriser toutes les origines WebContainer
+			if (process.env.NODE_ENV === 'development' && origin && origin.includes('webcontainer-api.io')) {
+				logger.info(`CORS: Development mode - allowing WebContainer origin ${origin}`);
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
 		}
 	},
 	credentials: true,
