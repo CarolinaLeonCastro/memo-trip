@@ -21,13 +21,7 @@ const corsOptions = {
 			callback(null, true);
 		} else {
 			logger.warn(`CORS: Origin ${origin} not allowed`);
-			// En mode développement, autoriser toutes les origines WebContainer
-			if (process.env.NODE_ENV === 'development' && origin && origin.includes('webcontainer-api.io')) {
-				logger.info(`CORS: Development mode - allowing WebContainer origin ${origin}`);
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
+			callback(new Error('Not allowed by CORS'));
 		}
 	},
 	credentials: true,
