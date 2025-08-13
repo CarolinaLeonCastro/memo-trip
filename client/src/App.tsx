@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 // Components
 import { Box } from '@mui/material';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 // Layouts
 import Layout from './components/Layouts/Layout';
 //Pages
@@ -17,8 +18,13 @@ import PlaceDetail from './pages/PlaceDetail';
 import NewJournal from './pages/NewJournal';
 import Profile from './pages/Profile';
 import MapView from './pages/MapView';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminSetup from './pages/AdminSetup';
+import PublicJournals from './pages/PublicJournals';
+import PublicJournalDetail from './pages/PublicJournalDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthDebug from './components/debug/AuthDebug';
 
 function App() {
   return (
@@ -27,8 +33,17 @@ function App() {
         <JournalProvider>
           <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <Router>
+              <AuthDebug />
               <Routes>
-                {/* Routes d'authentification (publiques) */}
+                {/* Routes publiques */}
+                <Route path="/public/journals" element={<PublicJournals />} />
+                <Route
+                  path="/public/journals/:id"
+                  element={<PublicJournalDetail />}
+                />
+                <Route path="/setup" element={<AdminSetup />} />
+
+                {/* Routes d'authentification */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
@@ -49,6 +64,14 @@ function App() {
                   <Route path="journals/edit/:id" element={<EditJournal />} />
                   <Route path="place/:id" element={<PlaceDetail />} />
                   <Route path="profile" element={<Profile />} />
+                  <Route
+                    path="admin"
+                    element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    }
+                  />
                 </Route>
               </Routes>
             </Router>

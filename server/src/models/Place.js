@@ -49,7 +49,15 @@ const placeSchema = new mongoose.Schema(
 		tags: [{ type: String, trim: true }], // Tags personnalisés
 		is_favorite: { type: Boolean, default: false },
 		visit_duration: { type: Number }, // Durée en minutes
-		notes: { type: String, trim: true } // Notes détaillées
+		notes: { type: String, trim: true }, // Notes détaillées
+		moderation_status: {
+			type: String,
+			enum: ['pending', 'approved', 'rejected'],
+			default: 'pending'
+		},
+		moderated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+		moderated_at: { type: Date },
+		rejection_reason: { type: String, trim: true }
 	},
 	{
 		timestamps: true

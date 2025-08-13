@@ -12,6 +12,18 @@ const journalSchema = new mongoose.Schema(
 			enum: ['draft', 'published', 'archived'],
 			default: 'draft'
 		},
+		moderation_status: {
+			type: String,
+			enum: ['pending', 'approved', 'rejected'],
+			default: 'pending'
+		},
+		is_public: {
+			type: Boolean,
+			default: false
+		},
+		moderated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+		moderated_at: { type: Date },
+		rejection_reason: { type: String, trim: true },
 		tags: [{ type: String, trim: true }], // Tags pour catégoriser
 		user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 		places: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Place' }],

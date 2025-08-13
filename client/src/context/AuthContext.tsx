@@ -14,6 +14,7 @@ import {
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (
     name: string,
@@ -54,6 +55,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Vérifier si l'utilisateur est connecté au chargement
   useEffect(() => {
+    // Exposer authService pour le débogage
+    if (typeof window !== 'undefined') {
+      (window as any).authService = authService;
+    }
+
     const initAuth = async () => {
       try {
         // Vérifier s'il y a des données dans sessionStorage
@@ -160,6 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
+    isAuthenticated: !!user,
     login,
     register,
     logout,

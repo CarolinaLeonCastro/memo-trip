@@ -10,12 +10,15 @@ export interface AuthResponse {
     id: string;
     email: string;
     name: string;
+    role?: 'user' | 'admin';
+    status?: 'active' | 'blocked' | 'pending';
     avatar?: {
       url?: string;
       filename?: string;
       uploadedAt?: string;
     };
     created_at: string;
+    last_login?: string;
   };
   token: string;
 }

@@ -11,6 +11,8 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"seed": "node src/utils/seed.js",
+		"create-admin": "node src/utils/createAdmin.js",
+		"check-admin": "node src/utils/checkAdmin.js",
 		"test:validation": "node test-validation.js",
 		"test:api": "node test-api-validation.js",
 		"prepare": "husky install"

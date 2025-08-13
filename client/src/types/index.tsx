@@ -2,12 +2,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role?: 'user' | 'admin';
+  status?: 'active' | 'blocked' | 'pending';
   avatar?: {
     url?: string;
     filename?: string;
     uploadedAt?: string;
   };
   created_at?: string;
+  last_login?: string;
 }
 
 export interface Journal {

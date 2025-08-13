@@ -39,8 +39,11 @@ export async function register(req, res, next) {
 			id: user._id,
 			email: user.email,
 			name: user.name,
+			role: user.role,
+			status: user.status,
 			avatar: user.avatar,
-			created_at: user.created_at
+			created_at: user.created_at,
+			last_login: user.last_login
 		};
 
 		logger.info('User registered successfully', { userId: user._id, email: user.email });
@@ -73,6 +76,10 @@ export async function login(req, res, next) {
 			return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
 		}
 
+		// Mettre à jour la date de dernière connexion
+		user.last_login = new Date();
+		await user.save();
+
 		// Générer le token JWT
 		const token = generateToken(user._id);
 
@@ -81,8 +88,11 @@ export async function login(req, res, next) {
 			id: user._id,
 			email: user.email,
 			name: user.name,
+			role: user.role,
+			status: user.status,
 			avatar: user.avatar,
-			created_at: user.created_at
+			created_at: user.created_at,
+			last_login: user.last_login
 		};
 
 		logger.info('User logged in successfully', { userId: user._id, email: user.email });
@@ -118,8 +128,11 @@ export function getCurrentUser(req, res, next) {
 			id: req.user._id,
 			email: req.user.email,
 			name: req.user.name,
+			role: req.user.role,
+			status: req.user.status,
 			avatar: req.user.avatar,
-			created_at: req.user.created_at
+			created_at: req.user.created_at,
+			last_login: req.user.last_login
 		};
 
 		res.json({ user: userResponse });

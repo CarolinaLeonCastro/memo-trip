@@ -30,6 +30,7 @@ import {
   LightMode as LightModeIcon,
   Logout as LogoutIcon,
   ExpandMore as ExpandMoreIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { useThemeMode } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -75,6 +76,15 @@ const Navbar: React.FC = () => {
       path: '/profile',
       icon: <PersonIcon />,
     },
+    ...(user?.role === 'admin'
+      ? [
+          {
+            label: 'Administration',
+            path: '/admin',
+            icon: <AdminIcon />,
+          },
+        ]
+      : []),
   ];
 
   const drawer = (
