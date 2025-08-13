@@ -1,0 +1,2 @@
+mon project a deux folders à la racine : server(express.js), client ( vite react typescript).
+lors des problèmes propose des solutions qui ne vont pas casser tout ce que j'ai fait et si on perds trop de temps propose des workarounds.
