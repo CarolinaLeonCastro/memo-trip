@@ -11,16 +11,24 @@ const corsOptions = {
 		const allowedOrigins = [
 			'http://localhost:3000',
 			'http://localhost:5173', // Vite dev server
-			env.FRONTEND_URLS
+			...(env.FRONTEND_URLS ? env.FRONTEND_URLS.split(',') : [])
 		].filter(Boolean);
 
-		// Autoriser les URLs WebContainer dynamiques
-		const webContainerPattern = /^https:\/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/;
+		// Autoriser les URLs WebContainer dynamiques (pattern plus flexible)
+		const webContainerPatterns = [
+			/^https:\/\/[a-z0-9]+-[a-z0-9]+-[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
+			/^https:\/\/[a-z0-9]+--\d+--[a-z0-9]+\.local-credentialless\.webcontainer-api\.io$/,
+			/^https:\/\/.*\.webcontainer-api\.io$/,
+			/^https:\/\/.*\.local-credentialless\.webcontainer-api\.io$/
+		];
 
 		// Autoriser les requêtes sans origine (mobile apps, Postman)
 		if (!origin) return callback(null, true);
 
-		if (allowedOrigins.indexOf(origin) !== -1 || webContainerPattern.test(origin)) {
+		const isWebContainer = webContainerPatterns.some(pattern => pattern.test(origin));
+		
+		if (allowedOrigins.indexOf(origin) !== -1 || isWebContainer) {
+			logger.info(`CORS: Origin ${origin} allowed`);
 			callback(null, true);
 		} else {
 			logger.warn(`CORS: Origin ${origin} not allowed`);
