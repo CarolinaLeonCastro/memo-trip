@@ -6,7 +6,6 @@ import {
   Box,
   IconButton,
   Typography,
-  useMediaQuery,
   useTheme,
   Chip,
   FormControlLabel,
@@ -71,7 +70,6 @@ const SUGGESTED_TAGS = [
 
 const AddPlacePage: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const { addPlace, journals } = useJournals();
 
@@ -277,7 +275,12 @@ const AddPlacePage: React.FC = () => {
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="h4" component="h1" fontWeight={700}>
+          <Typography
+            variant="h4"
+            component="h1"
+            fontWeight={700}
+            sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+          >
             Ajouter un nouveau lieu
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -301,7 +304,10 @@ const AddPlacePage: React.FC = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <LocationIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography variant="h6" fontWeight={600}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+              >
                 Informations de base
               </Typography>
             </Box>
@@ -403,7 +409,10 @@ const AddPlacePage: React.FC = () => {
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-                  <Typography variant="h6" fontWeight={600}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+                  >
                     Localisation GPS (optionnel)
                   </Typography>
                 </Box>
@@ -442,7 +451,10 @@ const AddPlacePage: React.FC = () => {
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
               Tags et catégories
             </Typography>
 
@@ -527,7 +539,10 @@ const AddPlacePage: React.FC = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <ImageIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography variant="h6" fontWeight={600}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+              >
                 Aperçu de l'image
               </Typography>
             </Box>
@@ -600,7 +615,10 @@ const AddPlacePage: React.FC = () => {
               mb: 3,
             }}
           >
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
               Statut de visite
             </Typography>
 
@@ -659,7 +677,10 @@ const AddPlacePage: React.FC = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
               <MenuBookIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography variant="h6" fontWeight={600}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+              >
                 Journal associé
               </Typography>
             </Box>
@@ -742,7 +763,10 @@ const AddPlacePage: React.FC = () => {
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
               Notes personnelles
             </Typography>
 

@@ -307,7 +307,10 @@ const Home: React.FC = () => {
                 mb: 0.5,
               }}
             >
-              <Typography variant="h6" fontWeight={600}>
+              <Typography
+                variant="h6"
+                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+              >
                 Lieux récents
               </Typography>
               <Button
@@ -495,32 +498,33 @@ const Home: React.FC = () => {
             )}
 
             {/* Actions rapides */}
-            <Card>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                  Actions rapides
-                </Typography>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<BookIcon />}
-                  sx={{
-                    py: 1.5,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderColor: 'text.secondary',
-                    color: 'text.primary',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      bgcolor: 'primary.light',
-                    },
-                  }}
-                  onClick={() => navigate('/journals')}
-                >
-                  Mes journaux
-                </Button>
-              </CardContent>
-            </Card>
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, fontFamily: '"Chau Philomene One", cursive' }}
+              >
+                Actions rapides
+              </Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<BookIcon />}
+                sx={{
+                  py: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: 'text.secondary',
+                  color: 'text.primary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    bgcolor: 'primary.light',
+                  },
+                }}
+                onClick={() => navigate('/journals')}
+              >
+                Mes journaux
+              </Button>
+            </Box>
           </Box>
         </Grid>
       </Grid>
