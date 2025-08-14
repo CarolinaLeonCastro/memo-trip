@@ -87,7 +87,11 @@ const Home: React.FC = () => {
               mb: 3,
             }}
           >
-            <Typography variant="decorative" color="primary.main">
+            <Typography
+              variant="h3"
+              color="primary.main"
+              sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+            >
               Mes lieux
             </Typography>
 
