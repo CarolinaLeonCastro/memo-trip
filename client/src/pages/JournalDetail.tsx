@@ -35,19 +35,12 @@ import {
   Download as DownloadIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
-import AddPlaceModal from '../components/AddPlaceModal';
 import PhotoGallery from '../components/PhotoGallery';
-
-export interface AddPlaceModalProps {
-  journalId: string;
-  onClose: () => void;
-}
 
 const JournalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getJournal, deleteJournal, deletePlace } = useJournals();
-  const [showAddPlace, setShowAddPlace] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [showGallery, setShowGallery] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -219,7 +212,7 @@ const JournalDetail: React.FC = () => {
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
         <Button
-          onClick={() => setShowAddPlace(true)}
+          onClick={() => navigate('/place/new')}
           startIcon={<AddIcon />}
           variant="contained"
           size="large"
@@ -274,7 +267,7 @@ const JournalDetail: React.FC = () => {
               Commencez à documenter votre voyage en ajoutant des lieux
             </Typography>
             <Button
-              onClick={() => setShowAddPlace(true)}
+              onClick={() => navigate('/place/new')}
               startIcon={<AddIcon />}
               variant="contained"
               size="large"
@@ -384,11 +377,13 @@ const JournalDetail: React.FC = () => {
                               )(place.dateVisited)}
                               size="small"
                             />
-                            <Chip
-                              icon={<LocationOnIcon />}
-                              label={`${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}`}
-                              size="small"
-                            />
+                            {place.latitude && place.longitude && (
+                              <Chip
+                                icon={<LocationOnIcon />}
+                                label={`${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}`}
+                                size="small"
+                              />
+                            )}
                             {place.photos.length > 0 && (
                               <Chip
                                 icon={<PhotoCameraIcon />}
@@ -445,13 +440,6 @@ const JournalDetail: React.FC = () => {
       </Dialog>
 
       {/* Modals */}
-      {showAddPlace && (
-        <AddPlaceModal
-          open={showAddPlace}
-          onClose={() => setShowAddPlace(false)}
-        />
-      )}
-
       {showGallery && (
         <PhotoGallery
           photos={selectedPhotos}

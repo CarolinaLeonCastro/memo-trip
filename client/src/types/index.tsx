@@ -26,10 +26,17 @@ export interface Journal {
 export interface Place {
   id: string;
   name: string;
+  city: string;
+  country: string;
   description: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   dateVisited: Date;
   photos: string[];
+  imageUrl?: string;
+  tags: string[];
+  visited: boolean;
+  rating?: number;
+  personalNotes?: string;
   journalId: string;
 }

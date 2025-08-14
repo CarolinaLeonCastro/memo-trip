@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Grid,
@@ -17,7 +17,6 @@ import {
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
-import AddPlaceModal from '../components/AddPlaceModal';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -36,7 +35,6 @@ const Home: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { journals } = useJournals();
-  const [showAddModal, setShowAddModal] = useState(false);
 
   // Calculer les statistiques
   const allPlaces = journals.flatMap((journal) => journal.places);
@@ -57,14 +55,17 @@ const Home: React.FC = () => {
 
   // Calculer le centre de la carte
   const getMapCenter = () => {
-    if (allPlaces.length === 0) return [46.603354, 1.888334]; // Centre de la France
+    const placesWithCoords = allPlaces.filter(
+      (place) => place.latitude && place.longitude
+    );
+    if (placesWithCoords.length === 0) return [46.603354, 1.888334]; // Centre de la France
 
     const avgLat =
-      allPlaces.reduce((sum, place) => sum + place.latitude, 0) /
-      allPlaces.length;
+      placesWithCoords.reduce((sum, place) => sum + (place.latitude || 0), 0) /
+      placesWithCoords.length;
     const avgLng =
-      allPlaces.reduce((sum, place) => sum + place.longitude, 0) /
-      allPlaces.length;
+      placesWithCoords.reduce((sum, place) => sum + (place.longitude || 0), 0) /
+      placesWithCoords.length;
 
     return [avgLat, avgLng];
   };
@@ -92,17 +93,16 @@ const Home: React.FC = () => {
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => navigate('/place/new')}
                   size={isMobile ? 'medium' : 'large'}
                   sx={{
-                    borderRadius: 3,
                     px: { xs: 2, sm: 3 },
                     py: { xs: 1, sm: 1.5 },
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                     minWidth: { xs: '100%', sm: 'auto' },
                   }}
                 >
-                  Ajoute un lieu
+                  Ajouter un lieu
                 </Button>
               </Box>
 
@@ -128,41 +128,43 @@ const Home: React.FC = () => {
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    {allPlaces.map((place) => (
-                      <Marker
-                        key={place.id}
-                        position={[place.latitude, place.longitude]}
-                      >
-                        <Popup>
-                          <Box sx={{ p: 1, minWidth: 200 }}>
-                            <Typography
-                              variant="subtitle1"
-                              fontWeight={600}
-                              sx={{ mb: 1 }}
-                            >
-                              {place.name}
-                            </Typography>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              {place.description}
-                            </Typography>
-                            {place.photos.length > 0 && (
-                              <Box
-                                component="img"
-                                src={place.photos[0]}
-                                alt={place.name}
-                                sx={{
-                                  width: '100%',
-                                  height: 100,
-                                  objectFit: 'cover',
-                                  borderRadius: 1,
-                                  mt: 1,
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </Popup>
-                      </Marker>
-                    ))}
+                    {allPlaces
+                      .filter((place) => place.latitude && place.longitude)
+                      .map((place) => (
+                        <Marker
+                          key={place.id}
+                          position={[place.latitude!, place.longitude!]}
+                        >
+                          <Popup>
+                            <Box sx={{ p: 1, minWidth: 200 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight={600}
+                                sx={{ mb: 1 }}
+                              >
+                                {place.name}
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                {place.description}
+                              </Typography>
+                              {place.photos.length > 0 && (
+                                <Box
+                                  component="img"
+                                  src={place.photos[0]}
+                                  alt={place.name}
+                                  sx={{
+                                    width: '100%',
+                                    height: 100,
+                                    objectFit: 'cover',
+                                    borderRadius: 1,
+                                    mt: 1,
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          </Popup>
+                        </Marker>
+                      ))}
                   </MapContainer>
                 ) : (
                   <Box
@@ -364,12 +366,6 @@ const Home: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-
-      {/* Modal d'ajout de lieu */}
-      <AddPlaceModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-      />
     </Box>
   );
 };
