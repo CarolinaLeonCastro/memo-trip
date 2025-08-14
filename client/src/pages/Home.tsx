@@ -324,7 +324,7 @@ const Home: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                 }}
-                onClick={() => navigate('/journals')}
+                onClick={() => navigate('/places')}
               >
                 Voir tous
               </Button>

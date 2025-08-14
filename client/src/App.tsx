@@ -12,6 +12,7 @@ import Layout from './components/Layouts/Layout';
 //Pages
 import Home from './pages/Home';
 import Journals from './pages/Journals';
+import AllPlaces from './pages/AllPlaces';
 import JournalDetail from './pages/JournalDetail';
 import EditJournal from './pages/EditJournal';
 import PlaceDetail from './pages/PlaceDetail';
@@ -59,6 +60,7 @@ function App() {
                 >
                   <Route index element={<Home />} />
                   <Route path="journals" element={<Journals />} />
+                  <Route path="places" element={<AllPlaces />} />
                   <Route path="journals/map" element={<MapView />} />
                   <Route path="journals/new" element={<NewJournal />} />
                   <Route path="journals/:id" element={<JournalDetail />} />
