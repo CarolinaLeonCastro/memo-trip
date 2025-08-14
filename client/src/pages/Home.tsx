@@ -14,6 +14,9 @@ import {
   Add as AddIcon,
   LocationOn as LocationIcon,
   Visibility as VisibilityIcon,
+  CalendarToday as CalendarIcon,
+  FavoriteBorder as FavoriteIcon,
+  MenuBook as BookIcon,
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
@@ -235,89 +238,10 @@ const Home: React.FC = () => {
               gap: { xs: 2, sm: 3 },
             }}
           >
-            {/* Recent places */}
-            <Card>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 2,
-                  }}
-                >
-                  <Typography variant="h5" fontWeight={600}>
-                    Lieux récents
-                  </Typography>
-                  <Button
-                    size="small"
-                    sx={{ color: 'info.main', fontWeight: 600 }}
-                    onClick={() => navigate('/journals')}
-                  >
-                    Voir tous
-                  </Button>
-                </Box>
-
-                {recentPlaces.length === 0 ? (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <LocationIcon
-                      sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      No places added yet
-                    </Typography>
-                  </Box>
-                ) : (
-                  recentPlaces.slice(0, 2).map((place, index) => (
-                    <Box key={place.id} sx={{ mb: index < 1 ? 3 : 0 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight={600}
-                        sx={{ mb: 0.5 }}
-                      >
-                        {place.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}
-                      >
-                        {place.description}
-                      </Typography>
-
-                      <Grid container spacing={1}>
-                        {place.photos.slice(0, 3).map((photo, photoIndex) => (
-                          <Grid size={{ xs: 4 }} key={photoIndex}>
-                            <Box
-                              component="img"
-                              src={photo}
-                              alt={`${place.name} ${photoIndex + 1}`}
-                              sx={{
-                                width: '100%',
-                                height: { xs: 60, sm: 80 },
-                                objectFit: 'cover',
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                  transform: 'scale(1.05)',
-                                },
-                              }}
-                              onClick={() => navigate(`/place/${place.id}`)}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </Box>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Statistiques */}
+            {/* Statistiques en haut */}
             <Grid container spacing={2}>
               <Grid size={6}>
-                <Card>
+                <Card sx={{ bgcolor: '#E8F0FE', border: 'none' }}>
                   <CardContent
                     sx={{
                       textAlign: 'center',
@@ -325,22 +249,26 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                      Lieux visités
-                    </Typography>
                     <Typography
                       variant="h2"
                       fontWeight={700}
-                      color="primary.main"
+                      color="#1976D2"
                       sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
                     >
                       {totalPlaces}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#1976D2"
+                      fontWeight={500}
+                    >
+                      Lieux visités
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
               <Grid size={6}>
-                <Card>
+                <Card sx={{ bgcolor: '#E8F5E8', border: 'none' }}>
                   <CardContent
                     sx={{
                       textAlign: 'center',
@@ -348,21 +276,250 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                      Pays visités
-                    </Typography>
                     <Typography
                       variant="h2"
                       fontWeight={700}
-                      color="primary.main"
+                      color="#2E7D32"
                       sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
                     >
                       {countries}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="#2E7D32"
+                      fontWeight={500}
+                    >
+                      Pays visités
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
+
+            {/* Recent places */}
+
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 0.5,
+              }}
+            >
+              <Typography variant="h6" fontWeight={600}>
+                Lieux récents
+              </Typography>
+              <Button
+                size="small"
+                sx={{
+                  color: '#4285F4',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                }}
+                onClick={() => navigate('/journals')}
+              >
+                Voir tous
+              </Button>
+            </Box>
+
+            {recentPlaces.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <LocationIcon
+                  sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Aucun lieu ajouté pour le moment
+                </Typography>
+              </Box>
+            ) : (
+              recentPlaces.slice(0, 3).map((place, index) => (
+                <Box key={place.id} sx={{ mb: index < 2 ? 2 : 0 }}>
+                  <Card
+                    sx={{
+                      p: 2,
+                      borderRadius: 1,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      border: '1px solid #f0f0f0',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      },
+                    }}
+                    onClick={() => navigate(`/place/${place.id}`)}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 2,
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      {/* Image du lieu */}
+                      <Box
+                        component="img"
+                        src={place.photos[0] || '/placeholder-image.jpg'}
+                        alt={place.name}
+                        sx={{
+                          width: 100,
+                          height: 100,
+                          objectFit: 'fill',
+                          borderRadius: 0.5,
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      {/* Informations du lieu */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight={600}
+                          sx={{
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            color: '#1a1a1a',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          {place.name.split(',')[0]}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mb: 1.5,
+                            color: '#666',
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {place.name.includes(',')
+                            ? place.name.split(',').slice(1).join(',').trim()
+                            : 'Italy'}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: '0.8rem',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {place.description || 'Aucune description fournie.'}
+                        </Typography>
+                      </Box>
+
+                      {/* Actions à droite */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          gap: 1.5,
+                        }}
+                      >
+                        {/* Badge de statut */}
+                        <Box
+                          sx={{
+                            bgcolor: '#E8F5E8',
+                            color: '#2E7D32',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 4,
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            textTransform: 'none',
+                          }}
+                        >
+                          Visité
+                        </Box>
+
+                        {/* Date avec icône */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                          }}
+                        >
+                          <CalendarIcon
+                            sx={{
+                              fontSize: '0.875rem',
+                              color: 'text.secondary',
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            {new Date(place.dateVisited).toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )}
+                          </Typography>
+                        </Box>
+
+                        {/* Icône favoris */}
+                        <Box
+                          sx={{
+                            cursor: 'pointer',
+                            '&:hover': { transform: 'scale(1.1)' },
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Action pour favoris
+                          }}
+                        >
+                          <FavoriteIcon
+                            sx={{
+                              fontSize: '1.2rem',
+                              color: 'text.secondary',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Card>
+                </Box>
+              ))
+            )}
+
+            {/* Actions rapides */}
+            <Card>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  Actions rapides
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<BookIcon />}
+                  sx={{
+                    py: 1.5,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderColor: 'text.secondary',
+                    color: 'text.primary',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'primary.light',
+                    },
+                  }}
+                  onClick={() => navigate('/journals')}
+                >
+                  Mes journaux
+                </Button>
+              </CardContent>
+            </Card>
           </Box>
         </Grid>
       </Grid>
