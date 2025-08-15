@@ -1,31 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Grid,
   Card,
   CardContent,
+  CardMedia,
   Typography,
   Button,
   Box,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ImageList,
-  ImageListItem,
+  Chip,
+  IconButton,
+  Rating,
+  Divider,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  LocationOn as LocationIcon,
-  Download as DownloadIcon,
   ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  Favorite as FavoriteIcon,
+  Share as ShareIcon,
+  Map as MapIcon,
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
+import PhotoGallery from '../components/PhotoGallery';
+import theme from '../theme';
 
 const PlaceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { journals } = useJournals();
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [showGallery, setShowGallery] = useState(false);
 
   // Trouver le lieu par ID
   const place = journals
@@ -36,188 +41,291 @@ const PlaceDetail: React.FC = () => {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
         <Typography variant="h5" color="text.secondary">
-          Place not found
+          Lieu non trouvé
         </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           sx={{ mt: 2 }}
         >
-          Back to Home
+          Retour
         </Button>
       </Box>
     );
   }
 
-  // Simuler d'autres lieux pour la liste
-  const otherPlaces = [
-    { name: 'Milan, Italy', id: 'milan' },
-    { name: 'New York, USA', id: 'newyork' },
-    { name: 'Paris, France', id: 'paris' },
-  ];
+  // Photos du lieu avec fallback
+  const photos =
+    place.photos.length > 0
+      ? place.photos
+      : [
+          'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=800',
+        ];
 
   return (
-    <Box>
-      <Grid container spacing={3}>
-        {/* Sidebar gauche */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card>
-            <CardContent sx={{ p: 2 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6" fontWeight={600}>
-                  My places
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  sx={{ borderRadius: 1.5 }}
-                >
-                  Add A Place
-                </Button>
-              </Box>
-
-              <List dense>
-                {otherPlaces.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    sx={{
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        bgcolor: 'grey.100',
-                      },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <LocationIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.name}
-                      primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        fontWeight: item.name === place.name ? 600 : 400,
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Contenu principal */}
-        <Grid size={{ xs: 12, md: 9 }}>
-          <Box sx={{ mb: 2 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          bgcolor: 'white',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          px: 3,
+          py: 2,
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: 1200,
+            mx: 'auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/')}
-              sx={{ mb: 2 }}
+              onClick={() => navigate(-1)}
+              sx={{ color: 'text.secondary' }}
             >
-              Back
+              Retour
             </Button>
+            <Box>
+              <Typography variant="h5" fontWeight={700}>
+                {place.name.split(',')[0]}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Italy
+                </Typography>
+                <Chip
+                  label="Historic"
+                  size="small"
+                  sx={{
+                    bgcolor: '#FFF3E0',
+                    color: '#E65100',
+                    fontWeight: 500,
+                  }}
+                />
+                <Chip
+                  label="Visité le 15 Mai 2024"
+                  size="small"
+                  sx={{
+                    bgcolor: '#E8F5E8',
+                    color: '#2E7D32',
+                    fontWeight: 500,
+                  }}
+                />
+              </Box>
+            </Box>
           </Box>
 
-          {/* Zone de carte */}
-          <Card sx={{ mb: 3 }}>
-            <Box
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton sx={{ color: 'text.secondary' }}>
+              <FavoriteIcon />
+            </IconButton>
+            <IconButton sx={{ color: 'text.secondary' }}>
+              <ShareIcon />
+            </IconButton>
+            <Button startIcon={<EditIcon />} variant="outlined" sx={{ ml: 1 }}>
+              Modifier
+            </Button>
+            <Button
+              startIcon={<AddIcon />}
+              variant="contained"
               sx={{
-                height: 300,
-                bgcolor: 'grey.200',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '12px 12px 0 0',
+                background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
               }}
             >
-              <Typography variant="h6" color="text.secondary">
-                Interactive Map View
-              </Typography>
-            </Box>
-          </Card>
+              Nouveau journal
+            </Button>
+          </Box>
+        </Box>
+      </Box>
 
-          {/* Détails du lieu */}
-          <Card>
-            <CardContent sx={{ p: 3 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  mb: 3,
-                }}
-              >
-                <Box>
-                  <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-                    {place.name}
+      {/* Contenu principal */}
+      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+        <Grid container spacing={3}>
+          {/* Galerie photos principale */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Card sx={{ mb: 2 }}>
+              <Box sx={{ position: 'relative' }}>
+                <CardMedia
+                  component="img"
+                  height="400"
+                  image={photos[selectedPhotoIndex]}
+                  alt={place.name}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => setShowGallery(true)}
+                />
+
+                {/* Indicateurs de photos */}
+                {photos.length > 1 && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      display: 'flex',
+                      gap: 1,
+                    }}
+                  >
+                    {photos.map((_, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor:
+                            selectedPhotoIndex === index
+                              ? 'white'
+                              : 'rgba(255,255,255,0.5)',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => setSelectedPhotoIndex(index)}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            </Card>
+
+            {/* Miniatures */}
+            {photos.length > 1 && (
+              <Grid container spacing={1} sx={{ mb: 3 }}>
+                {photos.map((photo, index) => (
+                  <Grid size={3} key={index}>
+                    <Card
+                      sx={{
+                        cursor: 'pointer',
+                        border: selectedPhotoIndex === index ? 2 : 0,
+                        borderColor: 'primary.main',
+                      }}
+                      onClick={() => setSelectedPhotoIndex(index)}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="80"
+                        image={photo}
+                        alt={`${place.name} ${index + 1}`}
+                      />
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Grid>
+
+          {/* Sidebar droite - Informations pratiques */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  Informations pratiques
+                </Typography>
+
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Description
                   </Typography>
-                  <Typography variant="body1" color="text.secondary">
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
                     {place.description}
                   </Typography>
                 </Box>
-                <Button
-                  variant="contained"
-                  startIcon={<DownloadIcon />}
-                  sx={{ borderRadius: 2 }}
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    Note
+                  </Typography>
+                  <Rating value={5} readOnly size="small" />
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  Localisation
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
                 >
-                  Download
+                  Piazza del Colosseo, 1, 00184 Roma RM, Italy
+                </Typography>
+
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<MapIcon />}
+                  sx={{
+                    mb: 3,
+                    borderColor: 'error.main',
+                    color: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.dark',
+                      color: 'error.dark',
+                    },
+                  }}
+                >
+                  Voir sur la carte
                 </Button>
-              </Box>
 
-              {/* Notes */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
-                  Notes
+                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                  Tags
                 </Typography>
-                <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
-                  Lorem Ipsum is simply dummy text of the printing and
-                  typesetting industry. Lorem Ipsum has been the industry's
-                  standard dummy text ever since the 1500s, when an unknown
-                  printer took a galley of type and scrambled it to make a type
-                  specimen book.
-                </Typography>
-              </Box>
 
-              {/* Photos */}
-              <Box>
-                <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
-                  Photos
-                </Typography>
-                <ImageList cols={4} gap={16} sx={{ m: 0 }}>
-                  {place.photos.map((photo, index) => (
-                    <ImageListItem key={index}>
-                      <Box
-                        component="img"
-                        src={photo}
-                        alt={`${place.name} ${index + 1}`}
-                        sx={{
-                          width: '100%',
-                          height: 150,
-                          objectFit: 'cover',
-                          borderRadius: 2,
-                          cursor: 'pointer',
-                          '&:hover': {
-                            opacity: 0.8,
-                          },
-                        }}
-                      />
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              </Box>
-            </CardContent>
-          </Card>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip
+                    label="UNESCO"
+                    size="small"
+                    sx={{
+                      bgcolor: '#E3F2FD',
+                      color: '#1976D2',
+                    }}
+                  />
+                  <Chip
+                    label="Antique"
+                    size="small"
+                    sx={{
+                      bgcolor: '#F3E5F5',
+                      color: '#7B1FA2',
+                    }}
+                  />
+                  <Chip
+                    label="Architecture"
+                    size="small"
+                    sx={{
+                      bgcolor: '#E8F5E8',
+                      color: '#2E7D32',
+                    }}
+                  />
+                  <Chip
+                    label="Monument"
+                    size="small"
+                    sx={{
+                      bgcolor: '#FFF3E0',
+                      color: '#E65100',
+                    }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      </Box>
+
+      {/* Modal galerie photos */}
+      {showGallery && (
+        <PhotoGallery photos={photos} onClose={() => setShowGallery(false)} />
+      )}
     </Box>
   );
 };

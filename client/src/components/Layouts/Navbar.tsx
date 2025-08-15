@@ -21,7 +21,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Explore as ExploreIcon,
   Person as PersonIcon,
   Book as BookIcon,
   Menu as MenuIcon,
@@ -180,33 +179,26 @@ const Navbar: React.FC = () => {
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: { xs: 1, sm: 2 },
+                gap: { xs: 1, sm: 1 },
               }}
             >
-              <ExploreIcon
-                sx={{ color: 'primary.main', fontSize: { xs: 24, sm: 28 } }}
+              <img
+                src=" ./src/assets/icon.png"
+                alt="Logo"
+                style={{ width: 40, height: 40 }}
               />
               <Typography
                 variant="h6"
-                fontWeight={700}
-                color="text.primary"
                 sx={{
-                  fontSize: { xs: '1rem', sm: '1.25rem' },
-                  display: { xs: 'none', sm: 'block' },
+                  fontFamily: '"Chau Philomene One", cursive',
                 }}
               >
-                MemoTrip
-              </Typography>
-              <Typography
-                variant="h6"
-                fontWeight={700}
-                color="text.primary"
-                sx={{
-                  fontSize: '1rem',
-                  display: { xs: 'block', sm: 'none' },
-                }}
-              >
-                MemoTrip
+                <Box component="span" sx={{ color: 'error.main' }}>
+                  MEMO
+                </Box>
+                <Box component="span" sx={{ color: 'primary.main' }}>
+                  TRIP
+                </Box>
               </Typography>
             </Box>
           </Link>

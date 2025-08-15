@@ -111,6 +111,13 @@ const createCustomTheme = (mode: 'light' | 'dark') => {
         letterSpacing: '0.02em',
         textTransform: 'none',
       },
+      decorative: {
+        fontFamily: '"Chau Philomene One", cursive',
+        fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
+        fontWeight: 400,
+        lineHeight: 1.2,
+        letterSpacing: '0.02em',
+      },
     },
     shape: {
       borderRadius: 16,

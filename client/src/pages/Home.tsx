@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Grid,
@@ -13,11 +13,12 @@ import {
 import {
   Add as AddIcon,
   LocationOn as LocationIcon,
-  Visibility as VisibilityIcon,
+  CalendarToday as CalendarIcon,
+  FavoriteBorder as FavoriteIcon,
+  MenuBook as BookIcon,
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
-import AddPlaceModal from '../components/AddPlaceModal';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -36,7 +37,6 @@ const Home: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { journals } = useJournals();
-  const [showAddModal, setShowAddModal] = useState(false);
 
   // Calculer les statistiques
   const allPlaces = journals.flatMap((journal) => journal.places);
@@ -57,14 +57,17 @@ const Home: React.FC = () => {
 
   // Calculer le centre de la carte
   const getMapCenter = () => {
-    if (allPlaces.length === 0) return [46.603354, 1.888334]; // Centre de la France
+    const placesWithCoords = allPlaces.filter(
+      (place) => place.latitude && place.longitude
+    );
+    if (placesWithCoords.length === 0) return [46.603354, 1.888334]; // Centre de la France
 
     const avgLat =
-      allPlaces.reduce((sum, place) => sum + place.latitude, 0) /
-      allPlaces.length;
+      placesWithCoords.reduce((sum, place) => sum + (place.latitude || 0), 0) /
+      placesWithCoords.length;
     const avgLng =
-      allPlaces.reduce((sum, place) => sum + place.longitude, 0) /
-      allPlaces.length;
+      placesWithCoords.reduce((sum, place) => sum + (place.longitude || 0), 0) /
+      placesWithCoords.length;
 
     return [avgLat, avgLng];
   };
@@ -74,154 +77,160 @@ const Home: React.FC = () => {
       <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
         {/* Section principale - My places */}
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            <Typography
+              variant="h3"
+              color="primary.main"
+              sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+            >
+              Mes lieux
+            </Typography>
+
+            {/* Boutons côte à côte */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                width: { xs: '100%', sm: 'auto' },
+                flexDirection: { xs: 'column', sm: 'row' },
+              }}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<LocationIcon />}
+                onClick={() => navigate('/journals/map')}
+                size="small"
+                sx={{
+                  borderColor: 'error.main',
+                  color: 'error.main',
+                  '&:hover': {
+                    borderColor: 'error.dark',
+                    color: 'error.dark',
+                  },
+                }}
+              >
+                Voir la carte
+              </Button>
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/place/new')}
+                size={isMobile ? 'medium' : 'large'}
+                sx={{
+                  px: { xs: 2, sm: 3 },
+                  py: { xs: 1, sm: 1.5 },
+                  minWidth: { xs: '100%', sm: 'auto' },
+                  background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                  '&:hover': {
+                    background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+                  },
+                }}
+              >
+                Ajouter un lieu
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Carte interactive intégrée */}
+          <Box
+            sx={{
+              height: { xs: 300, sm: 400, md: 550 },
+              borderRadius: 1,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'outline.main',
+              position: 'relative',
+            }}
+          >
+            {allPlaces.length > 0 ? (
+              <MapContainer
+                center={getMapCenter() as [number, number]}
+                zoom={allPlaces.length === 1 ? 12 : 6}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={!isMobile}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {allPlaces
+                  .filter((place) => place.latitude && place.longitude)
+                  .map((place) => (
+                    <Marker
+                      key={place.id}
+                      position={[place.latitude!, place.longitude!]}
+                    >
+                      <Popup>
+                        <Box sx={{ p: 1, minWidth: 200 }}>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={600}
+                            sx={{ mb: 1 }}
+                          >
+                            {place.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mb: 1 }}>
+                            {place.description}
+                          </Typography>
+                          {place.photos.length > 0 && (
+                            <Box
+                              component="img"
+                              src={place.photos[0]}
+                              alt={place.name}
+                              sx={{
+                                width: '100%',
+                                height: 100,
+                                objectFit: 'cover',
+                                borderRadius: 1,
+                                mt: 1,
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </Popup>
+                    </Marker>
+                  ))}
+              </MapContainer>
+            ) : (
               <Box
                 sx={{
+                  height: '100%',
                   display: 'flex',
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  justifyContent: 'space-between',
-                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'surface.main',
                   gap: 2,
-                  mb: 3,
                 }}
               >
-                <Typography variant="h4" fontWeight={700}>
-                  Mes lieux
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setShowAddModal(true)}
-                  size={isMobile ? 'medium' : 'large'}
-                  sx={{
-                    borderRadius: 3,
-                    px: { xs: 2, sm: 3 },
-                    py: { xs: 1, sm: 1.5 },
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    minWidth: { xs: '100%', sm: 'auto' },
-                  }}
+                <LocationIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  textAlign="center"
                 >
-                  Ajoute un lieu
-                </Button>
+                  Carte interactive
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  textAlign="center"
+                >
+                  Ajouter des lieux pour les voir sur la carte
+                </Typography>
               </Box>
-
-              {/* Carte interactive intégrée */}
-              <Box
-                sx={{
-                  height: { xs: 300, sm: 400, md: 500 },
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'outline.main',
-                  position: 'relative',
-                }}
-              >
-                {allPlaces.length > 0 ? (
-                  <MapContainer
-                    center={getMapCenter() as [number, number]}
-                    zoom={allPlaces.length === 1 ? 12 : 6}
-                    style={{ height: '100%', width: '100%' }}
-                    scrollWheelZoom={!isMobile}
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {allPlaces.map((place) => (
-                      <Marker
-                        key={place.id}
-                        position={[place.latitude, place.longitude]}
-                      >
-                        <Popup>
-                          <Box sx={{ p: 1, minWidth: 200 }}>
-                            <Typography
-                              variant="subtitle1"
-                              fontWeight={600}
-                              sx={{ mb: 1 }}
-                            >
-                              {place.name}
-                            </Typography>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              {place.description}
-                            </Typography>
-                            {place.photos.length > 0 && (
-                              <Box
-                                component="img"
-                                src={place.photos[0]}
-                                alt={place.name}
-                                sx={{
-                                  width: '100%',
-                                  height: 100,
-                                  objectFit: 'cover',
-                                  borderRadius: 1,
-                                  mt: 1,
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
-                ) : (
-                  <Box
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'surface.main',
-                      gap: 2,
-                    }}
-                  >
-                    <LocationIcon
-                      sx={{ fontSize: 48, color: 'text.secondary' }}
-                    />
-                    <Typography
-                      variant="h6"
-                      color="text.secondary"
-                      textAlign="center"
-                    >
-                      Carte interactive
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      textAlign="center"
-                    >
-                      Ajouter des lieux pour les voir sur la carte
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* Bouton pour voir la carte en plein écran */}
-                {allPlaces.length > 0 && (
-                  <Button
-                    variant="contained"
-                    startIcon={<VisibilityIcon />}
-                    onClick={() => navigate('journals/map')}
-                    sx={{
-                      position: 'absolute',
-                      top: 16,
-                      right: 16,
-                      zIndex: 1000,
-                      bgcolor: 'background.paper',
-                      color: 'text.primary',
-                      '&:hover': {
-                        bgcolor: 'background.paper',
-                        opacity: 0.9,
-                      },
-                    }}
-                    size="small"
-                  >
-                    Voir la carte
-                  </Button>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
+            )}
+          </Box>
         </Grid>
 
         {/* Sidebar droite */}
@@ -233,89 +242,10 @@ const Home: React.FC = () => {
               gap: { xs: 2, sm: 3 },
             }}
           >
-            {/* Recent places */}
-            <Card>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 2,
-                  }}
-                >
-                  <Typography variant="h5" fontWeight={600}>
-                    Lieux récents
-                  </Typography>
-                  <Button
-                    size="small"
-                    sx={{ color: 'info.main', fontWeight: 600 }}
-                    onClick={() => navigate('/journals')}
-                  >
-                    Voir tous
-                  </Button>
-                </Box>
-
-                {recentPlaces.length === 0 ? (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <LocationIcon
-                      sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      No places added yet
-                    </Typography>
-                  </Box>
-                ) : (
-                  recentPlaces.slice(0, 2).map((place, index) => (
-                    <Box key={place.id} sx={{ mb: index < 1 ? 3 : 0 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight={600}
-                        sx={{ mb: 0.5 }}
-                      >
-                        {place.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}
-                      >
-                        {place.description}
-                      </Typography>
-
-                      <Grid container spacing={1}>
-                        {place.photos.slice(0, 3).map((photo, photoIndex) => (
-                          <Grid size={{ xs: 4 }} key={photoIndex}>
-                            <Box
-                              component="img"
-                              src={photo}
-                              alt={`${place.name} ${photoIndex + 1}`}
-                              sx={{
-                                width: '100%',
-                                height: { xs: 60, sm: 80 },
-                                objectFit: 'cover',
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                  transform: 'scale(1.05)',
-                                },
-                              }}
-                              onClick={() => navigate(`/place/${place.id}`)}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </Box>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Statistiques */}
+            {/* Statistiques en haut */}
             <Grid container spacing={2}>
               <Grid size={6}>
-                <Card>
+                <Card sx={{ bgcolor: '#E8F0FE', border: 'none' }}>
                   <CardContent
                     sx={{
                       textAlign: 'center',
@@ -323,22 +253,17 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                      Lieux visités
-                    </Typography>
-                    <Typography
-                      variant="h2"
-                      fontWeight={700}
-                      color="primary.main"
-                      sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
-                    >
+                    <Typography variant="h3" fontWeight={700} color="#1976D2">
                       {totalPlaces}
+                    </Typography>
+                    <Typography variant="body2" color="#1976D2">
+                      Lieux visités
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
               <Grid size={6}>
-                <Card>
+                <Card sx={{ bgcolor: '#E8F5E8', border: 'none' }}>
                   <CardContent
                     sx={{
                       textAlign: 'center',
@@ -346,30 +271,258 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                      Pays visités
+                    <Typography variant="h3" fontWeight={700} color="#2E7D32">
+                      {countries}
                     </Typography>
                     <Typography
-                      variant="h2"
-                      fontWeight={700}
-                      color="primary.main"
-                      sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
+                      variant="body2"
+                      color="#2E7D32"
+                      fontWeight={500}
                     >
-                      {countries}
+                      Pays visités
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
+
+            {/* Recent places */}
+
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 0.5,
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: '"Chau Philomene One", cursive',
+                  color: 'primary.main',
+                }}
+              >
+                Lieux récents
+              </Typography>
+              <Button
+                size="small"
+                sx={{
+                  color: 'error.main',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                }}
+                onClick={() => navigate('/places')}
+              >
+                Voir tous
+              </Button>
+            </Box>
+
+            {recentPlaces.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <LocationIcon
+                  sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Aucun lieu ajouté pour le moment
+                </Typography>
+              </Box>
+            ) : (
+              recentPlaces.slice(0, 2).map((place, index) => (
+                <Box key={place.id} sx={{ mb: index < 0.5 ? 0.5 : 0 }}>
+                  <Card
+                    sx={{
+                      p: 2,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      border: '1px solid #f0f0f0',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      },
+                    }}
+                    onClick={() => navigate(`/place/${place.id}`)}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 2,
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      {/* Image du lieu */}
+                      <Box
+                        component="img"
+                        src={place.photos[0] || '/placeholder-image.jpg'}
+                        alt={place.name}
+                        sx={{
+                          width: 100,
+                          height: 100,
+                          objectFit: 'fill',
+                          borderRadius: 0.5,
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      {/* Informations du lieu */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight={600}
+                          sx={{
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            color: '#1a1a1a',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          {place.name.split(',')[0]}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mb: 1.5,
+                            color: '#666',
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {place.name.includes(',')
+                            ? place.name.split(',').slice(1).join(',').trim()
+                            : 'Italy'}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: '0.8rem',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {place.description || 'Aucune description fournie.'}
+                        </Typography>
+                      </Box>
+
+                      {/* Actions à droite */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                          gap: 1.5,
+                        }}
+                      >
+                        {/* Badge de statut */}
+                        <Box
+                          sx={{
+                            bgcolor: '#E8F5E8',
+                            color: '#2E7D32',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 4,
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            textTransform: 'none',
+                          }}
+                        >
+                          Visité
+                        </Box>
+
+                        {/* Date avec icône */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                          }}
+                        >
+                          <CalendarIcon
+                            sx={{
+                              fontSize: '0.875rem',
+                              color: 'text.secondary',
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            {new Date(place.dateVisited).toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )}
+                          </Typography>
+                        </Box>
+
+                        {/* Icône favoris */}
+                        <Box
+                          sx={{
+                            cursor: 'pointer',
+                            '&:hover': { transform: 'scale(1.1)' },
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Action pour favoris
+                          }}
+                        >
+                          <FavoriteIcon
+                            sx={{
+                              fontSize: '1.2rem',
+                              color: 'text.secondary',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Card>
+                </Box>
+              ))
+            )}
+
+            {/* Actions rapides */}
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontFamily: '"Chau Philomene One", cursive',
+                  color: 'primary.main',
+                }}
+              >
+                Actions rapides
+              </Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<BookIcon />}
+                sx={{
+                  py: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: 'text.secondary',
+                  color: 'text.primary',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    bgcolor: 'primary.light',
+                  },
+                }}
+                onClick={() => navigate('/journals')}
+              >
+                Mes journaux
+              </Button>
+            </Box>
           </Box>
         </Grid>
       </Grid>
-
-      {/* Modal d'ajout de lieu */}
-      <AddPlaceModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-      />
     </Box>
   );
 };

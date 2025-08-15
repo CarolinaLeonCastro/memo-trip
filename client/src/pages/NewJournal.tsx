@@ -14,6 +14,7 @@ import {
   Save as SaveIcon,
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
+import theme from '../theme';
 
 const NewJournal: React.FC = () => {
   const navigate = useNavigate();
@@ -95,7 +96,13 @@ const NewJournal: React.FC = () => {
         >
           Retour
         </Button>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontFamily: '"Chau Philomene One", cursive',
+            color: 'primary.main',
+          }}
+        >
           Nouveau Journal de Voyage
         </Typography>
       </Box>
@@ -183,6 +190,12 @@ const NewJournal: React.FC = () => {
                     variant="contained"
                     startIcon={<SaveIcon />}
                     size="large"
+                    sx={{
+                      background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                      '&:hover': {
+                        background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+                      },
+                    }}
                   >
                     Créer le journal
                   </Button>

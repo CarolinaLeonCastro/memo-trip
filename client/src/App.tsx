@@ -12,10 +12,12 @@ import Layout from './components/Layouts/Layout';
 //Pages
 import Home from './pages/Home';
 import Journals from './pages/Journals';
+import AllPlaces from './pages/AllPlaces';
 import JournalDetail from './pages/JournalDetail';
 import EditJournal from './pages/EditJournal';
 import PlaceDetail from './pages/PlaceDetail';
 import NewJournal from './pages/NewJournal';
+import AddPlace from './pages/AddPlace';
 import Profile from './pages/Profile';
 import MapView from './pages/MapView';
 import AdminDashboard from './pages/AdminDashboard';
@@ -24,7 +26,7 @@ import PublicJournals from './pages/PublicJournals';
 import PublicJournalDetail from './pages/PublicJournalDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AuthDebug from './components/debug/AuthDebug';
+//import AuthDebug from './components/debug/AuthDebug';
 
 function App() {
   return (
@@ -33,7 +35,7 @@ function App() {
         <JournalProvider>
           <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
             <Router>
-              <AuthDebug />
+              {/* <AuthDebug /> */}
               <Routes>
                 {/* Routes publiques */}
                 <Route path="/public/journals" element={<PublicJournals />} />
@@ -58,10 +60,12 @@ function App() {
                 >
                   <Route index element={<Home />} />
                   <Route path="journals" element={<Journals />} />
+                  <Route path="places" element={<AllPlaces />} />
                   <Route path="journals/map" element={<MapView />} />
                   <Route path="journals/new" element={<NewJournal />} />
                   <Route path="journals/:id" element={<JournalDetail />} />
                   <Route path="journals/edit/:id" element={<EditJournal />} />
+                  <Route path="place/new" element={<AddPlace />} />
                   <Route path="place/:id" element={<PlaceDetail />} />
                   <Route path="profile" element={<Profile />} />
                   <Route
