@@ -166,7 +166,15 @@ const AchievementsTab: React.FC = () => {
                     {/* Badge débloqué indicator */}
                     <Chip
                       label="DÉBLOQUÉ"
-                      color={badge.color as 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning'}
+                      color={
+                        badge.color as
+                          | 'primary'
+                          | 'secondary'
+                          | 'success'
+                          | 'error'
+                          | 'info'
+                          | 'warning'
+                      }
                       size="small"
                       sx={{
                         position: 'absolute',
