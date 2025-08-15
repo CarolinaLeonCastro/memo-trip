@@ -62,29 +62,15 @@ const PlaceDetail: React.FC = () => {
         ];
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'linear-gradient(145deg, #0F1419 0%, #1A2332 50%, #2C3E50 100%)'
-            : 'linear-gradient(145deg, #F8F9FA 0%, #E9ECEF 50%, #DEE2E6 100%)',
-      }}
-    >
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       {/* Header */}
       <Box
         sx={{
-          background: (theme) =>
-            theme.palette.mode === 'dark'
-              ? 'rgba(26, 35, 50, 0.95)'
-              : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: (theme) => `1px solid ${theme.palette.outline.main}`,
+          bgcolor: 'white',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           px: 3,
           py: 2,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
         }}
       >
         <Box
