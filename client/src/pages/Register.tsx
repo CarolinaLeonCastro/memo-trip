@@ -175,7 +175,7 @@ const Register: React.FC = () => {
         <Card
           sx={{
             p: { xs: 2, sm: 3 },
-            borderRadius: 3,
+
             boxShadow: (theme) =>
               theme.palette.mode === 'light'
                 ? '0 4px 20px rgba(61, 90, 128, 0.08)'

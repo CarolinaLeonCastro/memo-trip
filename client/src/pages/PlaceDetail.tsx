@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
 import PhotoGallery from '../components/PhotoGallery';
+import theme from '../theme';
 
 const PlaceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -130,7 +131,13 @@ const PlaceDetail: React.FC = () => {
             <Button startIcon={<EditIcon />} variant="outlined" sx={{ ml: 1 }}>
               Modifier
             </Button>
-            <Button startIcon={<AddIcon />} variant="contained">
+            <Button
+              startIcon={<AddIcon />}
+              variant="contained"
+              sx={{
+                background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+              }}
+            >
               Nouveau journal
             </Button>
           </Box>
@@ -258,7 +265,15 @@ const PlaceDetail: React.FC = () => {
                   variant="outlined"
                   fullWidth
                   startIcon={<MapIcon />}
-                  sx={{ mb: 3 }}
+                  sx={{
+                    mb: 3,
+                    borderColor: 'error.main',
+                    color: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.dark',
+                      color: 'error.dark',
+                    },
+                  }}
                 >
                   Voir sur la carte
                 </Button>

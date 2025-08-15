@@ -279,7 +279,10 @@ const AddPlacePage: React.FC = () => {
             variant="h4"
             component="h1"
             fontWeight={700}
-            sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+            sx={{
+              fontFamily: '"Chau Philomene One", cursive',
+              color: 'error.main',
+            }}
           >
             Ajouter un nouveau lieu
           </Typography>
@@ -467,8 +470,11 @@ const AddPlacePage: React.FC = () => {
                       key={tag}
                       label={tag}
                       onDelete={() => handleTagRemove(tag)}
-                      color="primary"
-                      variant="outlined"
+                      variant="filled"
+                      sx={{
+                        backgroundColor: 'tertiary.main',
+                        color: 'primary.main',
+                      }}
                     />
                   ))}
                 </Box>
@@ -511,12 +517,8 @@ const AddPlacePage: React.FC = () => {
                         key={tag}
                         label={tag}
                         onClick={() => handleTagAdd(tag)}
-                        variant="outlined"
+                        variant="filled"
                         size="small"
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': { backgroundColor: 'primary.50' },
-                        }}
                       />
                     ))}
                 </Box>
@@ -593,7 +595,15 @@ const AddPlacePage: React.FC = () => {
               variant="outlined"
               startIcon={<CloudUploadIcon />}
               fullWidth
-              sx={{ mb: 2 }}
+              sx={{
+                mb: 2,
+                borderColor: 'error.main',
+                color: 'error.main',
+                '&:hover': {
+                  borderColor: 'error.dark',
+                  color: 'error.dark',
+                },
+              }}
             >
               Choisir une image depuis le PC
               <input
@@ -794,7 +804,15 @@ const AddPlacePage: React.FC = () => {
           variant="outlined"
           onClick={() => navigate(-1)}
           size="large"
-          sx={{ px: 4 }}
+          sx={{
+            px: 4,
+            borderColor: 'error.main',
+            color: 'error.main',
+            '&:hover': {
+              borderColor: 'error.dark',
+              color: 'error.dark',
+            },
+          }}
         >
           Annuler
         </Button>
@@ -802,7 +820,13 @@ const AddPlacePage: React.FC = () => {
           variant="contained"
           onClick={handleSubmit}
           size="large"
-          sx={{ px: 4 }}
+          sx={{
+            px: 4,
+            background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+            '&:hover': {
+              background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+            },
+          }}
           startIcon={<CloudUploadIcon />}
         >
           Sauvegarder

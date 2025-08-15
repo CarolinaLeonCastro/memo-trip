@@ -108,13 +108,14 @@ const Home: React.FC = () => {
                 variant="outlined"
                 startIcon={<LocationIcon />}
                 onClick={() => navigate('/journals/map')}
-                size={isMobile ? 'medium' : 'large'}
+                size="small"
                 sx={{
-                  px: { xs: 2, sm: 3 },
-                  py: { xs: 1, sm: 1.5 },
-                  minWidth: { xs: '100%', sm: 'auto' },
-                  borderColor: 'text.secondary',
+                  borderColor: 'error.main',
                   color: 'error.main',
+                  '&:hover': {
+                    borderColor: 'error.dark',
+                    color: 'error.dark',
+                  },
                 }}
               >
                 Voir la carte
@@ -129,6 +130,10 @@ const Home: React.FC = () => {
                   px: { xs: 2, sm: 3 },
                   py: { xs: 1, sm: 1.5 },
                   minWidth: { xs: '100%', sm: 'auto' },
+                  background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                  '&:hover': {
+                    background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+                  },
                 }}
               >
                 Ajouter un lieu
@@ -293,7 +298,10 @@ const Home: React.FC = () => {
             >
               <Typography
                 variant="h6"
-                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+                sx={{
+                  fontFamily: '"Chau Philomene One", cursive',
+                  color: 'primary.main',
+                }}
               >
                 Lieux récents
               </Typography>
@@ -484,7 +492,11 @@ const Home: React.FC = () => {
             <Box>
               <Typography
                 variant="h6"
-                sx={{ mb: 2, fontFamily: '"Chau Philomene One", cursive' }}
+                sx={{
+                  mb: 2,
+                  fontFamily: '"Chau Philomene One", cursive',
+                  color: 'primary.main',
+                }}
               >
                 Actions rapides
               </Typography>

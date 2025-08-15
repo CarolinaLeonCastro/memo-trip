@@ -21,7 +21,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Explore as ExploreIcon,
   Person as PersonIcon,
   Book as BookIcon,
   Menu as MenuIcon,

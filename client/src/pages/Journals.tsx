@@ -29,6 +29,7 @@ import {
 import { fr } from 'date-fns/locale';
 import { formatWithOptions } from 'date-fns/fp';
 import { useJournals } from '../context/JournalContext';
+import theme from '../theme';
 
 const Journals: React.FC = () => {
   const { journals, deleteJournal } = useJournals();
@@ -93,7 +94,12 @@ const Journals: React.FC = () => {
           variant="contained"
           startIcon={<AddIcon />}
           size="large"
-          sx={{ borderRadius: 2 }}
+          sx={{
+            background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+            '&:hover': {
+              background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+            },
+          }}
         >
           Nouveau Journal
         </Button>

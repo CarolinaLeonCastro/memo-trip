@@ -16,10 +16,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Select,
   MenuItem,
-  FormControl,
-  InputLabel,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -37,6 +34,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import theme from '../theme';
+import BookIcon from '@mui/icons-material/Book';
 
 // Component to render rating stars
 const RatingStars = ({ rating }: { rating?: number }) => {
@@ -249,6 +248,12 @@ const AllPlaces: React.FC = () => {
           variant="contained"
           startIcon={<MapIcon />}
           onClick={() => setShowGlobalMap(true)}
+          sx={{
+            background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+            '&:hover': {
+              background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+            },
+          }}
         >
           Voir tous sur la carte
         </Button>
@@ -331,7 +336,7 @@ const AllPlaces: React.FC = () => {
       </Grid>
 
       {/* Filtres */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'nowrap' }}>
         <TextField
           placeholder="Rechercher un lieu, ville ou pays..."
           value={searchTerm}
@@ -343,44 +348,86 @@ const AllPlaces: React.FC = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ minWidth: 300 }}
+          sx={{ width: '50%' }}
         />
 
-        <FormControl sx={{ minWidth: 150 }}>
-          <InputLabel>Tous les lieux</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Tous les lieux"
-            onChange={(e) => setStatusFilter(e.target.value)}
+        <TextField
+          select
+          label=""
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          sx={{ width: '25%' }}
+        >
+          <MenuItem
+            value="all"
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'tertiary.main',
+              },
+            }}
           >
-            <MenuItem value="all">Tous les lieux</MenuItem>
-            <MenuItem value="visited">Visités</MenuItem>
-            <MenuItem value="to-visit">À visiter</MenuItem>
-          </Select>
-        </FormControl>
+            Tous les lieux
+          </MenuItem>
+          <MenuItem
+            value="visited"
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'tertiary.main',
+              },
+            }}
+          >
+            Visités
+          </MenuItem>
+          <MenuItem
+            value="to-visit"
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'tertiary.main',
+              },
+            }}
+          >
+            À visiter
+          </MenuItem>
+        </TextField>
 
-        <FormControl sx={{ minWidth: 150 }}>
-          <InputLabel>Tous les pays</InputLabel>
-          <Select
-            value={countryFilter}
-            label="Tous les pays"
-            onChange={(e) => setCountryFilter(e.target.value)}
+        <TextField
+          select
+          label=""
+          value={countryFilter}
+          onChange={(e) => setCountryFilter(e.target.value)}
+          sx={{ width: '25%' }}
+        >
+          <MenuItem
+            value="all"
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'tertiary.main',
+              },
+            }}
           >
-            <MenuItem value="all">Tous les pays</MenuItem>
-            {Array.from(
-              new Set(
-                allPlaces.map((place) => {
-                  const parts = place.name.split(',');
-                  return parts[parts.length - 1]?.trim() || '';
-                })
-              )
-            ).map((country) => (
-              <MenuItem key={country} value={country}>
-                {country}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            Tous les pays
+          </MenuItem>
+          {Array.from(
+            new Set(
+              allPlaces.map((place) => {
+                const parts = place.name.split(',');
+                return parts[parts.length - 1]?.trim() || '';
+              })
+            )
+          ).map((country) => (
+            <MenuItem
+              key={country}
+              value={country}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'tertiary.main',
+                },
+              }}
+            >
+              {country}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       {/* Grille des lieux */}
@@ -469,7 +516,7 @@ const AllPlaces: React.FC = () => {
                       flexDirection: 'column',
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                    <Typography variant="body1" fontWeight={600} sx={{ mb: 1 }}>
                       {place.name.split(',')[0]}
                     </Typography>
 
@@ -548,20 +595,26 @@ const AllPlaces: React.FC = () => {
                       <Chip
                         label="Histoire"
                         size="small"
-                        variant="outlined"
-                        sx={{ color: '#1976D2' }}
+                        variant="filled"
+                        sx={{
+                          backgroundColor: 'tertiary.main',
+                        }}
                       />
                       <Chip
                         label="Architecture"
                         size="small"
-                        variant="outlined"
-                        sx={{ color: '#7B1FA2' }}
+                        variant="filled"
+                        sx={{
+                          backgroundColor: 'tertiary.main',
+                        }}
                       />
                       <Chip
                         label="UNESCO"
                         size="small"
-                        variant="outlined"
-                        sx={{ color: '#2E7D32' }}
+                        variant="filled"
+                        sx={{
+                          backgroundColor: 'tertiary.main',
+                        }}
                       />
                     </Box>
 
@@ -571,15 +624,29 @@ const AllPlaces: React.FC = () => {
                         variant="outlined"
                         startIcon={<LocationIcon />}
                         onClick={() => openPlaceMap(place)}
-                        sx={{ flex: 1 }}
                         size="small"
+                        sx={{
+                          borderColor: 'error.main',
+                          color: 'error.main',
+                          '&:hover': {
+                            borderColor: 'error.dark',
+                            color: 'error.dark',
+                          },
+                        }}
                       >
                         Voir sur la carte
                       </Button>
                       <Button
                         variant="text"
                         size="small"
-                        sx={{ fontWeight: 600, color: '#4285F4' }}
+                        startIcon={<BookIcon />}
+                        sx={{
+                          fontWeight: 600,
+                          color: 'primary.main',
+                          '&:hover': {
+                            color: 'primary.dark',
+                          },
+                        }}
                       >
                         Journaux
                       </Button>

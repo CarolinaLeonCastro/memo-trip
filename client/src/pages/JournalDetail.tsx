@@ -152,8 +152,11 @@ const JournalDetail: React.FC = () => {
       {/* Section Lieux visités */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <LocationOnIcon sx={{ color: 'primary.main' }} />
-          <Typography variant="h6" fontWeight={600}>
+          <LocationOnIcon sx={{ color: 'error.main' }} />
+          <Typography
+            variant="h6"
+            sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+          >
             Lieux visités ({journal.places.length})
           </Typography>
         </Box>
