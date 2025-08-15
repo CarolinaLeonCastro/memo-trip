@@ -23,7 +23,6 @@ import {
   Favorite as FavoriteIcon,
   Comment as CommentIcon,
   Photo as PhotoIcon,
-  Visibility as ViewIcon,
 } from '@mui/icons-material';
 
 import { fr } from 'date-fns/locale';
@@ -286,37 +285,22 @@ const Journals: React.FC = () => {
                       <DeleteIcon fontSize="small" color="error" />
                     </IconButton>
                   </Box>
-
-                  {/* Badge localisation */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 8,
-                      left: 8,
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                      color: 'white',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                    }}
-                  >
-                    <LocationIcon sx={{ fontSize: '0.875rem' }} />
-                    <Typography variant="caption">
-                      {journal.places[0]?.name?.split(',').pop()?.trim() ||
-                        'France'}
-                    </Typography>
-                  </Box>
                 </Box>
 
                 <CardContent
                   sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
                 >
-                  <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
                     {journal.title}
                   </Typography>
+
+                  <Typography variant="caption" sx={{ mb: 1 }}>
+                    {journal.places
+                      .slice(0, 4)
+                      .map((place) => place.country)
+                      .join(', ')}
+                  </Typography>
+
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -338,6 +322,9 @@ const Journals: React.FC = () => {
                       label={`${formatWithOptions({ locale: fr }, 'dd MMM')(journal.startDate)} - ${formatWithOptions({ locale: fr }, 'dd MMM yyyy')(journal.endDate)}`}
                       size="small"
                       variant="outlined"
+                      sx={{
+                        border: 'none',
+                      }}
                     />
                   </Box>
 
@@ -349,8 +336,8 @@ const Journals: React.FC = () => {
                       label="Romantique"
                       size="small"
                       sx={{
-                        backgroundColor: '#E3F2FD',
-                        color: '#1976D2',
+                        backgroundColor: 'tertiary.main',
+                        color: 'primary.main',
                         fontWeight: 500,
                       }}
                     />
@@ -358,8 +345,8 @@ const Journals: React.FC = () => {
                       label="Culture"
                       size="small"
                       sx={{
-                        backgroundColor: '#F3E5F5',
-                        color: '#7B1FA2',
+                        backgroundColor: 'tertiary.main',
+                        color: 'primary.main',
                         fontWeight: 500,
                       }}
                     />
@@ -367,8 +354,8 @@ const Journals: React.FC = () => {
                       label="Gastronomie"
                       size="small"
                       sx={{
-                        backgroundColor: '#E8F5E8',
-                        color: '#2E7D32',
+                        backgroundColor: 'tertiary.main',
+                        color: 'primary.main',
                         fontWeight: 500,
                       }}
                     />

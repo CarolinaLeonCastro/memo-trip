@@ -311,24 +311,24 @@ Le soir, nous avons dîné dans un petit bistrot du Marais recommandé par notre
         <Chip
           label="Romantique"
           sx={{
-            backgroundColor: '#E3F2FD',
-            color: '#1976D2',
+            backgroundColor: 'tertiary.main',
+            color: 'primary.main',
             fontWeight: 500,
           }}
         />
         <Chip
           label="Culture"
           sx={{
-            backgroundColor: '#F3E5F5',
-            color: '#7B1FA2',
+            backgroundColor: 'tertiary.main',
+            color: 'primary.main',
             fontWeight: 500,
           }}
         />
         <Chip
           label="Gastronomie"
           sx={{
-            backgroundColor: '#E8F5E8',
-            color: '#2E7D32',
+            backgroundColor: 'tertiary.main',
+            color: 'primary.main',
             fontWeight: 500,
           }}
         />
