@@ -112,14 +112,9 @@ const Home: React.FC = () => {
                 sx={{
                   px: { xs: 2, sm: 3 },
                   py: { xs: 1, sm: 1.5 },
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
                   minWidth: { xs: '100%', sm: 'auto' },
                   borderColor: 'text.secondary',
-                  color: 'text.primary',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: 'primary.light',
-                  },
+                  color: 'error.main',
                 }}
               >
                 Voir la carte
@@ -133,7 +128,6 @@ const Home: React.FC = () => {
                 sx={{
                   px: { xs: 2, sm: 3 },
                   py: { xs: 1, sm: 1.5 },
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
                   minWidth: { xs: '100%', sm: 'auto' },
                 }}
               >
@@ -254,19 +248,10 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography
-                      variant="h2"
-                      fontWeight={700}
-                      color="#1976D2"
-                      sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
-                    >
+                    <Typography variant="h3" fontWeight={700} color="#1976D2">
                       {totalPlaces}
                     </Typography>
-                    <Typography
-                      variant="body1"
-                      color="#1976D2"
-                      fontWeight={500}
-                    >
+                    <Typography variant="body2" color="#1976D2">
                       Lieux visités
                     </Typography>
                   </CardContent>
@@ -281,16 +266,11 @@ const Home: React.FC = () => {
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography
-                      variant="h2"
-                      fontWeight={700}
-                      color="#2E7D32"
-                      sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
-                    >
+                    <Typography variant="h3" fontWeight={700} color="#2E7D32">
                       {countries}
                     </Typography>
                     <Typography
-                      variant="body1"
+                      variant="body2"
                       color="#2E7D32"
                       fontWeight={500}
                     >
@@ -320,7 +300,7 @@ const Home: React.FC = () => {
               <Button
                 size="small"
                 sx={{
-                  color: '#4285F4',
+                  color: 'error.main',
                   fontWeight: 600,
                   textTransform: 'none',
                 }}
@@ -340,12 +320,11 @@ const Home: React.FC = () => {
                 </Typography>
               </Box>
             ) : (
-              recentPlaces.slice(0, 3).map((place, index) => (
+              recentPlaces.slice(0, 2).map((place, index) => (
                 <Box key={place.id} sx={{ mb: index < 0.5 ? 0.5 : 0 }}>
                   <Card
                     sx={{
                       p: 2,
-                      borderRadius: 1,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',

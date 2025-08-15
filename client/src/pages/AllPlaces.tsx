@@ -233,9 +233,9 @@ const AllPlaces: React.FC = () => {
           </IconButton>
           <Box>
             <Typography
-              variant="decorative"
+              variant="h3"
               color="primary.main"
-              sx={{ mb: 1 }}
+              sx={{ fontFamily: '"Chau Philomene One", cursive', mb: 1 }}
             >
               Tous mes lieux
             </Typography>
@@ -249,10 +249,6 @@ const AllPlaces: React.FC = () => {
           variant="contained"
           startIcon={<MapIcon />}
           onClick={() => setShowGlobalMap(true)}
-          sx={{
-            bgcolor: '#4285F4',
-            '&:hover': { bgcolor: '#3367D6' },
-          }}
         >
           Voir tous sur la carte
         </Button>
@@ -261,41 +257,73 @@ const AllPlaces: React.FC = () => {
       {/* Statistiques */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Card sx={{ bgcolor: '#E3F2FD', textAlign: 'center', p: 2 }}>
-            <Typography variant="h3" fontWeight={700} color="#1976D2">
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #EBF8FF 0%, #E0E7FF 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#1D4ED8">
               {totalPlaces}
             </Typography>
-            <Typography variant="body1" color="#1976D2" fontWeight={500}>
+            <Typography variant="body1" color="#2563EB" fontWeight={500}>
               Total lieux
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Card sx={{ bgcolor: '#E8F5E8', textAlign: 'center', p: 2 }}>
-            <Typography variant="h3" fontWeight={700} color="#2E7D32">
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#15803D">
               {visitedPlaces}
             </Typography>
-            <Typography variant="body1" color="#2E7D32" fontWeight={500}>
+            <Typography variant="body1" color="#16A34A" fontWeight={500}>
               Visités
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Card sx={{ bgcolor: '#FFF3E0', textAlign: 'center', p: 2 }}>
-            <Typography variant="h3" fontWeight={700} color="#F57C00">
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FFF7ED 0%, #FEF2F2 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#C2410C">
               {toVisitPlaces}
             </Typography>
-            <Typography variant="body1" color="#F57C00" fontWeight={500}>
+            <Typography variant="body1" color="#EA580C" fontWeight={500}>
               À visiter
             </Typography>
           </Card>
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <Card sx={{ bgcolor: '#F3E5F5', textAlign: 'center', p: 2 }}>
-            <Typography variant="h3" fontWeight={700} color="#7B1FA2">
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FAF5FF 0%, #FDF2F8 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#7C3AED">
               {uniqueCountries}
             </Typography>
-            <Typography variant="body1" color="#7B1FA2" fontWeight={500}>
+            <Typography variant="body1" color="#8B5CF6" fontWeight={500}>
               Pays
             </Typography>
           </Card>

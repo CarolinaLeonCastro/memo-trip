@@ -20,6 +20,10 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   CalendarToday as CalendarIcon,
+  Favorite as FavoriteIcon,
+  Comment as CommentIcon,
+  Photo as PhotoIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material';
 
 import { fr } from 'date-fns/locale';
@@ -34,6 +38,20 @@ const Journals: React.FC = () => {
     (journal) =>
       journal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       journal.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calcul des statistiques
+  const totalJournals = journals.length;
+  const totalLikes = 167; // Valeur simulée
+  const totalComments = 58; // Valeur simulée
+  const totalPhotos = journals.reduce(
+    (acc, journal) =>
+      acc +
+      journal.places.reduce(
+        (placeAcc, place) => placeAcc + place.photos.length,
+        0
+      ),
+    0
   );
 
   const handleDelete = (id: string, title: string) => {
@@ -58,7 +76,11 @@ const Journals: React.FC = () => {
         }}
       >
         <Box>
-          <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>
+          <Typography
+            variant="h3"
+            color="primary.main"
+            sx={{ fontFamily: '"Chau Philomene One", cursive', mb: 1 }}
+          >
             Mes Journaux de Voyage
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -76,6 +98,82 @@ const Journals: React.FC = () => {
           Nouveau Journal
         </Button>
       </Box>
+
+      {/* Statistiques */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #EBF8FF 0%, #E0E7FF 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#1D4ED8">
+              {totalJournals}
+            </Typography>
+            <Typography variant="body1" color="#2563EB" fontWeight={500}>
+              Journaux
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#15803D">
+              {totalLikes}
+            </Typography>
+            <Typography variant="body1" color="#16A34A" fontWeight={500}>
+              J'aime reçus
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FAF5FF 0%, #FDF2F8 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#7C3AED">
+              {totalComments}
+            </Typography>
+            <Typography variant="body1" color="#8B5CF6" fontWeight={500}>
+              Commentaires
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FFF7ED 0%, #FEF2F2 100%)',
+              textAlign: 'center',
+              p: 2,
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            <Typography variant="h3" fontWeight={700} color="#C2410C">
+              {totalPhotos}
+            </Typography>
+            <Typography variant="body1" color="#EA580C" fontWeight={500}>
+              Photos
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Search */}
       <Box sx={{ mb: 4 }}>
@@ -134,6 +232,11 @@ const Journals: React.FC = () => {
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  },
                 }}
               >
                 <Box sx={{ position: 'relative' }}>
@@ -177,6 +280,29 @@ const Journals: React.FC = () => {
                       <DeleteIcon fontSize="small" color="error" />
                     </IconButton>
                   </Box>
+
+                  {/* Badge localisation */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 8,
+                      left: 8,
+                      bgcolor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                    }}
+                  >
+                    <LocationIcon sx={{ fontSize: '0.875rem' }} />
+                    <Typography variant="caption">
+                      {journal.places[0]?.name?.split(',').pop()?.trim() ||
+                        'France'}
+                    </Typography>
+                  </Box>
                 </Box>
 
                 <CardContent
@@ -209,19 +335,86 @@ const Journals: React.FC = () => {
                     />
                   </Box>
 
+                  {/* Tags */}
+                  <Box
+                    sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}
+                  >
+                    <Chip
+                      label="Romantique"
+                      size="small"
+                      sx={{
+                        backgroundColor: '#E3F2FD',
+                        color: '#1976D2',
+                        fontWeight: 500,
+                      }}
+                    />
+                    <Chip
+                      label="Culture"
+                      size="small"
+                      sx={{
+                        backgroundColor: '#F3E5F5',
+                        color: '#7B1FA2',
+                        fontWeight: 500,
+                      }}
+                    />
+                    <Chip
+                      label="Gastronomie"
+                      size="small"
+                      sx={{
+                        backgroundColor: '#E8F5E8',
+                        color: '#2E7D32',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </Box>
+
+                  {/* Statistiques d'engagement */}
                   <Box
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      mt: 'auto',
+                      pt: 2,
+                      borderTop: '1px solid',
+                      borderColor: 'divider',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocationIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        {journal.places.length} lieu
-                        {journal.places.length !== 1 ? 'x' : ''}
-                      </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        <FavoriteIcon
+                          sx={{ fontSize: '1rem', color: '#E91E63' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          24
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        <CommentIcon
+                          sx={{ fontSize: '1rem', color: '#2196F3' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          8
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        <PhotoIcon
+                          sx={{ fontSize: '1rem', color: '#FF9800' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {journal.places.reduce(
+                            (acc, place) => acc + place.photos.length,
+                            0
+                          )}{' '}
+                          photos
+                        </Typography>
+                      </Box>
                     </Box>
 
                     <Button
