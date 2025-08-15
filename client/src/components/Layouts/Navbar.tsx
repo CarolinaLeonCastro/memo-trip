@@ -326,7 +326,6 @@ const Navbar: React.FC = () => {
         sx={{
           mt: 1,
           '& .MuiPaper-root': {
-            borderRadius: 2,
             minWidth: 200,
           },
         }}

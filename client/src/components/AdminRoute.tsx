@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { Alert, Box, Container } from '@mui/material';
+import { Alert, Container } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
 
 interface AdminRouteProps {
