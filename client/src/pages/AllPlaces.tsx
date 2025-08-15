@@ -315,6 +315,7 @@ const AllPlaces: React.FC = () => {
             </Typography>
           </Card>
         </Grid>
+
         <Grid size={{ xs: 6, sm: 3 }}>
           <Card
             sx={{
@@ -387,6 +388,16 @@ const AllPlaces: React.FC = () => {
             }}
           >
             À visiter
+          </MenuItem>
+          <MenuItem
+            value="favorites"
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'tertiary.main',
+              },
+            }}
+          >
+            Mes favoris
           </MenuItem>
         </TextField>
 
