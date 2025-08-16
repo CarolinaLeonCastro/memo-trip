@@ -83,7 +83,6 @@ const AddPlacePage: React.FC = () => {
     tags: [] as string[],
     visited: false,
     rating: 0,
-    personalNotes: '',
     latitude: '',
     longitude: '',
     // Nouvelles propriétés pour le journal
@@ -260,7 +259,6 @@ const AddPlacePage: React.FC = () => {
       tags: formData.tags,
       visited: formData.visited,
       rating: formData.rating || undefined,
-      personalNotes: formData.personalNotes || undefined,
     };
 
     addPlace(journalId, placeData);
@@ -762,32 +760,6 @@ const AddPlacePage: React.FC = () => {
                 />
               )}
             </Stack>
-          </Paper>
-
-          {/* Section 4: Notes personnelles */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
-            >
-              Notes personnelles
-            </Typography>
-
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              placeholder="Ajoutez des notes personnelles sur ce lieu..."
-              value={formData.personalNotes}
-              onChange={(e) => handleChange('personalNotes', e.target.value)}
-            />
           </Paper>
         </Grid>
       </Grid>

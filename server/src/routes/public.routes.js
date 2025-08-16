@@ -13,8 +13,7 @@ export const getPublicJournals = async (req, res) => {
 
 		const filter = {
 			is_public: true,
-			status: 'published',
-			moderation_status: 'approved'
+			status: 'published'
 		};
 
 		if (search) {
@@ -27,7 +26,6 @@ export const getPublicJournals = async (req, res) => {
 
 		const journals = await Journal.find(filter)
 			.populate('user_id', 'name avatar')
-			.select('-moderation_status -moderated_by -rejection_reason')
 			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(parseInt(limit));
@@ -63,16 +61,14 @@ export const getPublicJournalById = async (req, res) => {
 		const journal = await Journal.findOne({
 			_id: id,
 			is_public: true,
-			status: 'published',
-			moderation_status: 'approved'
+			status: 'published'
 		})
 			.populate('user_id', 'name avatar')
 			.populate({
 				path: 'places',
 				match: { moderation_status: 'approved' },
 				select: '-moderation_status -moderated_by -rejection_reason'
-			})
-			.select('-moderation_status -moderated_by -rejection_reason');
+			});
 
 		if (!journal) {
 			return res.status(404).json({
@@ -99,8 +95,7 @@ export const getPublicStats = async (req, res) => {
 	try {
 		const totalPublicJournals = await Journal.countDocuments({
 			is_public: true,
-			status: 'published',
-			moderation_status: 'approved'
+			status: 'published'
 		});
 
 		const totalPublicPlaces = await Place.countDocuments({
@@ -110,8 +105,7 @@ export const getPublicStats = async (req, res) => {
 		// Journaux les plus récents
 		const recentJournals = await Journal.find({
 			is_public: true,
-			status: 'published',
-			moderation_status: 'approved'
+			status: 'published'
 		})
 			.populate('user_id', 'name avatar')
 			.select('title description cover_image createdAt user_id stats')

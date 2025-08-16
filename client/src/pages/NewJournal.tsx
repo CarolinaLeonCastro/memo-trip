@@ -62,6 +62,7 @@ const NewJournal: React.FC = () => {
     description: '',
     startDate: '',
     endDate: '',
+    personalNotes: '',
   });
   const [mainPhoto, setMainPhoto] = useState<File | null>(null);
   const [mainPhotoPreview, setMainPhotoPreview] = useState<string>('');
@@ -165,6 +166,7 @@ const NewJournal: React.FC = () => {
       places: [],
       mainPhoto: photoUrl,
       tags: tags,
+      personalNotes: formData.personalNotes.trim() || undefined,
     });
 
     navigate('/journals');
@@ -338,6 +340,20 @@ const NewJournal: React.FC = () => {
                   helperText={errors.description}
                   placeholder="Décrivez votre voyage, vos attentes, les lieux que vous souhaitez visiter..."
                   required
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Notes personnelles"
+                  multiline
+                  rows={3}
+                  value={formData.personalNotes}
+                  onChange={(e) =>
+                    handleChange('personalNotes', e.target.value)
+                  }
+                  placeholder="Ajoutez vos notes personnelles sur ce voyage, vos réflexions, souvenirs..."
                 />
               </Grid>
 
