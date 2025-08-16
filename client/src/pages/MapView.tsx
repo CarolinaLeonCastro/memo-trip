@@ -1,25 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  FormControl,
-  Select,
-  MenuItem,
-  Grid,
-  Chip,
-} from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  LocationOn as LocationIcon,
-} from '@mui/icons-material';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Box, Typography } from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { format } from 'date-fns';
-//import { fr } from 'date-fns/locale';
+import { LocationOn as LocationIcon } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
+import MapHeader from '../components/map/MapHeader';
+import MapSidebar from '../components/map/MapSidebar';
+import PlaceDetailModal from '../components/map/PlaceDetailModal';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -33,10 +20,58 @@ L.Icon.Default.mergeOptions({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Custom marker icons for visited/to visit
+const visitedIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const toVisitIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+interface PlaceWithJournal {
+  id: string;
+  name: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  dateVisited: string;
+  photos: string[];
+  category?: string;
+  isVisited: boolean;
+  journalTitle: string;
+  journalId: string;
+}
+
 const MapView: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { journals, getJournal } = useJournals();
+
+  // States
   const [selectedJournal, setSelectedJournal] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'visited' | 'toVisit'
+  >('all');
+  const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
+  const [selectedPlace, setSelectedPlace] = useState<PlaceWithJournal | null>(
+    null
+  );
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const journalId = searchParams.get('journal');
 
@@ -46,210 +81,226 @@ const MapView: React.FC = () => {
     }
   }, [journalId]);
 
-  const getPlacesToShow = () => {
+  // Process places data
+  const places = useMemo(() => {
+    let allPlaces: PlaceWithJournal[];
+
     if (selectedJournal === 'all') {
-      return journals.flatMap((journal) =>
-        journal.places.map((place) => ({
-          ...place,
-          journalTitle: journal.title,
-        }))
+      allPlaces = journals.flatMap((journal) =>
+        journal.places
+          .filter((place) => place.latitude != null && place.longitude != null)
+          .map((place) => ({
+            id: place.id,
+            name: place.name,
+            description: place.description,
+            latitude: place.latitude!,
+            longitude: place.longitude!,
+            dateVisited: place.dateVisited.toString(),
+            photos: place.photos || [],
+            journalTitle: journal.title,
+            journalId: journal.id,
+            isVisited: new Date(place.dateVisited) <= new Date(),
+          }))
       );
     } else {
       const journal = getJournal(selectedJournal);
-      return journal
-        ? journal.places.map((place) => ({
-            ...place,
-            journalTitle: journal.title,
-          }))
+      allPlaces = journal
+        ? journal.places
+            .filter(
+              (place) => place.latitude != null && place.longitude != null
+            )
+            .map((place) => ({
+              id: place.id,
+              name: place.name,
+              description: place.description,
+              latitude: place.latitude!,
+              longitude: place.longitude!,
+              dateVisited: place.dateVisited.toString(),
+              photos: place.photos || [],
+              journalTitle: journal.title,
+              journalId: journal.id,
+              isVisited: new Date(place.dateVisited) <= new Date(),
+            }))
         : [];
     }
-  };
 
-  const places = getPlacesToShow();
+    // Apply filters
+    let filteredPlaces = allPlaces;
 
-  // Calculate center and zoom based on places
-  const getMapCenter = () => {
-    if (places.length === 0) return [46.603354, 1.888334]; // Center of France
+    if (filterStatus !== 'all') {
+      filteredPlaces = filteredPlaces.filter((place) =>
+        filterStatus === 'visited' ? place.isVisited : !place.isVisited
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredPlaces = filteredPlaces.filter(
+        (place) =>
+          place.name.toLowerCase().includes(query) ||
+          place.description.toLowerCase().includes(query) ||
+          place.journalTitle.toLowerCase().includes(query)
+      );
+    }
+
+    return filteredPlaces;
+  }, [journals, selectedJournal, getJournal, filterStatus, searchQuery]);
+
+  // Calculate map center and zoom
+  const { mapCenter, mapZoom } = useMemo(() => {
+    if (places.length === 0)
+      return { mapCenter: [46.603354, 1.888334], mapZoom: 6 };
 
     const avgLat =
       places.reduce((sum, place) => sum + place.latitude, 0) / places.length;
     const avgLng =
       places.reduce((sum, place) => sum + place.longitude, 0) / places.length;
 
-    return [avgLat, avgLng];
+    let zoom = 6;
+    if (places.length === 1) {
+      zoom = 12;
+    } else {
+      const lats = places.map((p) => p.latitude);
+      const lngs = places.map((p) => p.longitude);
+      const latSpread = Math.max(...lats) - Math.min(...lats);
+      const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+      const maxSpread = Math.max(latSpread, lngSpread);
+
+      if (maxSpread > 10) zoom = 4;
+      else if (maxSpread > 5) zoom = 5;
+      else if (maxSpread > 1) zoom = 7;
+      else zoom = 9;
+    }
+
+    return { mapCenter: [avgLat, avgLng], mapZoom: zoom };
+  }, [places]);
+
+  const handlePlaceClick = (place: PlaceWithJournal) => {
+    setSelectedPlace(place);
+    setDetailModalOpen(true);
+  };
+
+  const getTileLayerUrl = () => {
+    return mapType === 'satellite'
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  };
+
+  const getTileLayerAttribution = () => {
+    return mapType === 'satellite'
+      ? 'Tiles &copy; Esri &mdash; Source: Esri, Earthstar Geographics'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            component={Link}
-            to="/"
-            startIcon={<ArrowBackIcon />}
-            sx={{ color: 'text.secondary' }}
-          >
-            Retour
-          </Button>
-          <Typography variant="h4" fontWeight={700}>
-            Carte des Voyages
-          </Typography>
+      <MapHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterStatus={filterStatus}
+        onFilterStatusChange={setFilterStatus}
+        mapType={mapType}
+        onMapTypeChange={setMapType}
+      />
+
+      {/* Main content */}
+      <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
+        {/* Map Container */}
+        <Box sx={{ flex: 1, position: 'relative' }}>
+          {places.length === 0 ? (
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: 'background.default',
+                gap: 2,
+              }}
+            >
+              <LocationIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
+              <Typography
+                variant="h5"
+                color="text.secondary"
+                textAlign="center"
+              >
+                Aucun lieu à afficher
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                textAlign="center"
+              >
+                Ajustez vos filtres ou ajoutez de nouveaux lieux
+              </Typography>
+            </Box>
+          ) : (
+            <MapContainer
+              center={mapCenter as [number, number]}
+              zoom={mapZoom}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution={getTileLayerAttribution()}
+                url={getTileLayerUrl()}
+              />
+              {places.map((place) => (
+                <Marker
+                  key={place.id}
+                  position={[place.latitude, place.longitude]}
+                  icon={place.isVisited ? visitedIcon : toVisitIcon}
+                  eventHandlers={{
+                    click: () => handlePlaceClick(place),
+                  }}
+                >
+                  <Popup>
+                    <Box sx={{ p: 1, minWidth: 200 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{ mb: 1 }}
+                      >
+                        {place.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        {place.description}
+                      </Typography>
+                      {place.photos.length > 0 && (
+                        <Box
+                          component="img"
+                          src={place.photos[0]}
+                          alt={place.name}
+                          sx={{
+                            width: '100%',
+                            height: 100,
+                            objectFit: 'cover',
+                            borderRadius: 1,
+                            mt: 1,
+                          }}
+                        />
+                      )}
+                    </Box>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          )}
         </Box>
 
-        <FormControl sx={{ minWidth: 200 }}>
-          <Select
-            value={selectedJournal}
-            onChange={(e) => setSelectedJournal(e.target.value)}
-            size="small"
-          >
-            <MenuItem value="all">Tous les journaux</MenuItem>
-            {journals.map((journal) => (
-              <MenuItem key={journal.id} value={journal.id}>
-                {journal.title}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* Right Sidebar */}
+        <MapSidebar places={places} onPlaceClick={handlePlaceClick} />
       </Box>
 
-      {places.length === 0 ? (
-        <Card sx={{ textAlign: 'center', py: 8 }}>
-          <CardContent>
-            <LocationIcon
-              sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
-            />
-            <Typography variant="h5" fontWeight={600} sx={{ mb: 1 }}>
-              Aucun lieu à afficher
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              {selectedJournal === 'all'
-                ? 'Ajoutez des lieux à vos journaux pour les voir sur la carte'
-                : 'Ce journal ne contient aucun lieu pour le moment'}
-            </Typography>
-            <Button
-              component={Link}
-              to="/journals"
-              variant="contained"
-              startIcon={<LocationIcon />}
-            >
-              Voir mes journaux
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Map */}
-          <Card sx={{ mb: 4 }}>
-            <Box sx={{ height: { xs: 400, md: 600 } }}>
-              <MapContainer
-                center={getMapCenter() as [number, number]}
-                zoom={places.length === 1 ? 12 : 6}
-                style={{ height: '100%', width: '100%', borderRadius: '12px' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {places.map((place) => (
-                  <Marker
-                    key={place.id}
-                    position={[place.latitude, place.longitude]}
-                  >
-                    <Popup>
-                      <Box sx={{ p: 1, minWidth: 200 }}>
-                        <Typography
-                          variant="h6"
-                          fontWeight={600}
-                          sx={{ mb: 1 }}
-                        >
-                          {place.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="primary"
-                          sx={{ mb: 1 }}
-                        >
-                          {place.journalTitle}
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                          {place.description}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Visité le {format(place.dateVisited, 'dd MMM yyyy')}
-                        </Typography>
-                        {place.photos.length > 0 && (
-                          <Box
-                            component="img"
-                            src={place.photos[0]}
-                            alt={place.name}
-                            sx={{
-                              width: '100%',
-                              height: 100,
-                              objectFit: 'cover',
-                              borderRadius: 1,
-                              mt: 1,
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            </Box>
-          </Card>
-
-          {/* Places List */}
-          <Card>
-            <CardContent>
-              <Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>
-                Lieux affichés ({places.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {places.map((place) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
-                    <Card variant="outlined">
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography
-                          variant="h6"
-                          fontWeight={600}
-                          sx={{ mb: 1 }}
-                        >
-                          {place.name}
-                        </Typography>
-                        <Chip
-                          label={place.journalTitle}
-                          size="small"
-                          color="primary"
-                          sx={{ mb: 1 }}
-                        />
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ mb: 1 }}
-                        >
-                          {place.description}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {format(place.dateVisited, 'dd MMM yyyy')}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        </>
-      )}
+      {/* Place detail modal */}
+      <PlaceDetailModal
+        open={detailModalOpen}
+        place={selectedPlace}
+        onClose={() => setDetailModalOpen(false)}
+      />
     </Box>
   );
 };
