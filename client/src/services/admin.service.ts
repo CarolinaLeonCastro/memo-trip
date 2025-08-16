@@ -5,19 +5,16 @@ export interface AdminStats {
     total: number;
     active: number;
     blocked: number;
-    pending: number;
     newThisMonth: number;
   };
   journals: {
     total: number;
     published: number;
-    pending: number;
     public: number;
     newThisMonth: number;
   };
   places: {
     total: number;
-    pending: number;
   };
 }
 
@@ -26,7 +23,7 @@ export interface User {
   name: string;
   email: string;
   role: 'user' | 'admin';
-  status: 'active' | 'blocked' | 'pending';
+  status: 'active' | 'blocked';
   created_at: string;
   last_login?: string;
   avatar?: {
@@ -34,43 +31,11 @@ export interface User {
   };
 }
 
-export interface PendingContent {
-  journals: Array<{
-    _id: string;
-    title: string;
-    description: string;
-    user_id: {
-      name: string;
-      email: string;
-    };
-    createdAt: string;
-    moderation_status: string;
-  }>;
-  places: Array<{
-    _id: string;
-    name: string;
-    description: string;
-    user_id: {
-      name: string;
-      email: string;
-    };
-    journal_id: {
-      title: string;
-    };
-    createdAt: string;
-    moderation_status: string;
-  }>;
-}
-
 export interface SystemSettings {
   app: {
     name: string;
     version: string;
     description: string;
-  };
-  moderation: {
-    autoApprove: boolean;
-    requireApprovalForPublic: boolean;
   };
   limits: {
     maxPlacesPerJournal: number;
@@ -110,47 +75,10 @@ class AdminService {
 
   async updateUserStatus(
     userId: string,
-    status: 'active' | 'blocked' | 'pending'
+    status: 'active' | 'blocked'
   ): Promise<User> {
     const response = await api.patch(`/admin/users/${userId}/status`, {
       status,
-    });
-    return response.data;
-  }
-
-  // Modération du contenu
-  async getPendingContent(
-    type?: 'all' | 'journals' | 'places'
-  ): Promise<PendingContent> {
-    const response = await api.get('/admin/moderation/pending', {
-      params: { type },
-    });
-    return response.data;
-  }
-
-  async moderateJournal(
-    journalId: string,
-    action: 'approve' | 'reject',
-    reason?: string
-  ) {
-    const response = await api.patch(
-      `/admin/moderation/journals/${journalId}`,
-      {
-        action,
-        reason,
-      }
-    );
-    return response.data;
-  }
-
-  async moderatePlace(
-    placeId: string,
-    action: 'approve' | 'reject',
-    reason?: string
-  ) {
-    const response = await api.patch(`/admin/moderation/places/${placeId}`, {
-      action,
-      reason,
     });
     return response.data;
   }

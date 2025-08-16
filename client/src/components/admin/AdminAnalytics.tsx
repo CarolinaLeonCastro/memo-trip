@@ -243,30 +243,6 @@ const AdminAnalytics: React.FC = () => {
                   sx={{ height: 8, borderRadius: 4 }}
                 />
               </Box>
-
-              <Box>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={1}
-                >
-                  <Typography variant="body2">En attente</Typography>
-                  <Typography variant="body2" fontWeight="bold">
-                    {stats.users.pending} (
-                    {Math.round(
-                      (stats.users.pending / stats.users.total) * 100
-                    )}
-                    %)
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={(stats.users.pending / stats.users.total) * 100}
-                  color="warning"
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -307,9 +283,9 @@ const AdminAnalytics: React.FC = () => {
                             color="success"
                           />
                           <Chip
-                            label={`${stats.journals.pending} en attente`}
+                            label={`${stats.journals.public} publics`}
                             size="small"
-                            color="warning"
+                            color="info"
                           />
                         </Box>
                       </TableCell>
@@ -324,9 +300,9 @@ const AdminAnalytics: React.FC = () => {
                       <TableCell align="right">{stats.places.total}</TableCell>
                       <TableCell align="right">
                         <Chip
-                          label={`${stats.places.pending} en attente`}
+                          label="Tous actifs"
                           size="small"
-                          color="warning"
+                          color="success"
                         />
                       </TableCell>
                     </TableRow>
@@ -406,13 +382,13 @@ const AdminAnalytics: React.FC = () => {
                   <Box textAlign="center">
                     <Typography
                       variant="h3"
-                      color="warning.main"
+                      color="info.main"
                       fontWeight="bold"
                     >
-                      {stats.journals.pending + stats.places.pending}
+                      {stats.journals.published}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Éléments à modérer
+                      Journaux publiés
                     </Typography>
                   </Box>
                 </Grid>

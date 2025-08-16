@@ -67,7 +67,11 @@ const SystemSettings: React.FC = () => {
     }
   };
 
-  const updateSetting = (section: string, field: string, value: any) => {
+  const updateSetting = (
+    section: string,
+    field: string,
+    value: string | number | boolean
+  ) => {
     setSettings((prev) => {
       if (!prev) return prev;
       return {
@@ -151,14 +155,14 @@ const SystemSettings: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Paramètres de l'application */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Application
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Nom de l'application"
@@ -168,7 +172,7 @@ const SystemSettings: React.FC = () => {
                     }
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Version"
@@ -178,7 +182,7 @@ const SystemSettings: React.FC = () => {
                     }
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     multiline
@@ -195,58 +199,15 @@ const SystemSettings: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Paramètres de modération */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Modération
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={2}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.moderation.autoApprove}
-                      onChange={(e) =>
-                        updateSetting(
-                          'moderation',
-                          'autoApprove',
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label="Approbation automatique du contenu"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.moderation.requireApprovalForPublic}
-                      onChange={(e) =>
-                        updateSetting(
-                          'moderation',
-                          'requireApprovalForPublic',
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label="Approbation requise pour rendre public"
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
         {/* Limites système */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Limites système
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     type="number"
@@ -261,7 +222,7 @@ const SystemSettings: React.FC = () => {
                     }
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     type="number"
@@ -276,7 +237,7 @@ const SystemSettings: React.FC = () => {
                     }
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Box>
                     <Typography
                       variant="body2"
@@ -304,7 +265,7 @@ const SystemSettings: React.FC = () => {
         </Grid>
 
         {/* Fonctionnalités */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -362,7 +323,7 @@ const SystemSettings: React.FC = () => {
         </Grid>
 
         {/* Informations système */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -370,7 +331,7 @@ const SystemSettings: React.FC = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Box textAlign="center">
                     <Typography variant="h4" color="primary">
                       <SettingsIcon fontSize="large" />
@@ -380,7 +341,7 @@ const SystemSettings: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Box textAlign="center">
                     <Typography variant="body2" color="text.secondary">
                       Dernière mise à jour
@@ -390,15 +351,15 @@ const SystemSettings: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Box textAlign="center">
                     <Typography variant="body2" color="text.secondary">
                       Environnement
                     </Typography>
-                    <Chip label="Production" color="success" size="small" />
+                    <Chip label="development" color="success" size="small" />
                   </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Box textAlign="center">
                     <Typography variant="body2" color="text.secondary">
                       Base de données
