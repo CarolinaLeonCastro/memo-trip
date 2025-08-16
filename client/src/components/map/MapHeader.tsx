@@ -46,19 +46,18 @@ const MapHeader: React.FC<MapHeaderProps> = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        p: 1,
+        p: 0.5,
         justifyContent: 'space-between',
 
         flexWrap: { xs: 'wrap', lg: 'nowrap' },
       }}
     >
       {/* Left side - Back button and title */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Button
           onClick={handleGoBack}
           startIcon={<ArrowBackIcon />}
           sx={{
-            color: '#666',
             textTransform: 'none',
             fontSize: '14px',
             fontWeight: 400,
@@ -124,34 +123,32 @@ const MapHeader: React.FC<MapHeaderProps> = ({
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         {/* Status filter buttons */}
         <ToggleButtonGroup
-          value={filterStatus}
           exclusive
+          value={filterStatus}
           onChange={(_, newValue) => newValue && onFilterStatusChange(newValue)}
-          size="small"
           sx={{
             '& .MuiToggleButton-root': {
               px: 2,
               py: 0.5,
-              border: '1px solid #ddd',
-              borderRadius: '20px !important',
               textTransform: 'none',
               fontSize: '12px',
               fontWeight: 500,
-              color: '#666',
-              backgroundColor: 'white',
+
               '&.Mui-selected': {
-                backgroundColor: '#5B9BD5',
                 color: 'white',
-                borderColor: '#5B9BD5',
+                borderColor: theme.palette.primary.main,
                 '&:hover': {
-                  backgroundColor: '#4A8BC2',
+                  filter: 'brightness(0.9)',
                 },
               },
-              '&:hover': {
-                backgroundColor: '#f5f5f5',
+              '&[value="all"].Mui-selected': {
+                backgroundColor: theme.palette.primary.main,
               },
-              '&:not(:first-of-type)': {
-                marginLeft: '4px',
+              '&[value="visited"].Mui-selected': {
+                backgroundColor: theme.palette.success.main,
+              },
+              '&[value="toVisit"].Mui-selected': {
+                backgroundColor: theme.palette.warning.main,
               },
             },
           }}
@@ -172,22 +169,18 @@ const MapHeader: React.FC<MapHeaderProps> = ({
             '& .MuiToggleButton-root': {
               px: 1,
               py: 0.5,
-              border: '1px solid #ddd',
+
               borderRadius: '6px !important',
-              color: '#666',
-              backgroundColor: 'white',
+
               minWidth: '40px',
               '&.Mui-selected': {
-                backgroundColor: '#5B9BD5',
-                color: 'white',
-                borderColor: '#5B9BD5',
+                backgroundColor: theme.palette.primary.main,
+
                 '&:hover': {
                   backgroundColor: '#4A8BC2',
                 },
               },
-              '&:hover': {
-                backgroundColor: '#f5f5f5',
-              },
+              '&:hover': {},
               '&:not(:first-of-type)': {
                 marginLeft: '-1px',
               },
@@ -195,10 +188,10 @@ const MapHeader: React.FC<MapHeaderProps> = ({
           }}
         >
           <ToggleButton value="street">
-            <MapIcon fontSize="small" />
+            <MapIcon fontSize="small" sx={{ color: 'white' }} />
           </ToggleButton>
           <ToggleButton value="satellite">
-            <SatelliteIcon fontSize="small" />
+            <SatelliteIcon fontSize="small" sx={{ color: 'white' }} />
           </ToggleButton>
         </ToggleButtonGroup>
 

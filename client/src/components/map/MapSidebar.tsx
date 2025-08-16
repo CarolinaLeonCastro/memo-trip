@@ -13,6 +13,7 @@ import {
   PhotoCamera as PhotoIcon,
   LocationOn as LocationIcon,
 } from '@mui/icons-material';
+import theme from '../../theme';
 
 interface PlaceWithJournal {
   id: string;
@@ -39,7 +40,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
       sx={{
         width: 350,
         bgcolor: 'background.paper',
-        borderLeft: '1px solid',
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
@@ -50,12 +50,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
       <Box
         sx={{
           p: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: '#f8f9fa',
         }}
       >
-        <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+        <Typography
+          variant="h6"
+          sx={{ mb: 1, fontFamily: '"Chau Philomene One", cursive' }}
+        >
           Lieux ({places.length})
         </Typography>
       </Box>
@@ -86,16 +86,14 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {places.map((place, index) => (
+            {places.map((place) => (
               <ListItem
                 key={place.id}
                 sx={{
-                  borderBottom:
-                    index < places.length - 1 ? '1px solid' : 'none',
-                  borderColor: 'divider',
                   cursor: 'pointer',
                   '&:hover': {
-                    bgcolor: 'action.hover',
+                    bgcolor: theme.palette.primary.main,
+                    borderRadius: '8px',
                   },
                 }}
                 onClick={() => onPlaceClick(place)}
@@ -106,7 +104,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                     sx={{
                       width: 60,
                       height: 60,
-                      borderRadius: 1,
+                      borderRadius: '8px',
                     }}
                   >
                     <PhotoIcon />
@@ -141,7 +139,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                     <Box>
                       <Typography
                         variant="body2"
-                        color="text.secondary"
+                        color="text.primary"
                         sx={{ mb: 0.5 }}
                       >
                         {place.name.includes(',')

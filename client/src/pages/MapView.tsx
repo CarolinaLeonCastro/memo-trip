@@ -194,7 +194,13 @@ const MapView: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: { xs: 300, sm: 400, md: 600 },
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {/* Header */}
       <MapHeader
         searchQuery={searchQuery}
@@ -208,7 +214,14 @@ const MapView: React.FC = () => {
       {/* Main content */}
       <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
         {/* Map Container */}
-        <Box sx={{ flex: 1, position: 'relative' }}>
+        <Box
+          sx={{
+            flex: 1,
+            position: 'relative',
+            borderRadius: 1,
+            overflow: 'hidden',
+          }}
+        >
           {places.length === 0 ? (
             <Box
               sx={{

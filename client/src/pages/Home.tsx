@@ -114,8 +114,8 @@ const Home: React.FC = () => {
               flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
               alignItems: { xs: 'flex-start', sm: 'center' },
-              gap: 2,
-              mb: 3,
+              gap: 1,
+              mb: 1,
             }}
           >
             <Typography
@@ -175,11 +175,9 @@ const Home: React.FC = () => {
           {/* Carte interactive intégrée */}
           <Box
             sx={{
-              height: { xs: 300, sm: 400, md: 550 },
+              height: { xs: 300, sm: 400, md: 600 },
               borderRadius: 1,
               overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'outline.main',
               position: 'relative',
             }}
           >
@@ -270,7 +268,7 @@ const Home: React.FC = () => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: { xs: 2, sm: 3 },
+              gap: { xs: 2, sm: 2 },
             }}
           >
             {/* Statistiques en haut */}
@@ -280,7 +278,7 @@ const Home: React.FC = () => {
                   <CardContent
                     sx={{
                       textAlign: 'center',
-                      py: { xs: 2, sm: 3 },
+                      py: { xs: 2, sm: 1 },
                       px: { xs: 1, sm: 2 },
                     }}
                   >
@@ -298,7 +296,7 @@ const Home: React.FC = () => {
                   <CardContent
                     sx={{
                       textAlign: 'center',
-                      py: { xs: 2, sm: 3 },
+                      py: { xs: 2, sm: 1 },
                       px: { xs: 1, sm: 2 },
                     }}
                   >
@@ -323,7 +321,6 @@ const Home: React.FC = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                mb: 0.5,
               }}
             >
               <Typography
