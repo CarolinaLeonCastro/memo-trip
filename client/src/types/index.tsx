@@ -21,6 +21,8 @@ export interface Journal {
   endDate: Date;
   userId: string;
   places: Place[];
+  mainPhoto?: string;
+  tags?: string[];
 }
 
 export interface Place {
