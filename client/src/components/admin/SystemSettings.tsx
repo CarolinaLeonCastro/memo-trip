@@ -356,7 +356,7 @@ const SystemSettings: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Environnement
                     </Typography>
-                    <Chip label="Production" color="success" size="small" />
+                    <Chip label="development" color="success" size="small" />
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
