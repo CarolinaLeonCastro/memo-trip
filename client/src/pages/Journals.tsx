@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Grid,
   Card,
@@ -23,6 +23,7 @@ import {
   Favorite as FavoriteIcon,
   Comment as CommentIcon,
   Photo as PhotoIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 
 import { fr } from 'date-fns/locale';
@@ -32,6 +33,7 @@ import theme from '../theme';
 
 const Journals: React.FC = () => {
   const { journals, deleteJournal } = useJournals();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredJournals = journals.filter(
@@ -67,6 +69,7 @@ const Journals: React.FC = () => {
   return (
     <Box>
       {/* Header */}
+
       <Box
         sx={{
           display: 'flex',
@@ -75,6 +78,13 @@ const Journals: React.FC = () => {
           mb: 4,
         }}
       >
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/')}
+          sx={{ color: 'text.secondary' }}
+        >
+          Retour
+        </Button>
         <Box>
           <Typography
             variant="h3"

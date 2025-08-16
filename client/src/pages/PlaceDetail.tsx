@@ -22,7 +22,6 @@ import {
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
 import PhotoGallery from '../components/PhotoGallery';
-import EditPlaceModal from '../components/EditPlaceModal';
 
 const PlaceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +29,6 @@ const PlaceDetail: React.FC = () => {
   const { journals } = useJournals();
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [showGallery, setShowGallery] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
 
   // Trouver le lieu par ID
   const place = journals
@@ -135,7 +133,7 @@ const PlaceDetail: React.FC = () => {
               startIcon={<EditIcon />}
               variant="outlined"
               sx={{ ml: 1 }}
-              onClick={() => setShowEditModal(true)}
+              onClick={() => navigate(`/place/${place.id}/edit`)}
             >
               Modifier
             </Button>
@@ -324,15 +322,6 @@ const PlaceDetail: React.FC = () => {
       {/* Modal galerie photos */}
       {showGallery && (
         <PhotoGallery photos={photos} onClose={() => setShowGallery(false)} />
-      )}
-
-      {/* Modal d'édition du lieu */}
-      {showEditModal && place && journal && (
-        <EditPlaceModal
-          place={place}
-          journalId={journal.id}
-          onClose={() => setShowEditModal(false)}
-        />
       )}
     </Box>
   );

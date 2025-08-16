@@ -14,6 +14,7 @@ import Journals from './pages/Journals';
 import AllPlaces from './pages/AllPlaces';
 import JournalDetail from './pages/JournalDetail';
 import EditJournal from './pages/EditJournal';
+import EditPlace from './pages/EditPlace';
 import PlaceDetail from './pages/PlaceDetail';
 import NewJournal from './pages/NewJournal';
 import AddPlace from './pages/AddPlace';
@@ -65,6 +66,7 @@ function App() {
                   <Route path="journals/:id/edit" element={<EditJournal />} />
                   <Route path="place/new" element={<AddPlace />} />
                   <Route path="place/:id" element={<PlaceDetail />} />
+                  <Route path="place/:id/edit" element={<EditPlace />} />
                   <Route path="profile" element={<Profile />} />
                   <Route
                     path="admin"

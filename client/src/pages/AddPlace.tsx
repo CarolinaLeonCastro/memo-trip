@@ -27,11 +27,11 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
   LocationOn as LocationIcon,
-  PhotoCamera as PhotoCameraIcon,
   ExpandMore as ExpandMoreIcon,
   Image as ImageIcon,
   CloudUpload as CloudUploadIcon,
   MenuBook as MenuBookIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
@@ -79,7 +79,7 @@ const AddPlacePage: React.FC = () => {
     country: '',
     description: '',
     dateVisited: new Date().toISOString().split('T')[0],
-    imageUrl: '',
+    photos: [] as string[],
     tags: [] as string[],
     visited: false,
     rating: 0,
@@ -95,7 +95,6 @@ const AddPlacePage: React.FC = () => {
     null
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [imagePreview, setImagePreview] = useState<string>('');
   const [customTag, setCustomTag] = useState('');
 
   const handleChange = (
@@ -155,17 +154,41 @@ const AddPlacePage: React.FC = () => {
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          setImagePreview(reader.result as string);
-          handleChange('imageUrl', reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+    const files = event.target.files;
+    if (files) {
+      const newPhotos: string[] = [];
+      const fileArray = Array.from(files);
+
+      // Limiter à 4 photos maximum
+      const filesToProcess = fileArray.slice(0, 4 - formData.photos.length);
+
+      let processedCount = 0;
+      filesToProcess.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (reader.result) {
+            newPhotos.push(reader.result as string);
+            processedCount++;
+
+            // Quand toutes les images sont traitées, mettre à jour l'état
+            if (processedCount === filesToProcess.length) {
+              setFormData((prev) => ({
+                ...prev,
+                photos: [...prev.photos, ...newPhotos].slice(0, 4),
+              }));
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const handleRemovePhoto = (indexToRemove: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, index) => index !== indexToRemove),
+    }));
   };
 
   const handleTagAdd = (tag: string) => {
@@ -254,8 +277,7 @@ const AddPlacePage: React.FC = () => {
         ? parseFloat(formData.longitude)
         : undefined,
       dateVisited: new Date(formData.dateVisited),
-      photos: formData.imageUrl ? [formData.imageUrl] : [],
-      imageUrl: formData.imageUrl || undefined,
+      photos: formData.photos,
       tags: formData.tags,
       visited: formData.visited,
       rating: formData.rating || undefined,
@@ -366,20 +388,6 @@ const AddPlacePage: React.FC = () => {
                 error={!!errors.description}
                 helperText={errors.description}
                 placeholder="Décrivez ce lieu..."
-              />
-
-              {/* URL Image */}
-              <TextField
-                fullWidth
-                label="URL de l'image"
-                value={formData.imageUrl}
-                onChange={(e) => {
-                  handleChange('imageUrl', e.target.value);
-                  if (e.target.value) {
-                    setImagePreview(e.target.value);
-                  }
-                }}
-                placeholder="https://images.unsplash.com/..."
               />
             </Stack>
           </Paper>
@@ -543,74 +551,121 @@ const AddPlacePage: React.FC = () => {
                 variant="h6"
                 sx={{ fontFamily: '"Chau Philomene One", cursive' }}
               >
-                Aperçu de l'image
+                Photos ({formData.photos.length}/4)
               </Typography>
             </Box>
 
-            {/* Zone d'upload/preview */}
-            <Box
-              sx={{
-                height: 200,
-                border: '1px dashed',
-                borderColor: 'grey.300',
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'grey.50',
-                overflow: 'hidden',
-                position: 'relative',
-                mb: 2,
-              }}
-            >
-              {imagePreview ? (
-                <Box
-                  sx={{ width: '100%', height: '100%', position: 'relative' }}
+            {/* Zone d'upload compacte */}
+            <Box sx={{ mb: 3 }}>
+              {formData.photos.length < 4 && (
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  fullWidth
+                  sx={{
+                    mb: 2,
+                    borderColor: 'error.main',
+                    color: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.dark',
+                      color: 'error.dark',
+                    },
+                  }}
                 >
-                  <img
-                    src={imagePreview}
-                    alt="Aperçu"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
+                  Ajouter des photos ({formData.photos.length}/4)
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
                   />
-                </Box>
-              ) : (
-                <Box sx={{ textAlign: 'center', color: 'grey.500' }}>
-                  <PhotoCameraIcon sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant="body2">
-                    Aucune image sélectionnée
-                  </Typography>
+                </Button>
+              )}
+
+              {/* Carrousel horizontal des photos */}
+              {formData.photos.length > 0 && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    overflowX: 'auto',
+                    pb: 1,
+                    '&::-webkit-scrollbar': {
+                      height: 6,
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      bgcolor: 'grey.100',
+                      borderRadius: 3,
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      bgcolor: 'grey.400',
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  {formData.photos.map((photo, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        position: 'relative',
+                        minWidth: 120,
+                        height: 80,
+                        border: '1px solid',
+                        borderColor: 'grey.300',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <img
+                        src={photo}
+                        alt={`Photo ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemovePhoto(index)}
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          bgcolor: 'rgba(0,0,0,0.6)',
+                          color: 'white',
+                          width: 24,
+                          height: 24,
+                          '&:hover': {
+                            bgcolor: 'rgba(0,0,0,0.8)',
+                          },
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: 2,
+                          left: 4,
+                          color: 'white',
+                          bgcolor: 'rgba(0,0,0,0.6)',
+                          px: 0.5,
+                          borderRadius: 0.5,
+                          fontSize: '0.65rem',
+                        }}
+                      >
+                        {index + 1}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Box>
               )}
             </Box>
-
-            {/* Bouton d'upload */}
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              fullWidth
-              sx={{
-                mb: 2,
-                borderColor: 'error.main',
-                color: 'error.main',
-                '&:hover': {
-                  borderColor: 'error.dark',
-                  color: 'error.dark',
-                },
-              }}
-            >
-              Choisir une image depuis le PC
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-            </Button>
           </Paper>
 
           {/* Section 2: Statut de visite */}
