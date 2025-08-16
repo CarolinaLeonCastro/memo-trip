@@ -21,11 +21,10 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Person as PersonIcon,
-  Book as BookIcon,
+  PersonOutlineOutlined as PersonOutlineOutlinedIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
-  DarkMode as DarkModeIcon,
+  DarkModeOutlined as DarkModeOutlinedIcon,
   LightMode as LightModeIcon,
   Logout as LogoutIcon,
   ExpandMore as ExpandMoreIcon,
@@ -66,14 +65,9 @@ const Navbar: React.FC = () => {
 
   const navigationItems = [
     {
-      label: 'Mes Voyages',
-      path: '/journals',
-      icon: <BookIcon />,
-    },
-    {
       label: 'Profil',
       path: '/profile',
-      icon: <PersonIcon />,
+      icon: <PersonOutlineOutlinedIcon />,
     },
     ...(user?.role === 'admin'
       ? [
@@ -121,7 +115,7 @@ const Navbar: React.FC = () => {
         {/* Dark mode toggle in mobile drawer */}
         <ListItem>
           <ListItemIcon>
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
           </ListItemIcon>
           <ListItemText primary="Mode sombre" />
           <IconButton
@@ -131,7 +125,7 @@ const Navbar: React.FC = () => {
               color: 'text.primary',
             }}
           >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
           </IconButton>
         </ListItem>
 
@@ -216,7 +210,7 @@ const Navbar: React.FC = () => {
                     },
                   }}
                 >
-                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
                 </IconButton>
               </Tooltip>
               <IconButton
@@ -267,7 +261,7 @@ const Navbar: React.FC = () => {
                     },
                   }}
                 >
-                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
                 </IconButton>
               </Tooltip>
 
@@ -326,7 +320,6 @@ const Navbar: React.FC = () => {
         sx={{
           mt: 1,
           '& .MuiPaper-root': {
-            borderRadius: 2,
             minWidth: 200,
           },
         }}
@@ -341,20 +334,6 @@ const Navbar: React.FC = () => {
             {user?.email}
           </Typography>
         </Box>
-
-        <MenuItem
-          component={Link}
-          to="/profile"
-          onClick={handleUserMenuClose}
-          sx={{ py: 1.5 }}
-        >
-          <ListItemIcon>
-            <PersonIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Mon profil" />
-        </MenuItem>
-
-        <Divider />
 
         <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
           <ListItemIcon>

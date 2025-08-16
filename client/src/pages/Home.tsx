@@ -9,16 +9,24 @@ import {
   Box,
   useMediaQuery,
   useTheme,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
 } from '@mui/material';
 import {
   Add as AddIcon,
   LocationOn as LocationIcon,
   CalendarToday as CalendarIcon,
   FavoriteBorder as FavoriteIcon,
-  MenuBook as BookIcon,
+  Map as MapIcon,
+  Favorite as FavoriteFilledIcon,
+  AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
+import { useAuth } from '../hooks/useAuth';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -37,6 +45,7 @@ const Home: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { journals } = useJournals();
+  const { user } = useAuth();
 
   // Calculer les statistiques
   const allPlaces = journals.flatMap((journal) => journal.places);
@@ -72,6 +81,28 @@ const Home: React.FC = () => {
     return [avgLat, avgLng];
   };
 
+  // Actions rapides avec conditions d'affichage
+  const quickActions = [
+    {
+      icon: <MapIcon />,
+      text: 'Mes voyages',
+      onClick: () => navigate('/journals'),
+      show: true,
+    },
+    {
+      icon: <FavoriteFilledIcon />,
+      text: 'Mes favoris',
+      onClick: () => navigate('/places?filter=favorites'),
+      show: true,
+    },
+    {
+      icon: <AdminIcon />,
+      text: 'Administration',
+      onClick: () => navigate('/admin'),
+      show: user?.role === 'admin',
+    },
+  ].filter((action) => action.show);
+
   return (
     <Box>
       <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
@@ -83,8 +114,8 @@ const Home: React.FC = () => {
               flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
               alignItems: { xs: 'flex-start', sm: 'center' },
-              gap: 2,
-              mb: 3,
+              gap: 1,
+              mb: 1,
             }}
           >
             <Typography
@@ -144,11 +175,9 @@ const Home: React.FC = () => {
           {/* Carte interactive intégrée */}
           <Box
             sx={{
-              height: { xs: 300, sm: 400, md: 550 },
+              height: { xs: 300, sm: 400, md: 600 },
               borderRadius: 1,
               overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'outline.main',
               position: 'relative',
             }}
           >
@@ -239,7 +268,7 @@ const Home: React.FC = () => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: { xs: 2, sm: 3 },
+              gap: { xs: 2, sm: 2 },
             }}
           >
             {/* Statistiques en haut */}
@@ -249,11 +278,11 @@ const Home: React.FC = () => {
                   <CardContent
                     sx={{
                       textAlign: 'center',
-                      py: { xs: 2, sm: 3 },
+                      py: { xs: 2, sm: 1 },
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h3" fontWeight={700} color="#1976D2">
+                    <Typography variant="h4" fontWeight={700} color="#1976D2">
                       {totalPlaces}
                     </Typography>
                     <Typography variant="body2" color="#1976D2">
@@ -267,11 +296,11 @@ const Home: React.FC = () => {
                   <CardContent
                     sx={{
                       textAlign: 'center',
-                      py: { xs: 2, sm: 3 },
+                      py: { xs: 2, sm: 1 },
                       px: { xs: 1, sm: 2 },
                     }}
                   >
-                    <Typography variant="h3" fontWeight={700} color="#2E7D32">
+                    <Typography variant="h4" fontWeight={700} color="#2E7D32">
                       {countries}
                     </Typography>
                     <Typography
@@ -287,13 +316,11 @@ const Home: React.FC = () => {
             </Grid>
 
             {/* Recent places */}
-
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                mb: 0.5,
               }}
             >
               <Typography
@@ -332,7 +359,7 @@ const Home: React.FC = () => {
                 <Box key={place.id} sx={{ mb: index < 0.5 ? 0.5 : 0 }}>
                   <Card
                     sx={{
-                      p: 2,
+                      p: 1,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
@@ -500,25 +527,60 @@ const Home: React.FC = () => {
               >
                 Actions rapides
               </Typography>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<BookIcon />}
+              <Card
                 sx={{
-                  py: 1.5,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: 'text.secondary',
-                  color: 'text.primary',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: 'primary.light',
-                  },
+                  bgcolor: '#E3F2FD',
+                  border: 'none',
                 }}
-                onClick={() => navigate('/journals')}
               >
-                Mes journaux
-              </Button>
+                <List sx={{ py: 0 }}>
+                  {quickActions.map((action, index) => (
+                    <ListItem
+                      key={index}
+                      disablePadding
+                      sx={{
+                        borderBottom:
+                          index < quickActions.length - 1
+                            ? '1px solid rgba(0,0,0,0.08)'
+                            : 'none',
+                      }}
+                    >
+                      <ListItemButton
+                        onClick={action.onClick}
+                        sx={{
+                          py: 1.5,
+                          px: 2,
+                          '&:hover': {
+                            bgcolor: 'rgba(33, 150, 243, 0.08)',
+                          },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            minWidth: 30,
+                            color: 'primary.main',
+                            '& svg': {
+                              fontSize: '1.2rem',
+                            },
+                          }}
+                        >
+                          {action.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={action.text}
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: '0.9rem',
+                              fontWeight: 500,
+                              color: 'text.primary',
+                            },
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Card>
             </Box>
           </Box>
         </Grid>

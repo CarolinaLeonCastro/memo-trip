@@ -142,12 +142,12 @@ const createCustomTheme = (mode: 'light' | 'dark') => {
       },
       MuiCard: {
         styleOverrides: {
-          root: ({ theme }) => ({
+          root: () => ({
             boxShadow: isLight
               ? '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)'
               : '0 4px 12px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)',
-            border: `1px solid ${theme.palette.outline.main}`,
-            borderRadius: 16,
+            border: 'none',
+            borderRadius: 12,
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             '&:hover': {
               boxShadow: isLight
