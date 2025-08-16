@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -35,7 +35,6 @@ import {
   Person as PersonIcon,
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
-  Pending as PendingIcon,
 } from '@mui/icons-material';
 
 import { adminService, type User } from '../../services/admin.service';
@@ -63,11 +62,7 @@ const UserManagement: React.FC = () => {
   });
   const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    loadUsers();
-  }, [filters]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminService.getUsers({
@@ -86,7 +81,11 @@ const UserManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: User) => {
     setAnchorEl(event.currentTarget);
@@ -114,7 +113,7 @@ const UserManagement: React.FC = () => {
 
   const handleStatusChange = async (
     userId: string,
-    newStatus: 'active' | 'blocked' | 'pending'
+    newStatus: 'active' | 'blocked'
   ) => {
     try {
       await adminService.updateUserStatus(userId, newStatus);
@@ -151,11 +150,6 @@ const UserManagement: React.FC = () => {
         color: 'error' as const,
         icon: <BlockIcon />,
       },
-      pending: {
-        label: 'En attente',
-        color: 'warning' as const,
-        icon: <PendingIcon />,
-      },
     };
     const config = configs[status as keyof typeof configs];
     return config ? (
@@ -190,7 +184,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
+    _event: React.ChangeEvent<unknown>,
     value: number
   ) => {
     setFilters((prev) => ({ ...prev, page: value }));
@@ -247,7 +241,6 @@ const UserManagement: React.FC = () => {
               <MenuItem value="">Tous</MenuItem>
               <MenuItem value="active">Actif</MenuItem>
               <MenuItem value="blocked">Bloqué</MenuItem>
-              <MenuItem value="pending">En attente</MenuItem>
             </Select>
           </FormControl>
         </Grid>

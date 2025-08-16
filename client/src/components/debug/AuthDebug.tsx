@@ -59,7 +59,7 @@ const AuthDebug: React.FC = () => {
   };
 
   // Affichage uniquement en mode développement
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'development') {
     return null;
   }
 

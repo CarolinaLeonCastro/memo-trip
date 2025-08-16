@@ -12,7 +12,6 @@ import {
   People as PeopleIcon,
   Book as BookIcon,
   Place as PlaceIcon,
-  Warning as WarningIcon,
   Public as PublicIcon,
 } from '@mui/icons-material';
 import { type AdminStats } from '../../services/admin.service';
@@ -109,17 +108,6 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
         />
       </Grid>
 
-      {/* Contenu en attente */}
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <StatCard
-          title="En attente"
-          value={stats.journals.pending + stats.places.pending}
-          subtitle={`${stats.journals.pending} journaux, ${stats.places.pending} lieux`}
-          icon={<WarningIcon />}
-          color="warning"
-        />
-      </Grid>
-
       {/* Cartes supplémentaires pour plus de détails */}
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
@@ -136,11 +124,6 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
               <Chip
                 label={`${stats.users.blocked} Bloqués`}
                 color="error"
-                variant="outlined"
-              />
-              <Chip
-                label={`${stats.users.pending} En attente`}
-                color="warning"
                 variant="outlined"
               />
             </Box>

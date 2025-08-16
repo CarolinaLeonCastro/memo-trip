@@ -14,7 +14,6 @@ import {
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
-  RateReview as ReviewIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
@@ -22,7 +21,6 @@ import {
 import { adminService, type AdminStats } from '../services/admin.service';
 import AdminStatsCards from '../components/admin/AdminStatsCards';
 import UserManagement from '../components/admin/UserManagement';
-import ContentModeration from '../components/admin/ContentModeration';
 import SystemSettings from '../components/admin/SystemSettings';
 import AdminAnalytics from '../components/admin/AdminAnalytics';
 
@@ -72,7 +70,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -90,14 +88,14 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 2 }}>
       {/* En-tête */}
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <Box mb={2}>
+        <Typography variant="decorative" component="h3" gutterBottom>
           Administration MemoTrip
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
-          Gestion de l'application et modération du contenu
+          Gestion de l'application
         </Typography>
       </Box>
 
@@ -133,22 +131,16 @@ const AdminDashboard: React.FC = () => {
               aria-controls="admin-tabpanel-1"
             />
             <Tab
-              icon={<ReviewIcon />}
-              label="Modération"
+              icon={<TrendingUpIcon />}
+              label="Analytiques"
               id="admin-tab-2"
               aria-controls="admin-tabpanel-2"
             />
             <Tab
-              icon={<TrendingUpIcon />}
-              label="Analytiques"
-              id="admin-tab-3"
-              aria-controls="admin-tabpanel-3"
-            />
-            <Tab
               icon={<SettingsIcon />}
               label="Paramètres"
-              id="admin-tab-4"
-              aria-controls="admin-tabpanel-4"
+              id="admin-tab-3"
+              aria-controls="admin-tabpanel-3"
             />
           </Tabs>
         </Box>
@@ -165,14 +157,6 @@ const AdminDashboard: React.FC = () => {
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       Actions rapides
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.journals?.pending || 0} journaux en attente de
-                      modération
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.places?.pending || 0} lieux en attente de
-                      modération
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       • {stats?.users?.newThisMonth || 0} nouveaux utilisateurs
@@ -195,7 +179,7 @@ const AdminDashboard: React.FC = () => {
                       • {stats?.users?.active || 0} utilisateurs actifs
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • {stats?.journals?.public || 0} journaux publics
+                      • {stats?.journals?.published || 0} journaux publiés
                     </Typography>
                   </CardContent>
                 </Card>
@@ -209,14 +193,10 @@ const AdminDashboard: React.FC = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
-          <ContentModeration />
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={3}>
           <AdminAnalytics />
         </TabPanel>
 
-        <TabPanel value={tabValue} index={4}>
+        <TabPanel value={tabValue} index={3}>
           <SystemSettings />
         </TabPanel>
       </Card>
