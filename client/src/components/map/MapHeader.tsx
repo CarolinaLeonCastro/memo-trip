@@ -10,7 +10,6 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import {
-  ArrowBack as ArrowBackIcon,
   LocationOn as LocationIcon,
   Search as SearchIcon,
   Satellite as SatelliteIcon,
@@ -37,10 +36,6 @@ const MapHeader: React.FC<MapHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleGoBack = () => {
-    navigate(-1);
-  };
-
   return (
     <Box
       sx={{
@@ -54,20 +49,6 @@ const MapHeader: React.FC<MapHeaderProps> = ({
     >
       {/* Left side - Back button and title */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Button
-          onClick={handleGoBack}
-          startIcon={<ArrowBackIcon />}
-          sx={{
-            textTransform: 'none',
-            fontSize: '14px',
-            fontWeight: 400,
-            '&:hover': {
-              bgcolor: 'rgba(0,0,0,0.04)',
-            },
-          }}
-        >
-          Retour
-        </Button>
         <Typography
           variant="h3"
           color="primary.main"

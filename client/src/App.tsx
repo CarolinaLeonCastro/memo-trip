@@ -10,7 +10,6 @@ import AdminRoute from './components/AdminRoute';
 // Layouts
 import Layout from './components/Layouts/Layout';
 //Pages
-import Home from './pages/Home';
 import Journals from './pages/Journals';
 import AllPlaces from './pages/AllPlaces';
 import JournalDetail from './pages/JournalDetail';
@@ -58,10 +57,9 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<Home />} />
+                  <Route index element={<MapView />} />
                   <Route path="journals" element={<Journals />} />
                   <Route path="places" element={<AllPlaces />} />
-                  <Route path="journals/map" element={<MapView />} />
                   <Route path="journals/new" element={<NewJournal />} />
                   <Route path="journals/:id" element={<JournalDetail />} />
                   <Route path="journals/:id/edit" element={<EditJournal />} />
