@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 
 import { formatWithOptions } from 'date-fns/fp';
@@ -9,7 +9,6 @@ import {
   Container,
   Typography,
   Button,
-  Paper,
   Grid,
   Card,
   CardMedia,
@@ -25,6 +24,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Share as ShareIcon,
   Visibility as VisibilityIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
 import PhotoGallery from '../components/PhotoGallery';
 
@@ -69,10 +69,12 @@ const JournalDetail: React.FC = () => {
         }}
       >
         <Button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/journals')}
           startIcon={<ArrowBackIcon />}
           sx={{ color: 'text.secondary' }}
-        ></Button>
+        >
+          Retour aux journaux
+        </Button>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton
@@ -161,149 +163,221 @@ const JournalDetail: React.FC = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={2}>
-          {journal.places.map((place) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
-              <Card
-                sx={{
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 2,
-                  },
-                }}
-                onClick={() => navigate(`/place/${place.id}`)}
-              >
-                <Box sx={{ position: 'relative' }}>
-                  <CardMedia
-                    component="img"
-                    height="150"
-                    image={
-                      place.photos[0] ||
-                      'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400'
-                    }
-                    alt={place.name}
-                  />
-
-                  {/* Badge Visité */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: '#4CAF50',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: 24,
-                      height: 24,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <CheckCircleIcon sx={{ fontSize: '1rem' }} />
-                  </Box>
-
-                  {/* Badge Visité texte */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: 8,
-                      left: 8,
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Visité
-                  </Box>
-
-                  {/* Icône de vue */}
-                  <IconButton
-                    sx={{
-                      position: 'absolute',
-                      bottom: 8,
-                      right: 8,
-                      bgcolor: 'rgba(255,255,255,0.9)',
-                      width: 32,
-                      height: 32,
-                      '&:hover': { bgcolor: 'white' },
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (place.photos.length > 0) {
-                        openGallery(place.photos);
+        {journal.places.length === 0 ? (
+          <Box
+            sx={{
+              textAlign: 'center',
+              py: 6,
+              border: '2px dashed',
+              borderColor: 'grey.300',
+              borderRadius: 2,
+              bgcolor: 'grey.50',
+            }}
+          >
+            <LocationOnIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Aucun lieu visité
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Commencez à planifier votre voyage en ajoutant des lieux à visiter
+            </Typography>
+            <Button
+              component={Link}
+              to={`/place/new?journalId=${journal.id}`}
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{ mr: 2 }}
+            >
+              Ajouter un lieu
+            </Button>
+            <Button
+              onClick={() => navigate(`/journals/${journal.id}/edit`)}
+              variant="outlined"
+              startIcon={<EditIcon />}
+            >
+              Modifier le journal
+            </Button>
+          </Box>
+        ) : (
+          <Grid container spacing={2}>
+            {journal.places.map((place) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
+                <Card
+                  sx={{
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 2,
+                    },
+                  }}
+                  onClick={() => navigate(`/place/${place.id}`)}
+                >
+                  <Box sx={{ position: 'relative' }}>
+                    <CardMedia
+                      component="img"
+                      height="150"
+                      image={
+                        place.photos[0] ||
+                        'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400'
                       }
-                    }}
-                  >
-                    <VisibilityIcon sx={{ fontSize: '1rem' }} />
-                  </IconButton>
-                </Box>
-
-                <CardContent sx={{ p: 2 }}>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={600}
-                    sx={{ mb: 0.5 }}
-                  >
-                    {place.name.split(',')[0]}
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      mb: 1,
-                    }}
-                  >
-                    <LocationOnIcon
-                      sx={{ fontSize: '0.875rem', color: 'text.secondary' }}
+                      alt={place.name}
                     />
-                    <Typography variant="caption" color="text.secondary">
-                      {place.name.split(',').slice(1).join(',').trim() ||
-                        'Paris, France'}
-                    </Typography>
+
+                    {/* Badge Visité */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        bgcolor: '#4CAF50',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: 24,
+                        height: 24,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: '1rem' }} />
+                    </Box>
+
+                    {/* Badge Visité texte */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 8,
+                        left: 8,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Visité
+                    </Box>
+
+                    {/* Icône de vue */}
+                    <IconButton
+                      sx={{
+                        position: 'absolute',
+                        bottom: 8,
+                        right: 8,
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        width: 32,
+                        height: 32,
+                        '&:hover': { bgcolor: 'white' },
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (place.photos.length > 0) {
+                          openGallery(place.photos);
+                        }
+                      }}
+                    >
+                      <VisibilityIcon sx={{ fontSize: '1rem' }} />
+                    </IconButton>
                   </Box>
 
-                  {/* Note personnelle en italique */}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontStyle: 'italic',
-                      color: 'text.secondary',
-                      fontSize: '0.8rem',
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    "
-                    {place.description ||
-                      'Une expérience inoubliable dans ce lieu magnifique.'}
-                    "
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      sx={{ mb: 0.5 }}
+                    >
+                      {place.name.split(',')[0]}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        mb: 1,
+                      }}
+                    >
+                      <LocationOnIcon
+                        sx={{ fontSize: '0.875rem', color: 'text.secondary' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {place.name.split(',').slice(1).join(',').trim() ||
+                          'Paris, France'}
+                      </Typography>
+                    </Box>
+
+                    {/* Note personnelle en italique */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontStyle: 'italic',
+                        color: 'text.secondary',
+                        fontSize: '0.8rem',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      "
+                      {place.description ||
+                        'Une expérience inoubliable dans ce lieu magnifique.'}
+                      "
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Box>
 
-      {/* Description du voyage */}
+      {/* Description et Notes personnelles */}
       <Box sx={{ mb: 4 }}>
-        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
-          <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
-            {journal.description ||
-              `Notre voyage à Paris a commencé par une promenade matinale le long de la Seine. L'air était frais et la ville s'éveillait doucement. Nous avons pris le petit-déjeuner dans un café typiquement parisien près de Notre-Dame.
+        {journal.description && (
+          <Box sx={{ p: 3, mb: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: '"Chau Philomene One", cursive',
+                mb: 2,
+                color: 'primary.main',
+              }}
+            >
+              Description du voyage
+            </Typography>
+            <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
+              {journal.description}
+            </Typography>
+          </Box>
+        )}
+      </Box>
 
-Après-midi, nous avons visité le Louvre où nous avons passé des heures à admirer les œuvres d'art. La Joconde était évidemment au rendez-vous, mais c'est la Vénus de Milo qui m'a le plus impressionnée.
-
-Le soir, nous avons dîné dans un petit bistrot du Marais recommandé par notre hôte Airbnb. L'ambiance était parfaite et la cuisine délicieuse.`}
-          </Typography>
-        </Paper>
+      {/* Notes personnelles */}
+      <Box sx={{ mb: 4 }}>
+        {journal.personalNotes && (
+          <Box sx={{ p: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: '"Chau Philomene One", cursive',
+                mb: 2,
+                color: 'text.primary',
+              }}
+            >
+              Notes personnelles
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                lineHeight: 1.7,
+                fontStyle: 'italic',
+                color: 'text.primary',
+              }}
+            >
+              {journal.personalNotes}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {/* Tags */}

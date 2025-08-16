@@ -121,6 +121,17 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         },
       ],
     },
+    {
+      id: '2',
+      title: 'Voyage de test',
+      description: 'Un voyage pour tester la fonctionnalité',
+      startDate: new Date('2025-09-01'),
+      endDate: new Date('2025-09-10'),
+      userId: 'user1',
+      personalNotes: 'Voyage sans lieux pour tester',
+      tags: ['Test'],
+      places: [],
+    },
   ]);
 
   const addJournal = (journalData: Omit<Journal, 'id'>) => {

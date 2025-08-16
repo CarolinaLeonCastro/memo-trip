@@ -64,7 +64,7 @@ function App() {
                   <Route path="journals/map" element={<MapView />} />
                   <Route path="journals/new" element={<NewJournal />} />
                   <Route path="journals/:id" element={<JournalDetail />} />
-                  <Route path="journals/edit/:id" element={<EditJournal />} />
+                  <Route path="journals/:id/edit" element={<EditJournal />} />
                   <Route path="place/new" element={<AddPlace />} />
                   <Route path="place/:id" element={<PlaceDetail />} />
                   <Route path="profile" element={<Profile />} />
