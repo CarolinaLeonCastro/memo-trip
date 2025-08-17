@@ -16,14 +16,12 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
-  Add as AddIcon,
   Favorite as FavoriteIcon,
   Share as ShareIcon,
   Map as MapIcon,
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
 import PhotoGallery from '../components/PhotoGallery';
-import theme from '../theme';
 
 const PlaceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +34,9 @@ const PlaceDetail: React.FC = () => {
   const place = journals
     .flatMap((journal) => journal.places)
     .find((p) => p.id === id);
+
+  // Trouver le journal qui contient ce lieu
+  const journal = journals.find((j) => j.places.some((p) => p.id === id));
 
   if (!place) {
     return (
@@ -128,17 +129,13 @@ const PlaceDetail: React.FC = () => {
             <IconButton sx={{ color: 'text.secondary' }}>
               <ShareIcon />
             </IconButton>
-            <Button startIcon={<EditIcon />} variant="outlined" sx={{ ml: 1 }}>
-              Modifier
-            </Button>
             <Button
-              startIcon={<AddIcon />}
-              variant="contained"
-              sx={{
-                background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
-              }}
+              startIcon={<EditIcon />}
+              variant="outlined"
+              sx={{ ml: 1 }}
+              onClick={() => navigate(`/place/${place.id}/edit`)}
             >
-              Nouveau journal
+              Modifier
             </Button>
           </Box>
         </Box>

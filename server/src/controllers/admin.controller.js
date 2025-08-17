@@ -13,7 +13,6 @@ export const getAdminStats = async (req, res) => {
 
 		const totalJournals = await Journal.countDocuments();
 		const publishedJournals = await Journal.countDocuments({ status: 'published' });
-		const pendingJournals = await Journal.countDocuments({ moderation_status: 'pending' });
 		const publicJournals = await Journal.countDocuments({ is_public: true });
 
 		const totalPlaces = await Place.countDocuments();
@@ -44,7 +43,6 @@ export const getAdminStats = async (req, res) => {
 				journals: {
 					total: totalJournals,
 					published: publishedJournals,
-					pending: pendingJournals,
 					public: publicJournals,
 					newThisMonth: newJournalsThisMonth
 				},
@@ -190,15 +188,10 @@ export const getPendingContent = async (req, res) => {
 	try {
 		const { type = 'all' } = req.query;
 
-		let pendingJournals = [];
 		let pendingPlaces = [];
 
-		if (type === 'all' || type === 'journals') {
-			pendingJournals = await Journal.find({ moderation_status: 'pending' })
-				.populate('user_id', 'name email')
-				.sort({ createdAt: -1 })
-				.limit(20);
-		}
+		// Note: La modération des journaux a été supprimée
+		// Seuls les lieux nécessitent encore une modération
 
 		if (type === 'all' || type === 'places') {
 			pendingPlaces = await Place.find({ moderation_status: 'pending' })
@@ -211,7 +204,6 @@ export const getPendingContent = async (req, res) => {
 		res.json({
 			success: true,
 			data: {
-				journals: pendingJournals,
 				places: pendingPlaces
 			}
 		});
@@ -220,60 +212,6 @@ export const getPendingContent = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: 'Erreur lors de la récupération du contenu en attente'
-		});
-	}
-};
-
-export const moderateJournal = async (req, res) => {
-	try {
-		const { journalId } = req.params;
-		const { action, reason } = req.body; // action: 'approve' ou 'reject'
-
-		if (!['approve', 'reject'].includes(action)) {
-			return res.status(400).json({
-				success: false,
-				message: 'Action invalide'
-			});
-		}
-
-		const updateData = {
-			moderation_status: action === 'approve' ? 'approved' : 'rejected',
-			moderated_by: req.user._id,
-			moderated_at: new Date()
-		};
-
-		if (action === 'reject' && reason) {
-			updateData.rejection_reason = reason;
-		}
-
-		const journal = await Journal.findByIdAndUpdate(journalId, updateData, { new: true }).populate(
-			'user_id',
-			'name email'
-		);
-
-		if (!journal) {
-			return res.status(404).json({
-				success: false,
-				message: 'Journal non trouvé'
-			});
-		}
-
-		logger.info(`Journal moderated: ${journal.title} -> ${action}`, {
-			adminId: req.user._id,
-			journalId: journal._id,
-			reason
-		});
-
-		res.json({
-			success: true,
-			data: journal,
-			message: `Journal ${action === 'approve' ? 'approuvé' : 'rejeté'} avec succès`
-		});
-	} catch (error) {
-		logger.error('Error moderating journal:', error);
-		res.status(500).json({
-			success: false,
-			message: 'Erreur lors de la modération du journal'
 		});
 	}
 };

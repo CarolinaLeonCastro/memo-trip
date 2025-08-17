@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -8,11 +9,18 @@ import {
   ListItemText,
   Avatar,
   Chip,
+  Card,
+  ListItemButton,
+  ListItemIcon,
 } from '@mui/material';
 import {
   PhotoCamera as PhotoIcon,
   LocationOn as LocationIcon,
+  Map as MapIcon,
+  AdminPanelSettings as AdminIcon,
+  Favorite as FavoriteIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../hooks/useAuth';
 import theme from '../../theme';
 
 interface PlaceWithJournal {
@@ -35,6 +43,31 @@ interface MapSidebarProps {
 }
 
 const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Actions rapides avec conditions d'affichage
+  const quickActions = [
+    {
+      icon: <MapIcon />,
+      text: 'Mes voyages',
+      onClick: () => navigate('/journals'),
+      show: true,
+    },
+    {
+      icon: <FavoriteIcon />,
+      text: 'Mes favoris',
+      onClick: () => navigate('/places?filter=favorites'),
+      show: true,
+    },
+    {
+      icon: <AdminIcon />,
+      text: 'Administration',
+      onClick: () => navigate('/admin'),
+      show: user?.role === 'admin',
+    },
+  ].filter((action) => action.show);
+
   return (
     <Box
       sx={{
@@ -161,6 +194,77 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
             ))}
           </List>
         )}
+      </Box>
+
+      {/* Actions rapides */}
+      <Box>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            ml: 2,
+            fontFamily: '"Chau Philomene One", cursive',
+            color: 'primary.main',
+          }}
+        >
+          Actions rapides
+        </Typography>
+        <Card
+          sx={{
+            bgcolor: '#E3F2FD',
+            border: 'none',
+            ml: 2,
+            boxShadow: 'none',
+          }}
+        >
+          <List sx={{ py: 0 }}>
+            {quickActions.map((action, index) => (
+              <ListItem
+                key={index}
+                disablePadding
+                sx={{
+                  borderBottom:
+                    index < quickActions.length - 1
+                      ? '1px solid rgba(0,0,0,0.08)'
+                      : 'none',
+                }}
+              >
+                <ListItemButton
+                  onClick={action.onClick}
+                  sx={{
+                    py: 1.5,
+                    px: 2,
+                    '&:hover': {
+                      bgcolor: 'rgba(33, 150, 243, 0.08)',
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 30,
+                      color: 'primary.main',
+                      '& svg': {
+                        fontSize: '1.2rem',
+                      },
+                    }}
+                  >
+                    {action.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={action.text}
+                    sx={{
+                      '& .MuiListItemText-primary': {
+                        fontSize: '0.9rem',
+                        fontWeight: 500,
+                        color: 'text.primary',
+                      },
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Card>
       </Box>
     </Box>
   );

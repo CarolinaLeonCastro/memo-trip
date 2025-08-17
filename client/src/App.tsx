@@ -10,11 +10,11 @@ import AdminRoute from './components/AdminRoute';
 // Layouts
 import Layout from './components/Layouts/Layout';
 //Pages
-import Home from './pages/Home';
 import Journals from './pages/Journals';
 import AllPlaces from './pages/AllPlaces';
 import JournalDetail from './pages/JournalDetail';
 import EditJournal from './pages/EditJournal';
+import EditPlace from './pages/EditPlace';
 import PlaceDetail from './pages/PlaceDetail';
 import NewJournal from './pages/NewJournal';
 import AddPlace from './pages/AddPlace';
@@ -58,15 +58,15 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<Home />} />
+                  <Route index element={<MapView />} />
                   <Route path="journals" element={<Journals />} />
                   <Route path="places" element={<AllPlaces />} />
-                  <Route path="journals/map" element={<MapView />} />
                   <Route path="journals/new" element={<NewJournal />} />
                   <Route path="journals/:id" element={<JournalDetail />} />
-                  <Route path="journals/edit/:id" element={<EditJournal />} />
+                  <Route path="journals/:id/edit" element={<EditJournal />} />
                   <Route path="place/new" element={<AddPlace />} />
                   <Route path="place/:id" element={<PlaceDetail />} />
+                  <Route path="place/:id/edit" element={<EditPlace />} />
                   <Route path="profile" element={<Profile />} />
                   <Route
                     path="admin"

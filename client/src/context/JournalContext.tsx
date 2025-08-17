@@ -47,6 +47,8 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       startDate: new Date('2024-06-15'),
       endDate: new Date('2024-06-22'),
       userId: 'user1',
+      personalNotes:
+        "Ce voyage en Europe a été absolument fantastique ! Les paysages, la culture, la gastronomie... tout était parfait. J'ai particulièrement aimé les couchers de soleil à Paris et l'ambiance historique de Rome.",
       places: [
         {
           id: '1',
@@ -65,7 +67,6 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           tags: ['Architecture', 'Landmark', 'Historic'],
           visited: true,
           rating: 5,
-          personalNotes: 'Absolutely stunning at sunset!',
           journalId: '1',
         },
         {
@@ -85,7 +86,6 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           tags: ['History', 'Ancient', 'UNESCO'],
           visited: true,
           rating: 4,
-          personalNotes: 'Amazing history, crowded but worth it',
           journalId: '1',
         },
         {
@@ -103,7 +103,6 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           tags: ['Architecture', 'Gaudí', 'Basilica'],
           visited: true,
           rating: 3,
-          personalNotes: 'Beautiful but still under construction',
           journalId: '1',
         },
         {
@@ -121,6 +120,17 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           journalId: '1',
         },
       ],
+    },
+    {
+      id: '2',
+      title: 'Voyage de test',
+      description: 'Un voyage pour tester la fonctionnalité',
+      startDate: new Date('2025-09-01'),
+      endDate: new Date('2025-09-10'),
+      userId: 'user1',
+      personalNotes: 'Voyage sans lieux pour tester',
+      tags: ['Test'],
+      places: [],
     },
   ]);
 

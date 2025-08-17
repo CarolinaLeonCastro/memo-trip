@@ -6,7 +6,6 @@ import {
 	updateUserRole,
 	updateUserStatus,
 	getPendingContent,
-	moderateJournal,
 	moderatePlace,
 	getSystemSettings,
 	updateSystemSettings
@@ -28,7 +27,6 @@ router.patch('/users/:userId/status', updateUserStatus);
 
 // Routes modération du contenu
 router.get('/moderation/pending', getPendingContent);
-router.patch('/moderation/journals/:journalId', moderateJournal);
 router.patch('/moderation/places/:placeId', moderatePlace);
 
 // Routes paramètres système

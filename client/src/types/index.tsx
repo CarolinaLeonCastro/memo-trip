@@ -21,6 +21,9 @@ export interface Journal {
   endDate: Date;
   userId: string;
   places: Place[];
+  mainPhoto?: string;
+  tags?: string[];
+  personalNotes?: string;
 }
 
 export interface Place {
@@ -37,6 +40,5 @@ export interface Place {
   tags: string[];
   visited: boolean;
   rating?: number;
-  personalNotes?: string;
   journalId: string;
 }
