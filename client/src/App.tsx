@@ -24,6 +24,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminSetup from './pages/AdminSetup';
 import PublicJournals from './pages/PublicJournals';
 import PublicJournalDetail from './pages/PublicJournalDetail';
+import Discover from './pages/Discover';
 import Login from './pages/Login';
 import Register from './pages/Register';
 //import AuthDebug from './components/debug/AuthDebug';
@@ -59,6 +60,7 @@ function App() {
                   }
                 >
                   <Route index element={<MapView />} />
+                  <Route path="discover" element={<Discover />} />
                   <Route path="journals" element={<Journals />} />
                   <Route path="places" element={<AllPlaces />} />
                   <Route path="journals/new" element={<NewJournal />} />
