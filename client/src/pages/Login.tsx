@@ -2,26 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   TextField,
   Button,
   Alert,
   CircularProgress,
-  Container,
   InputAdornment,
   IconButton,
-  Divider,
 } from '@mui/material';
+
 import {
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  Explore as ExploreIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import CarouselSlides from '../components/auth/CarouselSlides';
 
 interface FormErrors {
   email?: string;
@@ -93,202 +90,186 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'background.default',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 3,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+      {/* Left Side - Login Form */}
+      <Box
+        sx={{
+          flex: { xs: 1, lg: '0 0 41.666667%' }, // 5/12 = 41.666667%
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          backgroundColor: 'background.paper',
+          padding: { xs: 3, sm: 6, lg: 8 },
+        }}
+      >
+        <Box sx={{ maxWidth: 400, mx: 'auto', width: '100%' }}>
           {/* Logo et titre */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 2,
-            }}
-          >
-            <ExploreIcon sx={{ color: 'primary.main', fontSize: 40, mr: 1 }} />
-            <Typography variant="h4" fontWeight={700} color="text.primary">
-              MemoTrip
-            </Typography>
-          </Box>
-          <Typography
-            variant="h5"
-            fontWeight={600}
-            color="text.primary"
-            gutterBottom
-          >
-            Bon retour !
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Connectez-vous pour accéder à vos carnets de voyage
-          </Typography>
-        </Box>
-
-        <Card
-          sx={{
-            p: { xs: 2, sm: 3 },
-
-            boxShadow: (theme) =>
-              theme.palette.mode === 'light'
-                ? '0 4px 20px rgba(61, 90, 128, 0.08)'
-                : '0 8px 32px rgba(0, 0, 0, 0.3)',
-          }}
-        >
-          <CardContent>
+          <Box sx={{ mb: 6 }}>
             <Box
-              component="form"
-              onSubmit={handleSubmit}
-              sx={{ width: '100%' }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 1, sm: 1 },
+              }}
             >
-              {error && (
-                <Alert
-                  severity="error"
-                  sx={{ mb: 3, borderRadius: 2 }}
-                  onClose={clearError}
-                >
-                  {error}
-                </Alert>
-              )}
-
-              <TextField
-                fullWidth
-                label="Adresse email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                error={!!formErrors.email}
-                helperText={formErrors.email}
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                placeholder="exemple@email.com"
+              <img
+                src=" ./src/assets/icon.png"
+                alt="Logo"
+                style={{ width: 40, height: 40 }}
               />
-
-              <TextField
-                fullWidth
-                label="Mot de passe"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                error={!!formErrors.password}
-                helperText={formErrors.password}
-                sx={{ mb: 4 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleTogglePasswordVisibility}
-                        disabled={isLoading}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                placeholder="Votre mot de passe"
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={isLoading || !email || !password}
+              <Typography
+                variant="h5"
                 sx={{
-                  py: 1.5,
-                  mb: 3,
-                  fontSize: '1rem',
-                  fontWeight: 600,
+                  fontFamily: '"Chau Philomene One", cursive',
                 }}
               >
-                {isLoading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CircularProgress size={20} color="inherit" />
-                    Connexion...
-                  </Box>
-                ) : (
-                  'Se connecter'
-                )}
-              </Button>
+                <Box component="span" sx={{ color: 'error.main' }}>
+                  MEMO
+                </Box>
+                <Box component="span" sx={{ color: 'primary.main' }}>
+                  TRIP
+                </Box>
+              </Typography>
+            </Box>
+            <Typography variant="h3" color="text.primary" gutterBottom sx={{}}>
+              Organisez vos voyages nouvelle génération
+            </Typography>
+            <Typography
+              variant="h6"
+              color="text.primary"
+              sx={{ mb: 1, fontWeight: 500 }}
+            >
+              Bienvenue à nouveau
+            </Typography>
+          </Box>
 
-              <Divider sx={{ mb: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                  OU
-                </Typography>
-              </Divider>
+          <Box component="form" onSubmit={handleSubmit}>
+            {error && (
+              <Alert
+                severity="error"
+                sx={{ mb: 3, borderRadius: 2 }}
+                onClose={clearError}
+              >
+                {error}
+              </Alert>
+            )}
 
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1 }}
-                >
-                  Vous n'avez pas encore de compte ?
-                </Typography>
-                <Button
-                  component={Link}
+            <TextField
+              fullWidth
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
+              sx={{ mb: 3 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="memotrip@exemple.com"
+              variant="outlined"
+            />
+
+            <TextField
+              fullWidth
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              error={!!formErrors.password}
+              helperText={formErrors.password}
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleTogglePasswordVisibility}
+                      disabled={isLoading}
+                      edge="end"
+                      size="small"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="mot de passe"
+              variant="outlined"
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading || !email || !password}
+              sx={{
+                py: 1.5,
+                mb: 4,
+                fontSize: '1rem',
+                fontWeight: 600,
+
+                backgroundColor: '#6C7B8A',
+                '&:hover': {
+                  backgroundColor: '#5A6875',
+                },
+              }}
+            >
+              {isLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={20} color="inherit" />
+                  Connexion...
+                </Box>
+              ) : (
+                'Se connecter'
+              )}
+            </Button>
+
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mb: 1 }}
+              >
+                Vous n'avez pas encore de compte ?{' '}
+                <Link
                   to="/register"
-                  variant="outlined"
-                  size="large"
-                  fullWidth
-                  disabled={isLoading}
-                  sx={{
-                    py: 1.5,
-                    fontSize: '1rem',
+                  style={{
+                    color: '#6C7B8A',
                     fontWeight: 600,
+                    textDecoration: 'none',
                   }}
                 >
                   Créer un compte
-                </Button>
-              </Box>
+                </Link>
+              </Typography>
             </Box>
-          </CardContent>
-        </Card>
-
-        <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            En vous connectant, vous acceptez nos{' '}
-            <Typography
-              component="span"
-              color="primary.main"
-              sx={{ cursor: 'pointer' }}
-            >
-              conditions d'utilisation
-            </Typography>{' '}
-            et notre{' '}
-            <Typography
-              component="span"
-              color="primary.main"
-              sx={{ cursor: 'pointer' }}
-            >
-              politique de confidentialité
-            </Typography>
-          </Typography>
+          </Box>
         </Box>
-      </Container>
+      </Box>
+
+      {/* Right Side - Carousel (Desktop only) */}
+      <Box
+        sx={{
+          flex: { lg: '0 0 58.333333%' }, // 7/12 = 58.333333%
+          display: { xs: 'none', lg: 'flex' },
+          position: 'relative',
+          minHeight: '100vh',
+        }}
+      >
+        <CarouselSlides />
+      </Box>
     </Box>
   );
 };
