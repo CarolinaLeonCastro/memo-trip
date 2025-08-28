@@ -4,44 +4,36 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Avatar,
-  IconButton,
-  TextField,
-  InputAdornment,
-  Chip,
-  Button,
   CircularProgress,
-  Stack,
-  Select,
-  MenuItem,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
-  Favorite as FavoriteIcon,
-  FavoriteBorder as FavoriteBorderIcon,
-  Comment as CommentIcon,
-  Visibility as VisibilityIcon,
   LocationOn as LocationOnIcon,
-  TrendingUp as TrendingUpIcon,
-  ArrowBack as ArrowBackIcon,
-  MenuBook as MenuBookIcon,
   People as PeopleIcon,
+  MenuBook as MenuBookIcon,
 } from '@mui/icons-material';
+// import { useNavigate } from 'react-router-dom';
 
-import { useNavigate } from 'react-router-dom';
+// Import des nouveaux composants
+import {
+  DiscoverStatsCard,
+  DiscoverSearchBar,
+  DiscoverTrendingTags,
+  DiscoverTabs,
+  PlaceCard,
+  JournalCard,
+} from '../components';
 
-// Types pour la page découverte
+// Types
+interface DiscoverStats {
+  shared_places: number;
+  public_journals: number;
+  active_travelers: number;
+}
+
 interface DiscoverUser {
   _id: string;
   name: string;
-  avatar?: {
-    url?: string;
-  };
+  avatar?: { url: string };
 }
 
 interface DiscoverPlace {
@@ -50,16 +42,9 @@ interface DiscoverPlace {
   description: string;
   city: string;
   country: string;
-  photos: Array<{
-    url: string;
-    caption?: string;
-  }>;
+  photos: Array<{ url: string }>;
   tags: string[];
-  rating?: number;
-  location?: {
-    latitude?: number;
-    longitude?: number;
-  };
+  rating: number;
   date_visited: string;
 }
 
@@ -67,7 +52,7 @@ interface DiscoverJournal {
   _id: string;
   title: string;
   description: string;
-  cover_image?: string;
+  cover_image: string;
   tags: string[];
   places_count: number;
   start_date: string;
@@ -86,48 +71,36 @@ interface DiscoverPost {
   created_at: string;
 }
 
-interface DiscoverStats {
-  shared_places: number;
-  public_journals: number;
-  active_travelers: number;
-}
-
 const TRENDING_TAGS = [
-  '#Historic',
-  '#Architecture',
-  '#Photography',
-  '#Romantic',
-  '#Beach',
-  '#Nature',
-  '#Food',
-  '#Adventure',
-  '#Cultural',
-  '#UNESCO',
-  '#Museum',
-  '#Festival',
+  'Adventure',
+  'Cultural',
+  'Photography',
+  'Architecture',
+  'Gastronomie',
+  'Historic',
+  'Romantic',
+  'Nature',
 ];
 
 const Discover: React.FC = () => {
-  const navigate = useNavigate();
-
-  // États
+  // const navigate = useNavigate();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
-  const [stats] = useState<DiscoverStats>({
-    shared_places: 1234,
-    public_journals: 567,
-    active_travelers: 2890,
-  });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'trending'>(
-    'recent'
-  );
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
 
-  // Données mockées pour le développement
+  // Données mockées pour les statistiques
+  const stats: DiscoverStats = {
+    shared_places: 2453,
+    public_journals: 1087,
+    active_travelers: 3241,
+  };
+
+  // Données mockées pour les posts
   const mockPosts: DiscoverPost[] = useMemo(
     () => [
+      // Lieux variés
       {
         _id: '1',
         type: 'place',
@@ -143,7 +116,11 @@ const Discover: React.FC = () => {
             'Ancient amphitheatre in the centre of Rome, a must-see for history lovers!',
           city: 'Rome',
           country: 'Italy',
-          photos: [{ url: '/api/placeholder/400/250' }],
+          photos: [
+            {
+              url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=400',
+            },
+          ],
           tags: ['Historic', 'Architecture', 'UNESCO'],
           rating: 5,
           date_visited: '2024-01-15',
@@ -169,7 +146,11 @@ const Discover: React.FC = () => {
             "The perfect spot for sunset photos! Don't miss the light show at night ✨",
           city: 'Paris',
           country: 'France',
-          photos: [{ url: '/api/placeholder/400/250' }],
+          photos: [
+            {
+              url: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&q=80&w=400',
+            },
+          ],
           tags: ['Iconic', 'Photography', 'Romantic'],
           rating: 4,
           date_visited: '2024-01-10',
@@ -180,6 +161,98 @@ const Discover: React.FC = () => {
         is_liked: true,
         created_at: '2024-01-10T15:20:00Z',
       },
+      {
+        _id: '4',
+        type: 'place',
+        user: {
+          _id: 'user4',
+          name: 'Yuki Tanaka',
+          avatar: { url: '/api/placeholder/40/40' },
+        },
+        content: {
+          _id: 'place4',
+          name: 'Rothenburg ob der Tauber',
+          description:
+            'Medieval town that looks like a fairytale! Perfect for history enthusiasts and photographers.',
+          city: 'Rothenburg',
+          country: 'Germany',
+          photos: [
+            {
+              url: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=400',
+            },
+          ],
+          tags: ['Medieval', 'Architecture', 'Photography'],
+          rating: 5,
+          date_visited: '2024-01-20',
+        } as DiscoverPlace,
+        likes: 67,
+        comments: 8,
+        views: 234,
+        is_liked: false,
+        created_at: '2024-01-20T14:15:00Z',
+      },
+      {
+        _id: '5',
+        type: 'place',
+        user: {
+          _id: 'user5',
+          name: 'Anna Schmidt',
+          avatar: { url: '/api/placeholder/40/40' },
+        },
+        content: {
+          _id: 'place5',
+          name: 'Santorini Sunset',
+          description:
+            'Most breathtaking sunset view in the world! The blue domes and white houses create pure magic.',
+          city: 'Oia',
+          country: 'Greece',
+          photos: [
+            {
+              url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400',
+            },
+          ],
+          tags: ['Sunset', 'Romantic', 'Architecture'],
+          rating: 5,
+          date_visited: '2024-01-25',
+        } as DiscoverPlace,
+        likes: 198,
+        comments: 32,
+        views: 1456,
+        is_liked: true,
+        created_at: '2024-01-25T18:30:00Z',
+      },
+      {
+        _id: '6',
+        type: 'place',
+        user: {
+          _id: 'user6',
+          name: 'James Wilson',
+          avatar: { url: '/api/placeholder/40/40' },
+        },
+        content: {
+          _id: 'place6',
+          name: 'Machu Picchu',
+          description:
+            'Ancient Incan city in the clouds. The hike is challenging but absolutely worth every step!',
+          city: 'Cusco',
+          country: 'Peru',
+          photos: [
+            {
+              url: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&q=80&w=400',
+            },
+          ],
+          tags: ['Adventure', 'Historic', 'Hiking'],
+          rating: 5,
+          date_visited: '2024-02-01',
+        } as DiscoverPlace,
+        likes: 245,
+        comments: 41,
+        views: 2103,
+        is_liked: false,
+        created_at: '2024-02-01T08:45:00Z',
+      },
+
+      // Journaux variés
       {
         _id: '3',
         type: 'journal',
@@ -193,7 +266,8 @@ const Discover: React.FC = () => {
           title: 'European Adventure 2024',
           description:
             'Découverte de 5 pays européens en 3 semaines - un voyage inoubliable !',
-          cover_image: '/api/placeholder/400/250',
+          cover_image:
+            'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=400',
           tags: ['Adventure', 'Cultural', 'Photography'],
           places_count: 15,
           start_date: '2024-01-01',
@@ -204,6 +278,58 @@ const Discover: React.FC = () => {
         views: 1203,
         is_liked: false,
         created_at: '2024-01-05T09:15:00Z',
+      },
+      {
+        _id: '7',
+        type: 'journal',
+        user: {
+          _id: 'user7',
+          name: 'Elena Rossi',
+          avatar: { url: '/api/placeholder/40/40' },
+        },
+        content: {
+          _id: 'journal2',
+          title: 'Two Weeks in Mediterranean Paradise',
+          description:
+            'From the historic streets of Rome to the beautiful beaches of Santorini...',
+          cover_image:
+            'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=400',
+          tags: ['Rome', 'Florence', 'Santorini'],
+          places_count: 8,
+          start_date: '2024-01-15',
+          end_date: '2024-01-29',
+        } as DiscoverJournal,
+        likes: 234,
+        comments: 45,
+        views: 1876,
+        is_liked: true,
+        created_at: '2024-01-15T11:20:00Z',
+      },
+      {
+        _id: '8',
+        type: 'journal',
+        user: {
+          _id: 'user8',
+          name: 'Alex Thompson',
+          avatar: { url: '/api/placeholder/40/40' },
+        },
+        content: {
+          _id: 'journal3',
+          title: 'Solo Backpacking Through Southeast Asia',
+          description:
+            'An incredible journey of self-discovery through Thailand, Vietnam, and Cambodia.',
+          cover_image:
+            'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400',
+          tags: ['Bangkok', 'Ho Chi Minh', 'Siem Reap'],
+          places_count: 12,
+          start_date: '2024-02-01',
+          end_date: '2024-02-30',
+        } as DiscoverJournal,
+        likes: 189,
+        comments: 32,
+        views: 1234,
+        is_liked: false,
+        created_at: '2024-02-01T16:30:00Z',
       },
     ],
     []
@@ -232,625 +358,138 @@ const Discover: React.FC = () => {
   };
 
   const handleTagClick = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
-  const getImageUrl = (
-    photos: Array<{ url: string }> | string | undefined
-  ): string => {
-    if (Array.isArray(photos) && photos.length > 0) {
-      return photos[0].url;
-    }
-    if (typeof photos === 'string') {
-      return photos;
-    }
-    return '/api/placeholder/400/250';
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
   };
 
-  const renderPost = (post: DiscoverPost) => (
-    <Card
-      key={post._id}
-      sx={{
-        borderRadius: 3,
-        overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        transition: 'all 0.3s ease',
-        backgroundColor: 'white',
-        '&:hover': {
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-          transform: 'translateY(-4px)',
-        },
-      }}
-    >
-      {/* Image */}
-      <Box sx={{ position: 'relative' }}>
-        <CardMedia
-          component="img"
-          height="200"
-          image={getImageUrl(
-            post.type === 'place'
-              ? (post.content as DiscoverPlace).photos
-              : (post.content as DiscoverJournal).cover_image
-          )}
-          alt={
-            post.type === 'place'
-              ? (post.content as DiscoverPlace).name
-              : (post.content as DiscoverJournal).title
-          }
-          sx={{
-            objectFit: 'cover',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            if (post.type === 'place') {
-              navigate(`/place/${post.content._id}`);
-            } else {
-              navigate(`/public/journals/${post.content._id}`);
-            }
-          }}
+  const handleTabChange = (tab: number) => {
+    setActiveTab(tab);
+  };
+
+  const renderPost = (post: DiscoverPost) => {
+    if (post.type === 'place') {
+      return (
+        <PlaceCard
+          place={post.content as DiscoverPlace}
+          user={post.user}
+          likes={post.likes}
+          comments={post.comments}
+          views={post.views}
+          isLiked={post.is_liked}
+          onLike={() => handleLike(post._id)}
         />
-
-        {/* Heart overlay sur l'image */}
-        <IconButton
-          onClick={() => handleLike(post._id)}
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            color: post.is_liked ? '#FF6B35' : '#666',
-            '&:hover': {
-              backgroundColor: 'white',
-              color: '#FF6B35',
-            },
-            width: 40,
-            height: 40,
-          }}
-        >
-          {post.is_liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </IconButton>
-      </Box>
-
-      {/* Contenu */}
-      <CardContent sx={{ p: 2 }}>
-        {post.type === 'place' ? (
-          <>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              gutterBottom
-              sx={{ fontSize: '1.1rem' }}
-            >
-              {(post.content as DiscoverPlace).name}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <LocationOnIcon sx={{ fontSize: 16, color: '#666', mr: 0.5 }} />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: '0.875rem' }}
-              >
-                {(post.content as DiscoverPlace).city},{' '}
-                {(post.content as DiscoverPlace).country}
-              </Typography>
-            </Box>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontSize: '0.85rem',
-                lineHeight: 1.4,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                mb: 1.5,
-              }}
-            >
-              {(post.content as DiscoverPlace).description}
-            </Typography>
-          </>
-        ) : (
-          <>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              gutterBottom
-              sx={{ fontSize: '1.1rem' }}
-            >
-              {(post.content as DiscoverJournal).title}
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontSize: '0.85rem',
-                lineHeight: 1.4,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                mb: 1.5,
-              }}
-            >
-              {(post.content as DiscoverJournal).description}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <MenuBookIcon sx={{ fontSize: 16, color: '#666', mr: 0.5 }} />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: '0.875rem' }}
-              >
-                {(post.content as DiscoverJournal).places_count} lieux
-              </Typography>
-            </Box>
-          </>
-        )}
-
-        {/* Footer avec utilisateur et stats */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mt: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              src={post.user.avatar?.url}
-              sx={{
-                width: 28,
-                height: 28,
-                mr: 1,
-                bgcolor: '#1976d2',
-                fontSize: '0.75rem',
-              }}
-            >
-              {post.user.name.charAt(0)}
-            </Avatar>
-            <Typography
-              variant="caption"
-              fontWeight="medium"
-              sx={{ fontSize: '0.8rem' }}
-            >
-              {post.user.name}
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontSize: '0.75rem' }}
-              >
-                {post.likes}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CommentIcon sx={{ fontSize: 14, color: '#666' }} />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontSize: '0.75rem' }}
-              >
-                {post.comments}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <VisibilityIcon sx={{ fontSize: 14, color: '#666' }} />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontSize: '0.75rem' }}
-              >
-                {post.views}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+      );
+    } else {
+      return (
+        <JournalCard
+          journal={post.content as DiscoverJournal}
+          user={post.user}
+          likes={post.likes}
+          comments={post.comments}
+          views={post.views}
+          isLiked={post.is_liked}
+          onLike={() => handleLike(post._id)}
+        />
+      );
+    }
+  };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#E3F2FD' }}>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* En-tête */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <IconButton
-              onClick={() => navigate(-1)}
-              sx={{
-                mr: 2,
-                bgcolor: 'white',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                '&:hover': { bgcolor: 'white' },
-              }}
-            >
-              <ArrowBackIcon sx={{ color: '#1976d2' }} />
-            </IconButton>
-            <Box>
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                sx={{ color: '#1976d2', mb: 0.5 }}
-              >
-                Découverte
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                Explorez les voyages et lieux de la communauté MemoTrip
-              </Typography>
-            </Box>
-          </Box>
+          <Typography
+            variant="h3"
+            fontWeight="bold"
+            sx={{ color: '#1976d2', mb: 0.5 }}
+          >
+            Découverte
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Explorez les voyages et lieux de la communauté MemoTrip
+          </Typography>
 
           {/* Statistiques */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={3} sx={{ mb: 4, mt: 2 }}>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Box
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  bgcolor: '#1976d2',
-                  color: 'white',
-                  borderRadius: 1,
-                  boxShadow: '0 4px 16px rgba(25, 118, 210, 0.3)',
-                }}
-              >
-                <LocationOnIcon sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                  Lieux partagés
-                </Typography>
-                <Typography variant="h3" fontWeight="bold">
-                  {stats.shared_places.toLocaleString()}
-                </Typography>
-              </Box>
+              <DiscoverStatsCard
+                icon={
+                  <LocationOnIcon sx={{ fontSize: 24, color: '#4F86F7' }} />
+                }
+                label="Lieux partagés"
+                value={stats.shared_places}
+                color="79, 134, 247"
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Box
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  bgcolor: '#1976d2',
-                  color: 'white',
-                  borderRadius: 1,
-                  boxShadow: '0 4px 16px rgba(25, 118, 210, 0.3)',
-                }}
-              >
-                <MenuBookIcon sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                  Journaux publics
-                </Typography>
-                <Typography variant="h3" fontWeight="bold">
-                  {stats.public_journals.toLocaleString()}
-                </Typography>
-              </Box>
+              <DiscoverStatsCard
+                icon={<MenuBookIcon sx={{ fontSize: 24, color: '#4F86F7' }} />}
+                label="Journaux publics"
+                value={stats.public_journals}
+                color="79, 134, 247"
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Box
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  bgcolor: '#1976d2',
-                  color: 'white',
-                  borderRadius: 1,
-                  boxShadow: '0 4px 16px rgba(25, 118, 210, 0.3)',
-                }}
-              >
-                <PeopleIcon sx={{ fontSize: 48, mb: 1 }} />
-                <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                  Voyageurs actifs
-                </Typography>
-                <Typography variant="h3" fontWeight="bold">
-                  {stats.active_travelers.toLocaleString()}
-                </Typography>
-              </Box>
+              <DiscoverStatsCard
+                icon={<PeopleIcon sx={{ fontSize: 24, color: '#FF8A00' }} />}
+                label="Voyageurs actifs"
+                value={stats.active_travelers}
+                color="255, 138, 0"
+              />
             </Grid>
           </Grid>
 
-          {/* Barre de recherche et filtres */}
-          <Box
-            sx={{
-              p: 3,
-              mb: 3,
-              borderRadius: 1,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Grid container spacing={3} alignItems="center">
-              <Grid size={{ xs: 12, md: 8 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Rechercher des lieux, journaux ou utilisateurs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: '#1976d2' }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 1,
-                      bgcolor: '#F5F9FD',
-                      border: 'none',
-                      '&:hover': {
-                        bgcolor: '#EBF4FE',
-                      },
-                      '&.Mui-focused': {
-                        bgcolor: 'white',
-                        boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Select
-                  value={sortBy}
-                  onChange={(e) =>
-                    setSortBy(
-                      e.target.value as 'recent' | 'popular' | 'trending'
-                    )
-                  }
-                  displayEmpty
-                  fullWidth
-                  sx={{
-                    borderRadius: 1,
-                    bgcolor: '#F5F9FD',
-                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                  }}
-                >
-                  <MenuItem value="recent">🕒 Plus récent</MenuItem>
-                  <MenuItem value="popular">🔥 Plus populaire</MenuItem>
-                  <MenuItem value="trending">📈 Tendance</MenuItem>
-                </Select>
-              </Grid>
-            </Grid>
-          </Box>
+          {/* Barre de recherche */}
+          <DiscoverSearchBar
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+          />
 
           {/* Tags tendance */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <TrendingUpIcon sx={{ color: '#1976d2', mr: 1, fontSize: 28 }} />
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                sx={{ color: '#1976d2' }}
-              >
-                Tags tendance
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-              {TRENDING_TAGS.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  onClick={() => handleTagClick(tag)}
-                  sx={{
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: 'medium',
-                    bgcolor: selectedTags.includes(tag) ? '#1976d2' : 'white',
-                    color: selectedTags.includes(tag) ? 'white' : '#1976d2',
-                    border: `2px solid ${selectedTags.includes(tag) ? '#1976d2' : '#E3F2FD'}`,
-                    '&:hover': {
-                      bgcolor: selectedTags.includes(tag)
-                        ? '#1565c0'
-                        : '#1976d2',
-                      color: 'white',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
+          <DiscoverTrendingTags
+            tags={TRENDING_TAGS}
+            selectedTags={selectedTags}
+            onTagClick={handleTagClick}
+          />
 
           {/* Tabs Lieux/Journaux */}
-          <Box sx={{ mb: 4 }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_e, newValue) => setActiveTab(newValue)}
-              sx={{
-                '& .MuiTabs-indicator': {
-                  bgcolor: '#1976d2',
-                  height: 3,
-                },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  color: '#666',
-                  '&.Mui-selected': {
-                    color: '#1976d2',
-                  },
-                },
-              }}
-            >
-              <Tab
-                icon={<LocationOnIcon />}
-                iconPosition="start"
-                label="Lieux"
-                sx={{ mr: 2 }}
-              />
-              <Tab
-                icon={<MenuBookIcon />}
-                iconPosition="start"
-                label="Journaux"
-              />
-            </Tabs>
-          </Box>
+          <DiscoverTabs activeTab={activeTab} onTabChange={handleTabChange} />
         </Box>
 
         {/* Contenu principal */}
-        <Grid container spacing={4}>
-          {/* Feed des posts en grille masonry */}
-          <Grid size={{ xs: 12, lg: 9 }}>
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress size={50} sx={{ color: '#1976d2' }} />
-              </Box>
-            ) : (
-              <Grid container spacing={3}>
-                {posts.map((post) => (
-                  <Grid key={post._id} size={{ xs: 12, sm: 6, md: 4 }}>
-                    {renderPost(post)}
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Grid>
-
-          {/* Sidebar */}
-          <Grid size={{ xs: 12, lg: 3 }}>
-            <Stack spacing={3}>
-              {/* Voyageurs actifs */}
-              <Box
-                sx={{
-                  p: 3,
-                  borderRadius: 1,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  gutterBottom
-                  sx={{ color: '#1976d2', mb: 2 }}
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress size={50} sx={{ color: '#4F86F7' }} />
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {posts
+              .filter((post) => {
+                if (activeTab === 0) return post.type === 'place';
+                if (activeTab === 1) return post.type === 'journal';
+                return true;
+              })
+              .map((post) => (
+                <Grid
+                  key={post._id}
+                  size={{
+                    xs: 12,
+                    sm: post.type === 'journal' ? 12 : 6,
+                    md: post.type === 'journal' ? 6 : 6,
+                    lg: post.type === 'journal' ? 6 : 4,
+                  }}
                 >
-                  👤 Voyageurs actifs
-                </Typography>
-                <Stack spacing={2}>
-                  {[
-                    {
-                      name: 'Emma Wilson',
-                      places: 42,
-                      avatar: '/api/placeholder/40/40',
-                    },
-                    {
-                      name: 'Jean Dupont',
-                      places: 38,
-                      avatar: '/api/placeholder/40/40',
-                    },
-                    {
-                      name: 'Maria Garcia',
-                      places: 35,
-                      avatar: '/api/placeholder/40/40',
-                    },
-                  ].map((traveler, index) => (
-                    <Box
-                      key={index}
-                      sx={{ display: 'flex', alignItems: 'center' }}
-                    >
-                      <Avatar
-                        src={traveler.avatar}
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          mr: 2,
-                          bgcolor: '#1976d2',
-                        }}
-                      >
-                        {traveler.name.charAt(0)}
-                      </Avatar>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {traveler.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {traveler.places} lieux visités
-                        </Typography>
-                      </Box>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          borderRadius: 2,
-                          borderColor: '#1976d2',
-                          color: '#1976d2',
-                          fontSize: '0.75rem',
-                          '&:hover': {
-                            bgcolor: '#1976d2',
-                            color: 'white',
-                          },
-                        }}
-                      >
-                        Suivre
-                      </Button>
-                    </Box>
-                  ))}
-                </Stack>
-              </Box>
-
-              {/* Destinations populaires */}
-              <Box
-                sx={{
-                  p: 3,
-                  borderRadius: 1,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  gutterBottom
-                  sx={{ color: '#1976d2', mb: 2 }}
-                >
-                  🌍 Destinations populaires
-                </Typography>
-                <Stack spacing={1.5}>
-                  {[
-                    { name: 'Paris, France', count: 234 },
-                    { name: 'Tokyo, Japon', count: 189 },
-                    { name: 'New York, USA', count: 167 },
-                    { name: 'Barcelona, Espagne', count: 145 },
-                    { name: 'Rome, Italie', count: 132 },
-                  ].map((destination, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        py: 1,
-                        px: 2,
-                        bgcolor: '#F5F9FD',
-                        borderRadius: 2,
-                        '&:hover': {
-                          bgcolor: '#EBF4FE',
-                        },
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight="medium">
-                        {destination.name}
-                      </Typography>
-                      <Chip
-                        label={destination.count}
-                        size="small"
-                        sx={{
-                          bgcolor: '#1976d2',
-                          color: 'white',
-                          fontWeight: 'bold',
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Box>
-            </Stack>
+                  {renderPost(post)}
+                </Grid>
+              ))}
           </Grid>
-        </Grid>
+        )}
       </Container>
     </Box>
   );

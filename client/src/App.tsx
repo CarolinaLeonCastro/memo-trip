@@ -24,6 +24,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminSetup from './pages/AdminSetup';
 import PublicJournals from './pages/PublicJournals';
 import PublicJournalDetail from './pages/PublicJournalDetail';
+import PublicPlaceDetail from './pages/PublicPlaceDetail';
 import Discover from './pages/Discover';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -43,6 +44,10 @@ function App() {
                 <Route
                   path="/public/journals/:id"
                   element={<PublicJournalDetail />}
+                />
+                <Route
+                  path="/public/place/:id"
+                  element={<PublicPlaceDetail />}
                 />
                 <Route path="/setup" element={<AdminSetup />} />
 
