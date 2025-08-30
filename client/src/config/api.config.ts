@@ -18,13 +18,11 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<any> {
-    const token = sessionStorage.getItem('memotrip-token');
-
     const config: RequestInit = {
       ...options,
+      credentials: 'include', // Important pour envoyer les cookies HTTPOnly
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     };
