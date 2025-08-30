@@ -5,9 +5,25 @@ import logger from '../config/logger.config.js';
 import env from '../config/dotenv.config.js';
 
 // Fonction utilitaire pour générer un token JWT
-const generateToken = (userId) => {
-	return jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
+const generateToken = (user) => {
+	const payload = {
+		userId: user._id,
+		email: user.email,
+		role: user.role,
+		status: user.status,
+		name: user.name
+	};
+	return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
 };
+
+// Fonction utilitaire pour les options de cookies sécurisés
+const getCookieOptions = () => ({
+	httpOnly: true,
+	secure: process.env.NODE_ENV === 'production', // HTTPS en production
+	sameSite: 'lax',
+	maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
+	path: '/'
+});
 
 // POST /api/auth/register
 export async function register(req, res, next) {
@@ -32,7 +48,7 @@ export async function register(req, res, next) {
 		});
 
 		// Générer le token JWT
-		const token = generateToken(user._id);
+		const token = generateToken(user);
 
 		// Retourner les données de l'utilisateur (sans le mot de passe) et le token
 		const userResponse = {
@@ -48,10 +64,12 @@ export async function register(req, res, next) {
 
 		logger.info('User registered successfully', { userId: user._id, email: user.email });
 
+		// Définir le cookie HTTPOnly sécurisé
+		res.cookie('auth-token', token, getCookieOptions());
+
 		res.status(201).json({
 			message: 'Utilisateur créé avec succès',
-			user: userResponse,
-			token
+			user: userResponse
 		});
 	} catch (err) {
 		logger.error('Error during user registration', { error: err.message });
@@ -81,7 +99,7 @@ export async function login(req, res, next) {
 		await user.save();
 
 		// Générer le token JWT
-		const token = generateToken(user._id);
+		const token = generateToken(user);
 
 		// Retourner les données de l'utilisateur (sans le mot de passe) et le token
 		const userResponse = {
@@ -97,10 +115,12 @@ export async function login(req, res, next) {
 
 		logger.info('User logged in successfully', { userId: user._id, email: user.email });
 
+		// Définir le cookie HTTPOnly sécurisé
+		res.cookie('auth-token', token, getCookieOptions());
+
 		res.json({
 			message: 'Connexion réussie',
-			user: userResponse,
-			token
+			user: userResponse
 		});
 	} catch (err) {
 		logger.error('Error during user login', { error: err.message });
@@ -111,8 +131,14 @@ export async function login(req, res, next) {
 // POST /api/auth/logout
 export function logout(req, res, next) {
 	try {
-		// Avec JWT, le logout côté serveur consiste simplement à confirmer la déconnexion
-		// Le client devra supprimer le token de son côté
+		// Supprimer le cookie d'authentification
+		res.clearCookie('auth-token', getCookieOptions());
+
+		logger.info('User logged out successfully', {
+			userId: req.user?._id,
+			email: req.user?.email
+		});
+
 		res.json({ message: 'Déconnexion réussie' });
 	} catch (err) {
 		logger.error('Error during logout', { error: err.message });

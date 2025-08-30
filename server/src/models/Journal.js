@@ -17,6 +17,11 @@ const journalSchema = new mongoose.Schema(
 			type: Boolean,
 			default: false
 		},
+		slug: {
+			type: String,
+			unique: true,
+			sparse: true // Permet null/undefined mais les valeurs existantes doivent être uniques
+		},
 		tags: [{ type: String, trim: true }], // Tags pour catégoriser
 		user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 		places: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Place' }],
@@ -30,6 +35,23 @@ const journalSchema = new mongoose.Schema(
 		timestamps: true
 	}
 );
+
+// Middleware pour générer un slug unique lors de la publication
+journalSchema.pre('save', async function (next) {
+	if (this.is_public && !this.slug) {
+		// Générer un slug basé sur le titre et l'ID
+		const baseSlug = this.title
+			.toLowerCase()
+			.replace(/[^a-z0-9]/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+		
+		// Ajouter un suffixe unique avec timestamp
+		const timestamp = Date.now();
+		this.slug = `${baseSlug}-${timestamp}`;
+	}
+	next();
+});
 
 // Index pour la recherche par titre
 journalSchema.index({ title: 'text', description: 'text' });

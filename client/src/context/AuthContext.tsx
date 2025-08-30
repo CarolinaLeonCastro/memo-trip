@@ -7,10 +7,10 @@ import React, {
 } from 'react';
 import type { User } from '../types';
 import {
-  authService,
+  authCookieService as authService, // Alias pour compatibilité
   type LoginRequest,
   type RegisterRequest,
-} from '../services/auth.service';
+} from '../services/auth-cookie.service';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +22,7 @@ interface AuthContextType {
     password: string,
     confirmPassword: string
   ) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
@@ -53,36 +53,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
-  // Vérifier si l'utilisateur est connecté au chargement
+  // Vérifier si l'utilisateur est connecté au chargement (optimisé avec JWT)
   useEffect(() => {
-    // Exposer authService pour le débogage
-    if (typeof window !== 'undefined') {
-      (window as any).authService = authService;
+    // Exposer authService pour le débogage en développement
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      // Éviter les types `any` - interface pour window dev
+      interface WindowDev extends Window {
+        authService: typeof authService;
+        authDiagnose: () => Promise<void>;
+      }
+
+      const windowDev = window as unknown as WindowDev;
+      windowDev.authService = authService;
+      windowDev.authDiagnose = () => authService.diagnose();
     }
 
     const initAuth = async () => {
       try {
-        // Vérifier s'il y a des données dans sessionStorage
-        const storedUser = authService.getUser();
-        const token = authService.getToken();
+        // Vérifier si l'utilisateur est connecté via cookie HTTPOnly
+        const userData = await authService.getUserSafely();
 
-        if (storedUser && token) {
-          // Vérifier la validité du token auprès du serveur
-          try {
-            const response = await authService.getCurrentUser();
-            setUser(response.user);
-          } catch {
-            // Token invalide, nettoyer les données
-            authService.clearAuth();
-            setUser(null);
-          }
+        if (userData) {
+          console.log(
+            '🍪 Utilisateur connecté via cookie HTTPOnly:',
+            userData.name
+          );
+          setUser(userData);
+        } else {
+          console.log("🍪 Aucun cookie d'authentification trouvé");
+          setUser(null);
         }
       } catch (error) {
         console.error(
-          "Erreur lors de l'initialisation de l'authentification:",
+          "❌ Erreur lors de l'initialisation de l'authentification:",
           error
         );
-        authService.clearAuth();
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -100,10 +105,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const credentials: LoginRequest = { email, password };
       const response = await authService.login(credentials);
 
-      // Sauvegarder le token et les données utilisateur
-      authService.setToken(response.token);
-      authService.setUser(response.user);
+      // Le token est maintenant stocké dans un cookie HTTPOnly sécurisé
+      // Plus besoin de setToken ! 🎉
       setUser(response.user);
+
+      // Invalider le cache pour forcer la synchronisation
+      authService.invalidateCache();
 
       return true;
     } catch (err) {
@@ -134,10 +141,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
       const response = await authService.register(userData);
 
-      // Sauvegarder le token et les données utilisateur
-      authService.setToken(response.token);
-      authService.setUser(response.user);
+      // Le token est maintenant stocké dans un cookie HTTPOnly sécurisé
+      // Plus besoin de setToken ! 🎉
       setUser(response.user);
+
+      // Invalider le cache pour forcer la synchronisation
+      authService.invalidateCache();
 
       return true;
     } catch (err) {
@@ -151,16 +160,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
+    setIsLoading(true);
+
     try {
-      // Notifier le serveur de la déconnexion
+      // Supprimer le cookie côté serveur
       await authService.logout();
     } catch (error) {
-      console.error('Erreur lors de la déconnexion côté serveur:', error);
+      console.error('⚠️ Erreur lors de la déconnexion côté serveur:', error);
     } finally {
-      // Nettoyer complètement toutes les données de stockage
-      authService.clearAllStorage();
+      // Nettoyer l'état local même si le serveur échoue
+      authService.invalidateCache();
       setUser(null);
       setError(null);
+      setIsLoading(false);
+
+      console.log('🍪 Déconnexion réussie - Cookie supprimé');
     }
   };
 
