@@ -4,7 +4,11 @@ import Place from '../models/Place.js';
 // POST /api/journals
 export async function createJournal(req, res, next) {
 	try {
-		const journal = await Journal.create(req.body);
+		const journalData = {
+			...req.body,
+			user_id: req.user.id
+		};
+		const journal = await Journal.create(journalData);
 		res.status(201).json(journal);
 	} catch (err) {
 		next(err);
@@ -25,8 +29,7 @@ export async function getJournals(req, res, next) {
 			sort_order = 'desc'
 		} = req.query;
 
-		const filter = {};
-		if (user_id) filter.user_id = user_id;
+		const filter = { user_id: req.user.id }; // Toujours filtrer par l'utilisateur authentifié
 		if (status) filter.status = status;
 		if (tags) filter.tags = { $in: tags.split(',') };
 		if (search) {
@@ -78,8 +81,12 @@ export async function getJournals(req, res, next) {
 // GET /api/journals/:id
 export async function getJournalById(req, res, next) {
 	try {
-		const journal = await Journal.findById(req.params.id).populate('user_id', 'name email').populate('places');
-		if (!journal) return res.status(404).json({ message: 'Journal not found' });
+		const journal = await Journal.findOne({ 
+			_id: req.params.id, 
+			user_id: req.user.id 
+		}).populate('user_id', 'name email').populate('places');
+		
+		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
 		res.json(journal);
 	} catch (err) {
 		next(err);
@@ -89,13 +96,18 @@ export async function getJournalById(req, res, next) {
 // PUT /api/journals/:id
 export async function updateJournal(req, res, next) {
 	try {
-		const journal = await Journal.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-			runValidators: true
-		})
+		const journal = await Journal.findOneAndUpdate(
+			{ _id: req.params.id, user_id: req.user.id },
+			req.body,
+			{
+				new: true,
+				runValidators: true
+			}
+		)
 			.populate('user_id', 'name email')
 			.populate('places');
-		if (!journal) return res.status(404).json({ message: 'Journal not found' });
+		
+		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
 		res.json(journal);
 	} catch (err) {
 		next(err);
@@ -105,10 +117,14 @@ export async function updateJournal(req, res, next) {
 // DELETE /api/journals/:id
 export async function deleteJournal(req, res, next) {
 	try {
+		// Vérifier que le journal appartient à l'utilisateur
+		const journal = await Journal.findOne({ _id: req.params.id, user_id: req.user.id });
+		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
+
 		// Supprimer aussi tous les lieux associés
 		await Place.deleteMany({ journal_id: req.params.id });
 
-		const result = await Journal.deleteOne({ _id: req.params.id });
+		const result = await Journal.deleteOne({ _id: req.params.id, user_id: req.user.id });
 		if (result.deletedCount === 0) return res.status(404).json({ message: 'Journal not found' });
 		res.status(204).end();
 	} catch (err) {
@@ -116,20 +132,35 @@ export async function deleteJournal(req, res, next) {
 	}
 }
 
-// GET /api/journals/:id/export-pdf
-export async function exportJournalPDF(req, res, next) {
+// PATCH /api/journals/:id/toggle-public
+export async function togglePublic(req, res, next) {
 	try {
-		const journal = await Journal.findById(req.params.id).populate('user_id', 'name email').populate('places');
-
-		if (!journal) return res.status(404).json({ message: 'Journal not found' });
-
-		// TODO: Implémenter la génération PDF avec pdfkit
-		// Pour l'instant, retourner les données JSON
+		const { is_public, visibility } = req.body;
+		
+		const journal = await Journal.findOneAndUpdate(
+			{ _id: req.params.id, user_id: req.user.id },
+			{ 
+				is_public: is_public,
+				// Le slug sera généré automatiquement par le middleware pre-save si is_public devient true
+			},
+			{
+				new: true,
+				runValidators: true
+			}
+		)
+			.populate('user_id', 'name email')
+			.populate('places');
+		
+		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
+		
 		res.json({
-			message: 'PDF export not implemented yet',
-			data: journal
+			message: `Journal ${is_public ? 'publié' : 'rendu privé'} avec succès`,
+			journal: journal,
+			public_url: journal.is_public && journal.slug ? `/public/journals/${journal.slug}` : null
 		});
 	} catch (err) {
 		next(err);
 	}
 }
+
+

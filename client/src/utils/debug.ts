@@ -29,7 +29,7 @@ export const initDebugTools = () => {
     // Vérifier l'état de l'authentification
     checkAuth: async () => {
       console.log("🍪 État de l'authentification (cookies HTTPOnly):");
-      
+
       try {
         const user = await authCookieService.getUserSafely();
         console.log('  - Connecté:', !!user);
@@ -46,8 +46,8 @@ export const initDebugTools = () => {
   };
 
   console.log('🍪 Outils de debug MemoTrip (Cookies HTTPOnly):');
-  console.log("  - debugMemoTrip.diagnoseAuth() - Diagnostic complet");
-  console.log("  - debugMemoTrip.clearCache() - Invalider cache local");
+  console.log('  - debugMemoTrip.diagnoseAuth() - Diagnostic complet');
+  console.log('  - debugMemoTrip.clearCache() - Invalider cache local');
   console.log("  - debugMemoTrip.checkAuth() - Vérifier l'authentification");
   console.log('  - authDiagnose() - Raccourci pour diagnostic (déjà exposé)');
 };
