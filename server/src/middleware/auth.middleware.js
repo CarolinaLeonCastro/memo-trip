@@ -3,34 +3,49 @@ import env from '../config/dotenv.config.js';
 import User from '../models/User.js';
 import logger from '../config/logger.config.js';
 
-// Middleware pour vérifier l'authentification JWT
+// Middleware pour vérifier l'authentification JWT (via cookies HTTPOnly)
 export const authenticateToken = async (req, res, next) => {
 	try {
-		const authHeader = req.headers.authorization;
-		const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+		// Priorité 1: Cookie HTTPOnly sécurisé (recommandé)
+		let token = req.cookies['auth-token'];
+
+		// Priorité 2: Header Authorization (fallback pour API tools comme Postman)
+		if (!token) {
+			const authHeader = req.headers.authorization;
+			token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+		}
 
 		if (!token) {
 			return res.status(401).json({
 				success: false,
-				message: "Token d'authentification requis"
+				message: "Token d'authentification requis (cookie ou header)"
 			});
 		}
 
 		// Vérifier et décoder le token
 		const decoded = jwt.verify(token, env.JWT_SECRET);
 
-		// Récupérer l'utilisateur depuis la base de données
-		const user = await User.findById(decoded.userId).select('-password');
+		// Vérification de sécurité: s'assurer que l'utilisateur existe toujours
+		// (optionnel - pour des cas comme suppression de compte, changement de statut)
+		const userExists = await User.findById(decoded.userId, 'status');
 
-		if (!user) {
+		if (!userExists || userExists.status !== 'active') {
 			return res.status(401).json({
 				success: false,
-				message: 'Token invalide - utilisateur non trouvé'
+				message: 'Token invalide - utilisateur non trouvé ou inactif'
 			});
 		}
 
-		// Ajouter l'utilisateur à la requête
-		req.user = user;
+		// Utiliser les données du payload JWT (plus rapide)
+		req.user = {
+			_id: decoded.userId,
+			id: decoded.userId,
+			email: decoded.email,
+			name: decoded.name,
+			role: decoded.role,
+			status: decoded.status
+		};
+
 		next();
 	} catch (error) {
 		logger.warn('Authentication failed', {
@@ -90,14 +105,29 @@ export const requireRoles = (...roles) => {
 // Middleware optionnel pour les routes qui peuvent être publiques ou authentifiées
 export const optionalAuth = async (req, res, next) => {
 	try {
-		const authHeader = req.headers.authorization;
-		const token = authHeader && authHeader.split(' ')[1];
+		// Priorité 1: Cookie HTTPOnly
+		let token = req.cookies['auth-token'];
+
+		// Priorité 2: Header Authorization (fallback)
+		if (!token) {
+			const authHeader = req.headers.authorization;
+			token = authHeader && authHeader.split(' ')[1];
+		}
 
 		if (token) {
 			const decoded = jwt.verify(token, env.JWT_SECRET);
-			const user = await User.findById(decoded.userId).select('-password');
-			if (user) {
-				req.user = user;
+			const userExists = await User.findById(decoded.userId, 'status');
+
+			if (userExists && userExists.status === 'active') {
+				// Utiliser les données du payload JWT
+				req.user = {
+					_id: decoded.userId,
+					id: decoded.userId,
+					email: decoded.email,
+					name: decoded.name,
+					role: decoded.role,
+					status: decoded.status
+				};
 			}
 		}
 

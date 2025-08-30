@@ -1,12 +1,12 @@
 import React from 'react';
 import { Box, Paper, Typography, Button, Alert } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
-import { authService } from '../../services/auth.service';
+import { authCookieService } from '../../services/auth-cookie.service';
 
 const AuthDebug: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
 
-  const diagnoseAuth = () => {
+  const diagnoseAuth = async () => {
     console.log("🔍 Diagnostic d'authentification MemoTrip");
     console.log('═'.repeat(50));
 
@@ -35,8 +35,8 @@ const AuthDebug: React.FC = () => {
       console.log('  ❌ Aucun utilisateur connecté');
     }
 
-    console.log('\n💾 État du stockage :');
-    authService.diagnoseStorage();
+    console.log('\n🍪 Diagnostic des cookies HTTPOnly :');
+    await authCookieService.diagnose();
 
     console.log('\n🛠️ Actions recommandées :');
     if (!isAuthenticated) {
@@ -53,9 +53,17 @@ const AuthDebug: React.FC = () => {
     }
   };
 
-  const clearAuth = () => {
-    authService.clearAllStorage();
-    window.location.reload();
+  const clearAuth = async () => {
+    try {
+      await authCookieService.logout();
+      authCookieService.invalidateCache();
+      console.log('🍪 Déconnexion et nettoyage du cache terminés');
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur lors du nettoyage:', error);
+      authCookieService.invalidateCache();
+      window.location.reload();
+    }
   };
 
   // Affichage uniquement en mode développement
@@ -101,18 +109,18 @@ const AuthDebug: React.FC = () => {
           <Button
             size="small"
             variant="outlined"
-            onClick={diagnoseAuth}
+            onClick={() => diagnoseAuth()}
             sx={{ color: 'white', borderColor: 'white' }}
           >
-            Diagnostic Console
+            🍪 Diagnostic Cookie
           </Button>
           <Button
             size="small"
             variant="outlined"
-            onClick={clearAuth}
+            onClick={() => clearAuth()}
             sx={{ color: 'white', borderColor: 'white' }}
           >
-            Clear Storage
+            🍪 Logout & Clear
           </Button>
         </Box>
       </Paper>

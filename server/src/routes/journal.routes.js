@@ -5,7 +5,7 @@ import {
 	getJournalById,
 	updateJournal,
 	deleteJournal,
-	exportJournalPDF
+	togglePublic
 } from '../controllers/journal.controller.js';
 import { validateJournalCreate, validateJournalUpdate, validateJournalParams } from '../validation/middleware.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
@@ -18,6 +18,6 @@ router.get('/', authenticateToken, getJournals);
 router.get('/:id', authenticateToken, validateJournalParams, getJournalById);
 router.put('/:id', authenticateToken, validateJournalParams, validateJournalUpdate, updateJournal);
 router.delete('/:id', authenticateToken, validateJournalParams, deleteJournal);
-router.get('/:id/export-pdf', authenticateToken, validateJournalParams, exportJournalPDF);
+router.patch('/:id/toggle-public', authenticateToken, validateJournalParams, togglePublic);
 
 export default router;
