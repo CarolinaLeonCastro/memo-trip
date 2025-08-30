@@ -16,7 +16,6 @@ import {
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  Explore as ExploreIcon,
   LockOutlined as LockOutlinedIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';

@@ -24,6 +24,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminSetup from './pages/AdminSetup';
 import PublicJournals from './pages/PublicJournals';
 import PublicJournalDetail from './pages/PublicJournalDetail';
+import PublicPlaceDetail from './pages/PublicPlaceDetail';
+import Discover from './pages/Discover';
 import Login from './pages/Login';
 import Register from './pages/Register';
 //import AuthDebug from './components/debug/AuthDebug';
@@ -43,6 +45,10 @@ function App() {
                   path="/public/journals/:id"
                   element={<PublicJournalDetail />}
                 />
+                <Route
+                  path="/public/place/:id"
+                  element={<PublicPlaceDetail />}
+                />
                 <Route path="/setup" element={<AdminSetup />} />
 
                 {/* Routes d'authentification */}
@@ -59,6 +65,7 @@ function App() {
                   }
                 >
                   <Route index element={<MapView />} />
+                  <Route path="discover" element={<Discover />} />
                   <Route path="journals" element={<Journals />} />
                   <Route path="places" element={<AllPlaces />} />
                   <Route path="journals/new" element={<NewJournal />} />

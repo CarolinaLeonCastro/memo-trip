@@ -29,6 +29,7 @@ import {
   Logout as LogoutIcon,
   ExpandMore as ExpandMoreIcon,
   AdminPanelSettings as AdminIcon,
+  Explore as ExploreIcon,
 } from '@mui/icons-material';
 import { useThemeMode } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -64,6 +65,11 @@ const Navbar: React.FC = () => {
   };
 
   const navigationItems = [
+    {
+      label: 'Découverte',
+      path: '/discover',
+      icon: <ExploreIcon />,
+    },
     {
       label: 'Profil',
       path: '/profile',
