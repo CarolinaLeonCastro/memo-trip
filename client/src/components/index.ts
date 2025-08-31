@@ -1,7 +1,7 @@
 // Discover components
 export * from './discover';
 
-// Journal components  
+// Journal components
 export * from './journal';
 
 // Place components

@@ -146,30 +146,35 @@ const NewJournal: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    // Pour l'instant, on simule l'upload de la photo
-    // Dans une vraie application, il faudrait l'uploader sur le serveur
-    const photoUrl = mainPhotoPreview;
+    try {
+      // Pour l'instant, on simule l'upload de la photo
+      // Dans une vraie application, il faudrait l'uploader sur le serveur
+      const photoUrl = mainPhotoPreview;
 
-    addJournal({
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
-      userId: 'user1',
-      places: [],
-      mainPhoto: photoUrl,
-      tags: tags,
-      personalNotes: formData.personalNotes.trim() || undefined,
-    });
+      await addJournal({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        startDate: new Date(formData.startDate),
+        endDate: new Date(formData.endDate),
+        userId: 'user1',
+        places: [],
+        mainPhoto: photoUrl,
+        tags: tags,
+        personalNotes: formData.personalNotes.trim() || undefined,
+      });
 
-    navigate('/journals');
+      navigate('/journals');
+    } catch (error) {
+      console.error('Erreur lors de la création du journal:', error);
+      // Ici vous pouvez ajouter une notification d'erreur pour l'utilisateur
+    }
   };
 
   return (

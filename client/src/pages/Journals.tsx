@@ -259,7 +259,7 @@ const Journals: React.FC = () => {
                     component="img"
                     height="200"
                     image={
-                      journal.places[0]?.photos[0] ||
+                      journal.mainPhoto ||
                       'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=800'
                     }
                     alt={journal.title}
@@ -342,33 +342,30 @@ const Journals: React.FC = () => {
                   <Box
                     sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}
                   >
-                    <Chip
-                      label="Romantique"
-                      size="small"
-                      sx={{
-                        backgroundColor: 'tertiary.main',
-                        color: 'primary.main',
-                        fontWeight: 500,
-                      }}
-                    />
-                    <Chip
-                      label="Culture"
-                      size="small"
-                      sx={{
-                        backgroundColor: 'tertiary.main',
-                        color: 'primary.main',
-                        fontWeight: 500,
-                      }}
-                    />
-                    <Chip
-                      label="Gastronomie"
-                      size="small"
-                      sx={{
-                        backgroundColor: 'tertiary.main',
-                        color: 'primary.main',
-                        fontWeight: 500,
-                      }}
-                    />
+                    {journal.tags && journal.tags.length > 0 ? (
+                      journal.tags.slice(0, 3).map((tag, index) => (
+                        <Chip
+                          key={index}
+                          label={tag}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'tertiary.main',
+                            color: 'primary.main',
+                            fontWeight: 500,
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <Chip
+                        label="Aucun tag"
+                        size="small"
+                        sx={{
+                          backgroundColor: 'grey.100',
+                          color: 'grey.600',
+                          fontWeight: 500,
+                        }}
+                      />
+                    )}
                   </Box>
 
                   {/* Statistiques d'engagement */}

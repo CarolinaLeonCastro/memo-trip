@@ -757,19 +757,9 @@ const AddPlacePage: React.FC = () => {
                   }
                 >
                   <FormControlLabel
-                    value="none"
-                    control={<Radio />}
-                    label="Aucun journal"
-                  />
-                  <FormControlLabel
                     value="existing"
                     control={<Radio />}
                     label="Ajouter à un journal existant"
-                  />
-                  <FormControlLabel
-                    value="new"
-                    control={<Radio />}
-                    label="Créer un nouveau journal"
                   />
                 </RadioGroup>
               </FormControl>
@@ -802,18 +792,12 @@ const AddPlacePage: React.FC = () => {
                 </FormControl>
               )}
 
-              {/* Créer nouveau journal */}
-              {formData.journalOption === 'new' && (
-                <TextField
-                  fullWidth
-                  label="Titre du nouveau journal"
-                  value={formData.newJournalTitle}
-                  onChange={(e) =>
-                    handleChange('newJournalTitle', e.target.value)
-                  }
-                  placeholder="Ex: Voyage en France 2023"
-                />
-              )}
+              <Button
+                variant="contained"
+                onClick={() => navigate('/journals/new')}
+              >
+                Créer un nouveau journal
+              </Button>
             </Stack>
           </Paper>
         </Grid>
