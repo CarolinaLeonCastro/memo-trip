@@ -106,15 +106,6 @@ const JournalDetail: React.FC = () => {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <LocationOnIcon
-              sx={{ color: 'primary.main', fontSize: '1.2rem' }}
-            />
-            <Typography variant="body2" color="primary.main" fontWeight={500}>
-              {journal.places[0]?.name?.split(',').slice(-2).join(',').trim() ||
-                'Paris, France'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <CalendarTodayIcon
               sx={{ color: 'text.secondary', fontSize: '1.2rem' }}
             />
@@ -144,7 +135,7 @@ const JournalDetail: React.FC = () => {
             objectFit: 'cover',
           }}
           image={
-            journal.places[0]?.photos[0] ||
+            journal.mainPhoto ||
             'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200'
           }
           alt={journal.title}
@@ -382,30 +373,28 @@ const JournalDetail: React.FC = () => {
 
       {/* Tags */}
       <Box sx={{ display: 'flex', gap: 1, mb: 4, flexWrap: 'wrap' }}>
-        <Chip
-          label="Romantique"
-          sx={{
-            backgroundColor: 'tertiary.main',
-            color: 'primary.main',
-            fontWeight: 500,
-          }}
-        />
-        <Chip
-          label="Culture"
-          sx={{
-            backgroundColor: 'tertiary.main',
-            color: 'primary.main',
-            fontWeight: 500,
-          }}
-        />
-        <Chip
-          label="Gastronomie"
-          sx={{
-            backgroundColor: 'tertiary.main',
-            color: 'primary.main',
-            fontWeight: 500,
-          }}
-        />
+        {journal.tags && journal.tags.length > 0 ? (
+          journal.tags.map((tag, index) => (
+            <Chip
+              key={index}
+              label={tag}
+              sx={{
+                backgroundColor: 'tertiary.main',
+                color: 'primary.main',
+                fontWeight: 500,
+              }}
+            />
+          ))
+        ) : (
+          <Chip
+            label="Aucun tag"
+            sx={{
+              backgroundColor: 'grey.100',
+              color: 'grey.600',
+              fontWeight: 500,
+            }}
+          />
+        )}
       </Box>
 
       {/* Modal galerie photos */}

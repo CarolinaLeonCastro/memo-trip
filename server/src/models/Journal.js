@@ -45,7 +45,7 @@ journalSchema.pre('save', async function (next) {
 			.replace(/[^a-z0-9]/g, '-')
 			.replace(/-+/g, '-')
 			.replace(/^-|-$/g, '');
-		
+
 		// Ajouter un suffixe unique avec timestamp
 		const timestamp = Date.now();
 		this.slug = `${baseSlug}-${timestamp}`;

@@ -81,11 +81,13 @@ export async function getJournals(req, res, next) {
 // GET /api/journals/:id
 export async function getJournalById(req, res, next) {
 	try {
-		const journal = await Journal.findOne({ 
-			_id: req.params.id, 
-			user_id: req.user.id 
-		}).populate('user_id', 'name email').populate('places');
-		
+		const journal = await Journal.findOne({
+			_id: req.params.id,
+			user_id: req.user.id
+		})
+			.populate('user_id', 'name email')
+			.populate('places');
+
 		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
 		res.json(journal);
 	} catch (err) {
@@ -96,17 +98,13 @@ export async function getJournalById(req, res, next) {
 // PUT /api/journals/:id
 export async function updateJournal(req, res, next) {
 	try {
-		const journal = await Journal.findOneAndUpdate(
-			{ _id: req.params.id, user_id: req.user.id },
-			req.body,
-			{
-				new: true,
-				runValidators: true
-			}
-		)
+		const journal = await Journal.findOneAndUpdate({ _id: req.params.id, user_id: req.user.id }, req.body, {
+			new: true,
+			runValidators: true
+		})
 			.populate('user_id', 'name email')
 			.populate('places');
-		
+
 		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
 		res.json(journal);
 	} catch (err) {
@@ -136,11 +134,11 @@ export async function deleteJournal(req, res, next) {
 export async function togglePublic(req, res, next) {
 	try {
 		const { is_public, visibility } = req.body;
-		
+
 		const journal = await Journal.findOneAndUpdate(
 			{ _id: req.params.id, user_id: req.user.id },
-			{ 
-				is_public: is_public,
+			{
+				is_public: is_public
 				// Le slug sera généré automatiquement par le middleware pre-save si is_public devient true
 			},
 			{
@@ -150,9 +148,9 @@ export async function togglePublic(req, res, next) {
 		)
 			.populate('user_id', 'name email')
 			.populate('places');
-		
+
 		if (!journal) return res.status(404).json({ message: 'Journal not found or not authorized' });
-		
+
 		res.json({
 			message: `Journal ${is_public ? 'publié' : 'rendu privé'} avec succès`,
 			journal: journal,
@@ -162,5 +160,3 @@ export async function togglePublic(req, res, next) {
 		next(err);
 	}
 }
-
-

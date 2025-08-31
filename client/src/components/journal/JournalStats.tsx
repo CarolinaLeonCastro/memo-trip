@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import CommentIcon from '@mui/icons-material/Comment';
+
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ShareIcon from '@mui/icons-material/Share';
 
@@ -14,7 +14,6 @@ interface JournalStatsProps {
 
 export const JournalStats: React.FC<JournalStatsProps> = ({
   likes,
-  comments,
   views,
   shares,
 }) => {
@@ -40,16 +39,6 @@ export const JournalStats: React.FC<JournalStatsProps> = ({
               sx={{ color: '#1F2937' }}
             >
               {likes} likes
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CommentIcon sx={{ fontSize: 20, color: '#6B7280' }} />
-            <Typography
-              variant="body2"
-              fontWeight="600"
-              sx={{ color: '#1F2937' }}
-            >
-              {comments} commentaires
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

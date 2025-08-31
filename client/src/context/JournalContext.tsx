@@ -2,16 +2,20 @@ import React, {
   createContext,
   useContext,
   useState,
+  useEffect,
+  useCallback,
   type ReactNode,
 } from 'react';
 import type { Journal } from '../types';
 import type { Place } from '../types';
+import { journalApi } from '../services/journal-api';
+import { useAuth } from '../hooks/useAuth';
 
 interface JournalContextType {
   journals: Journal[];
-  addJournal: (journal: Omit<Journal, 'id'>) => void;
-  updateJournal: (id: string, journal: Partial<Journal>) => void;
-  deleteJournal: (id: string) => void;
+  addJournal: (journal: Omit<Journal, 'id'>) => Promise<void>;
+  updateJournal: (id: string, journal: Partial<Journal>) => Promise<void>;
+  deleteJournal: (id: string) => Promise<void>;
   getJournal: (id: string) => Journal | undefined;
   addPlace: (journalId: string, place: Omit<Place, 'id' | 'journalId'>) => void;
   updatePlace: (
@@ -20,6 +24,9 @@ interface JournalContextType {
     place: Partial<Place>
   ) => void;
   deletePlace: (journalId: string, placeId: string) => void;
+  loadJournals: () => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const JournalContext = createContext<JournalContextType | undefined>(undefined);
@@ -39,120 +46,173 @@ interface JournalProviderProps {
 export const JournalProvider: React.FC<JournalProviderProps> = ({
   children,
 }) => {
-  const [journals, setJournals] = useState<Journal[]>([
-    {
-      id: '1',
-      title: 'European Adventure',
-      description: 'Amazing trip across Europe',
-      startDate: new Date('2024-06-15'),
-      endDate: new Date('2024-06-22'),
-      userId: 'user1',
-      personalNotes:
-        "Ce voyage en Europe a été absolument fantastique ! Les paysages, la culture, la gastronomie... tout était parfait. J'ai particulièrement aimé les couchers de soleil à Paris et l'ambiance historique de Rome.",
-      places: [
-        {
-          id: '1',
-          name: 'Eiffel Tower, Paris, France',
-          city: 'Paris',
-          country: 'France',
-          description: 'Iconic iron lattice tower and symbol of Paris',
-          latitude: 48.8584,
-          longitude: 2.2945,
-          dateVisited: new Date('2024-06-16'),
-          photos: [
-            'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&q=80&w=800',
-            'https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&q=80&w=800',
-            'https://images.unsplash.com/photo-1549144511-f099e773c147?auto=format&fit=crop&q=80&w=800',
-          ],
-          tags: ['Architecture', 'Landmark', 'Historic'],
-          visited: true,
-          rating: 5,
-          journalId: '1',
-        },
-        {
-          id: '2',
-          name: 'Coliseum, Rome, Italy',
-          city: 'Rome',
-          country: 'Italy',
-          description: 'Ancient amphitheatre in the centre of Rome',
-          latitude: 41.8902,
-          longitude: 12.4922,
-          dateVisited: new Date('2024-06-18'),
-          photos: [
-            'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800',
-            'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?auto=format&fit=crop&q=80&w=800',
-            'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?auto=format&fit=crop&q=80&w=800',
-          ],
-          tags: ['History', 'Ancient', 'UNESCO'],
-          visited: true,
-          rating: 4,
-          journalId: '1',
-        },
-        {
-          id: '3',
-          name: 'Sagrada Familia, Barcelona, Spain',
-          city: 'Barcelona',
-          country: 'Spain',
-          description: 'Iconic basilica designed by Antoni Gaudí',
-          latitude: 41.4036,
-          longitude: 2.1744,
-          dateVisited: new Date('2024-06-20'),
-          photos: [
-            'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&q=80&w=800',
-          ],
-          tags: ['Architecture', 'Gaudí', 'Basilica'],
-          visited: true,
-          rating: 3,
-          journalId: '1',
-        },
-        {
-          id: '4',
-          name: 'Santorini, Greece',
-          city: 'Santorini',
-          country: 'Greece',
-          description: 'Beautiful Greek island with stunning sunsets',
-          latitude: 36.3932,
-          longitude: 25.4615,
-          dateVisited: new Date('2024-07-01'),
-          photos: [],
-          tags: ['Island', 'Sunset', 'Mediterranean'],
-          visited: false,
-          journalId: '1',
-        },
-      ],
-    },
-    {
-      id: '2',
-      title: 'Voyage de test',
-      description: 'Un voyage pour tester la fonctionnalité',
-      startDate: new Date('2025-09-01'),
-      endDate: new Date('2025-09-10'),
-      userId: 'user1',
-      personalNotes: 'Voyage sans lieux pour tester',
-      tags: ['Test'],
-      places: [],
-    },
-  ]);
+  const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const [journals, setJournals] = useState<Journal[]>([]); // ✅ Démarrer avec un tableau vide
 
-  const addJournal = (journalData: Omit<Journal, 'id'>) => {
-    const newJournal: Journal = {
-      ...journalData,
-      id: Date.now().toString(),
-      places: [],
-    };
-    setJournals((prev) => [...prev, newJournal]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fonction pour charger les journaux de l'utilisateur connecté
+  const loadJournals = useCallback(async () => {
+    if (!user?.id) {
+      setJournals([]); // Si pas d'utilisateur, vider les journaux
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Appeler l'API pour récupérer les journaux de l'utilisateur
+      const response = await journalApi.getJournals();
+
+      // Convertir au format local
+      const userJournals = response.data.map((journal) => ({
+        id: journal._id,
+        title: journal.title,
+        description: journal.description || '',
+        startDate: new Date(journal.start_date),
+        endDate: new Date(journal.end_date),
+        userId: journal.user_id,
+        personalNotes: journal.personal_notes,
+        tags: journal.tags || [],
+        places: [], // TODO: convertir les places si nécessaire
+        // ✅ Ajouter la photo de couverture récupérée
+        mainPhoto: journal.cover_image || '',
+      }));
+
+      setJournals(userJournals);
+    } catch (error) {
+      console.error('Erreur lors du chargement des journaux:', error);
+      setError('Erreur lors du chargement des journaux');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  // Charger les journaux quand l'utilisateur change
+  useEffect(() => {
+    loadJournals();
+  }, [loadJournals]); // Recharger quand loadJournals change
+
+  const addJournal = async (journalData: Omit<Journal, 'id'>) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Vérifier que l'utilisateur est connecté
+      if (!user?.id) {
+        throw new Error('Vous devez être connecté pour créer un journal');
+      }
+
+      // Convertir les données au format attendu par l'API
+      const journalCreateData = {
+        title: journalData.title,
+        description: journalData.description,
+        start_date: journalData.startDate.toISOString(),
+        end_date: journalData.endDate.toISOString(),
+        personal_notes: journalData.personalNotes,
+        tags: journalData.tags || [],
+        status: 'draft' as const,
+        user_id: user.id,
+        // ✅ Ajouter la photo de couverture
+        cover_image:
+          (journalData as Journal & { mainPhoto?: string }).mainPhoto || '',
+      };
+
+      // Appeler l'API backend pour créer le journal dans MongoDB Atlas
+      await journalApi.createJournal(journalCreateData);
+
+      // Recharger tous les journaux pour être sûr d'avoir les données à jour
+      await loadJournals();
+    } catch (error) {
+      console.error('Erreur lors de la création du journal:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la création du journal'
+      );
+      throw error; // Propager l'erreur pour que le composant puisse la gérer
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateJournal = (id: string, updates: Partial<Journal>) => {
-    setJournals((prev) =>
-      prev.map((journal) =>
-        journal.id === id ? { ...journal, ...updates } : journal
-      )
-    );
+  const updateJournal = async (id: string, updates: Partial<Journal>) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Convertir les données au format attendu par l'API
+      const updateData: {
+        title?: string;
+        description?: string;
+        personal_notes?: string;
+        tags?: string[];
+        start_date?: string;
+        end_date?: string;
+        cover_image?: string;
+      } = {};
+
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) {
+        updateData.description = updates.description;
+      }
+      if (updates.personalNotes) {
+        updateData.personal_notes = updates.personalNotes;
+      }
+      if (updates.tags) updateData.tags = updates.tags;
+      if (updates.startDate) {
+        updateData.start_date = updates.startDate.toISOString();
+      }
+      if (updates.endDate) {
+        updateData.end_date = updates.endDate.toISOString();
+      }
+      if ((updates as Journal & { mainPhoto?: string }).mainPhoto) {
+        updateData.cover_image = (
+          updates as Journal & { mainPhoto?: string }
+        ).mainPhoto;
+      }
+
+      // Appeler l'API backend pour modifier le journal dans MongoDB Atlas
+      await journalApi.updateJournal(id, updateData);
+
+      // Recharger tous les journaux pour être sûr d'avoir les données à jour
+      await loadJournals();
+    } catch (error) {
+      console.error('Erreur lors de la modification du journal:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la modification du journal'
+      );
+      throw error; // Propager l'erreur pour que le composant puisse la gérer
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteJournal = (id: string) => {
-    setJournals((prev) => prev.filter((journal) => journal.id !== id));
+  const deleteJournal = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Appeler l'API backend pour supprimer le journal dans MongoDB Atlas
+      await journalApi.deleteJournal(id);
+
+      // Recharger tous les journaux pour être sûr d'avoir les données à jour
+      await loadJournals();
+    } catch (error) {
+      console.error('Erreur lors de la suppression du journal:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la suppression du journal'
+      );
+      throw error; // Propager l'erreur pour que le composant puisse la gérer
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getJournal = (id: string) => {
@@ -221,6 +281,9 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         addPlace,
         updatePlace,
         deletePlace,
+        loadJournals,
+        isLoading,
+        error,
       }}
     >
       {children}

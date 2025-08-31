@@ -34,30 +34,32 @@ import {
 
 // Tags prédéfinis suggérés pour les journaux
 const SUGGESTED_JOURNAL_TAGS = [
-  'Nature',
-  'Culture',
-  'Gastronomie',
-  'Aventure',
-  'Famille',
-  'Romantique',
-  'Solo',
-  'Backpacking',
-  'Luxe',
-  'Budget',
-  'Road Trip',
-  'City Break',
-  'Plage',
-  'Montagne',
   'Histoire',
-  'Art',
   'Architecture',
-  'Photographie',
-  'Détente',
-  'Sport',
-  'Festival',
-  'Shopping',
-  'Hiver',
-  'Été',
+  'UNESCO',
+  'Monuments',
+  'Vue panoramique',
+  'Romantique',
+  'Plages',
+  'Coucher de soleil',
+  'Château',
+  'Alpes',
+  'Conte de fées',
+  'Randonnée',
+  'Merveilles du monde',
+  'Gastronomie',
+  'Culture',
+  'Art',
+  'Nature',
+  'Aventure',
+  'Musée',
+  'Cathédrale',
+  'Jardin',
+  'Lac',
+  'Montagne',
+  'Ville',
+  'Village',
+  'Marché',
 ];
 
 const EditJournal: React.FC = () => {
@@ -202,7 +204,7 @@ const EditJournal: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
@@ -217,8 +219,13 @@ const EditJournal: React.FC = () => {
       tags: tags,
     };
 
-    updateJournal(journal.id, updateData);
-    navigate(`/journals/${journal.id}`);
+    try {
+      await updateJournal(journal.id, updateData);
+      navigate(`/journals/${journal.id}`);
+    } catch (error) {
+      console.error('Erreur lors de la modification:', error);
+      alert('Erreur lors de la modification du journal. Veuillez réessayer.');
+    }
   };
 
   return (
@@ -276,15 +283,6 @@ const EditJournal: React.FC = () => {
         />
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <LocationOnIcon
-              sx={{ color: 'primary.main', fontSize: '1.2rem' }}
-            />
-            <Typography variant="body2" color="primary.main" fontWeight={500}>
-              {journal.places[0]?.name?.split(',').slice(-2).join(',').trim() ||
-                'Destination non définie'}
-            </Typography>
-          </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CalendarTodayIcon
               sx={{ color: 'text.secondary', fontSize: '1.2rem' }}
