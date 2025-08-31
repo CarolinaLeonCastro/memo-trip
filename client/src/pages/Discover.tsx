@@ -72,14 +72,32 @@ interface DiscoverPost {
 }
 
 const TRENDING_TAGS = [
-  'Adventure',
-  'Cultural',
-  'Photography',
+  'Histoire',
   'Architecture',
+  'UNESCO',
+  'Monuments',
+  'Vue panoramique',
+  'Romantique',
+  'Plages',
+  'Coucher de soleil',
+  'Château',
+  'Alpes',
+  'Conte de fées',
+  'Randonnée',
+  'Merveilles du monde',
   'Gastronomie',
-  'Historic',
-  'Romantic',
+  'Culture',
+  'Art',
   'Nature',
+  'Aventure',
+  'Musée',
+  'Cathédrale',
+  'Jardin',
+  'Lac',
+  'Montagne',
+  'Ville',
+  'Village',
+  'Marché',
 ];
 
 const Discover: React.FC = () => {

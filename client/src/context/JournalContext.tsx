@@ -14,8 +14,8 @@ import { useAuth } from '../hooks/useAuth';
 interface JournalContextType {
   journals: Journal[];
   addJournal: (journal: Omit<Journal, 'id'>) => Promise<void>;
-  updateJournal: (id: string, journal: Partial<Journal>) => void;
-  deleteJournal: (id: string) => void;
+  updateJournal: (id: string, journal: Partial<Journal>) => Promise<void>;
+  deleteJournal: (id: string) => Promise<void>;
   getJournal: (id: string) => Journal | undefined;
   addPlace: (journalId: string, place: Omit<Place, 'id' | 'journalId'>) => void;
   updatePlace: (
@@ -138,16 +138,81 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     }
   };
 
-  const updateJournal = (id: string, updates: Partial<Journal>) => {
-    setJournals((prev) =>
-      prev.map((journal) =>
-        journal.id === id ? { ...journal, ...updates } : journal
-      )
-    );
+  const updateJournal = async (id: string, updates: Partial<Journal>) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Convertir les données au format attendu par l'API
+      const updateData: {
+        title?: string;
+        description?: string;
+        personal_notes?: string;
+        tags?: string[];
+        start_date?: string;
+        end_date?: string;
+        cover_image?: string;
+      } = {};
+
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) {
+        updateData.description = updates.description;
+      }
+      if (updates.personalNotes) {
+        updateData.personal_notes = updates.personalNotes;
+      }
+      if (updates.tags) updateData.tags = updates.tags;
+      if (updates.startDate) {
+        updateData.start_date = updates.startDate.toISOString();
+      }
+      if (updates.endDate) {
+        updateData.end_date = updates.endDate.toISOString();
+      }
+      if ((updates as Journal & { mainPhoto?: string }).mainPhoto) {
+        updateData.cover_image = (
+          updates as Journal & { mainPhoto?: string }
+        ).mainPhoto;
+      }
+
+      // Appeler l'API backend pour modifier le journal dans MongoDB Atlas
+      await journalApi.updateJournal(id, updateData);
+
+      // Recharger tous les journaux pour être sûr d'avoir les données à jour
+      await loadJournals();
+    } catch (error) {
+      console.error('Erreur lors de la modification du journal:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la modification du journal'
+      );
+      throw error; // Propager l'erreur pour que le composant puisse la gérer
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteJournal = (id: string) => {
-    setJournals((prev) => prev.filter((journal) => journal.id !== id));
+  const deleteJournal = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Appeler l'API backend pour supprimer le journal dans MongoDB Atlas
+      await journalApi.deleteJournal(id);
+
+      // Recharger tous les journaux pour être sûr d'avoir les données à jour
+      await loadJournals();
+    } catch (error) {
+      console.error('Erreur lors de la suppression du journal:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la suppression du journal'
+      );
+      throw error; // Propager l'erreur pour que le composant puisse la gérer
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getJournal = (id: string) => {

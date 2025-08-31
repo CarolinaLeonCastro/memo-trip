@@ -96,6 +96,9 @@ export const journalValidation = {
 		description: Joi.string().trim().max(500).allow('').messages({
 			'string.max': 'La description ne peut pas dépasser 500 caractères'
 		}),
+		personal_notes: Joi.string().trim().max(2000).allow('').messages({
+			'string.max': 'Les notes personnelles ne peuvent pas dépasser 2000 caractères'
+		}),
 		start_date: Joi.date().required().messages({
 			'any.required': 'La date de début est obligatoire',
 			'date.base': 'Format de date invalide'
@@ -127,6 +130,9 @@ export const journalValidation = {
 		}),
 		description: Joi.string().trim().max(500).allow('').messages({
 			'string.max': 'La description ne peut pas dépasser 500 caractères'
+		}),
+		personal_notes: Joi.string().trim().max(2000).allow('').messages({
+			'string.max': 'Les notes personnelles ne peuvent pas dépasser 2000 caractères'
 		}),
 		start_date: Joi.date().messages({
 			'date.base': 'Format de date invalide'

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   TextField,
@@ -33,7 +33,7 @@ import {
   MenuBook as MenuBookIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import PlaceSearchInput from '../components/PlaceSearchInput';
 import type { GeocodingResult } from '../services/geocoding.service';
@@ -72,6 +72,7 @@ const AddPlacePage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { addPlace, journals } = useJournals();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -96,6 +97,22 @@ const AddPlacePage: React.FC = () => {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customTag, setCustomTag] = useState('');
+
+  // 🎯 Pré-sélectionner le journal depuis l'URL (quand on vient de EditJournal)
+  useEffect(() => {
+    const journalIdFromUrl = searchParams.get('journalId');
+    if (journalIdFromUrl && journals.length > 0) {
+      // Vérifier que le journal existe dans la liste
+      const journalExists = journals.find((j) => j.id === journalIdFromUrl);
+      if (journalExists) {
+        setFormData((prev) => ({
+          ...prev,
+          journalOption: 'existing',
+          selectedJournalId: journalIdFromUrl,
+        }));
+      }
+    }
+  }, [searchParams, journals]);
 
   const handleChange = (
     field: string,

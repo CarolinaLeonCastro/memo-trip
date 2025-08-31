@@ -21,7 +21,6 @@ import {
   Delete as DeleteIcon,
   CalendarToday as CalendarIcon,
   Favorite as FavoriteIcon,
-  Comment as CommentIcon,
   Photo as PhotoIcon,
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
@@ -45,7 +44,6 @@ const Journals: React.FC = () => {
   // Calcul des statistiques
   const totalJournals = journals.length;
   const totalLikes = 167; // Valeur simulée
-  const totalComments = 58; // Valeur simulée
   const totalPhotos = journals.reduce(
     (acc, journal) =>
       acc +
@@ -56,13 +54,19 @@ const Journals: React.FC = () => {
     0
   );
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (
       window.confirm(
         `Êtes-vous sûr de vouloir supprimer le journal "${title}" ?`
       )
     ) {
-      deleteJournal(id);
+      try {
+        await deleteJournal(id);
+        // Le journal sera automatiquement supprimé de la liste après le rechargement
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression du journal. Veuillez réessayer.');
+      }
     }
   };
 
@@ -116,7 +120,7 @@ const Journals: React.FC = () => {
 
       {/* Statistiques */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 6, sm: 3 }}>
+        <Grid size={{ xs: 6, sm: 4 }}>
           <Card
             sx={{
               background: 'linear-gradient(135deg, #EBF8FF 0%, #E0E7FF 100%)',
@@ -134,7 +138,7 @@ const Journals: React.FC = () => {
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 6, sm: 3 }}>
+        <Grid size={{ xs: 6, sm: 4 }}>
           <Card
             sx={{
               background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)',
@@ -152,25 +156,8 @@ const Journals: React.FC = () => {
             </Typography>
           </Card>
         </Grid>
-        <Grid size={{ xs: 6, sm: 3 }}>
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #FAF5FF 0%, #FDF2F8 100%)',
-              textAlign: 'center',
-              p: 2,
-              border: 'none',
-              boxShadow: 'none',
-            }}
-          >
-            <Typography variant="h3" fontWeight={700} color="#7C3AED">
-              {totalComments}
-            </Typography>
-            <Typography variant="body1" color="#8B5CF6" fontWeight={500}>
-              Commentaires
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, sm: 3 }}>
+
+        <Grid size={{ xs: 6, sm: 4 }}>
           <Card
             sx={{
               background: 'linear-gradient(135deg, #FFF7ED 0%, #FEF2F2 100%)',
@@ -314,9 +301,16 @@ const Journals: React.FC = () => {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 2, flexGrow: 1 }}
+                    title={journal.description}
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      mb: 2,
+                      flexGrow: 1,
+                    }}
                   >
-                    {journal.description}
+                    {journal.description.substring(0, 100)}
+                    {journal.description.length > 100 && '...'}
                   </Typography>
 
                   <Box
@@ -389,16 +383,6 @@ const Journals: React.FC = () => {
                         />
                         <Typography variant="caption" color="text.secondary">
                           24
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                      >
-                        <CommentIcon
-                          sx={{ fontSize: '1rem', color: '#2196F3' }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          8
                         </Typography>
                       </Box>
                       <Box
