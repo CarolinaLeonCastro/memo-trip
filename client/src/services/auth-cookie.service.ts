@@ -193,7 +193,7 @@ class AuthCookieService {
         console.log('  ❌ Utilisateur non connecté');
       }
     } catch (error) {
-      console.log('  ❌ Erreur lors de la vérification:', error.message);
+      console.log('  ❌ Erreur lors de la vérification:', (error as Error).message);
     }
 
     console.log('🍪 Avantages des cookies HTTPOnly:');

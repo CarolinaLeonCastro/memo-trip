@@ -92,9 +92,7 @@ const AddPlacePage: React.FC = () => {
     newJournalTitle: '',
   });
 
-  const [selectedPlace, setSelectedPlace] = useState<GeocodingResult | null>(
-    null
-  );
+  const [, setSelectedPlace] = useState<GeocodingResult | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customTag, setCustomTag] = useState('');
 
