@@ -6,8 +6,6 @@ import {
   CardContent,
   Grid,
   TextField,
-  Switch,
-  FormControlLabel,
   Button,
   Alert,
   Divider,
@@ -260,64 +258,6 @@ const SystemSettings: React.FC = () => {
                   </Box>
                 </Grid>
               </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Fonctionnalités */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Fonctionnalités
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={2}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.features.publicJournals}
-                      onChange={(e) =>
-                        updateSetting(
-                          'features',
-                          'publicJournals',
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label="Journaux publics activés"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.features.userRegistration}
-                      onChange={(e) =>
-                        updateSetting(
-                          'features',
-                          'userRegistration',
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label="Inscription utilisateur activée"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.features.guestAccess}
-                      onChange={(e) =>
-                        updateSetting(
-                          'features',
-                          'guestAccess',
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label="Accès visiteur activé"
-                />
-              </Box>
             </CardContent>
           </Card>
         </Grid>

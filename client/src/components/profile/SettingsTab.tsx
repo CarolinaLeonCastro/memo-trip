@@ -16,17 +16,13 @@ import {
   TextField,
 } from '@mui/material';
 import {
-  Notifications as NotificationsIcon,
   Security as SecurityIcon,
   Palette as PaletteIcon,
   Delete as DeleteIcon,
-  Download as DownloadIcon,
 } from '@mui/icons-material';
 
 const SettingsTab: React.FC = () => {
   const [settings, setSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
     journalPublic: false,
     darkMode: false,
     language: 'fr',
@@ -47,12 +43,6 @@ const SettingsTab: React.FC = () => {
     setTimeout(() => setSuccess(''), 3000);
   };
 
-  const handleExportData = () => {
-    // Logique pour exporter les données
-    console.log('Export des données');
-    setSuccess('Export des données en cours...');
-  };
-
   const handleDeleteAccount = () => {
     if (deleteConfirmation === 'SUPPRIMER') {
       // Logique pour supprimer le compte
@@ -63,25 +53,6 @@ const SettingsTab: React.FC = () => {
   };
 
   const settingsSections = [
-    {
-      title: 'Notifications',
-      icon: NotificationsIcon,
-      color: 'primary.main',
-      settings: [
-        {
-          key: 'emailNotifications',
-          label: 'Notifications par email',
-          description: 'Recevoir des notifications par email',
-          value: settings.emailNotifications,
-        },
-        {
-          key: 'pushNotifications',
-          label: 'Notifications push',
-          description: 'Recevoir des notifications sur votre appareil',
-          value: settings.pushNotifications,
-        },
-      ],
-    },
     {
       title: 'Confidentialité',
       icon: SecurityIcon,
@@ -184,36 +155,6 @@ const SettingsTab: React.FC = () => {
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Export des données */}
-            <Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <Box>
-                  <Typography variant="body1" fontWeight={500}>
-                    Exporter mes données
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Télécharger toutes vos données en format JSON
-                  </Typography>
-                </Box>
-                <Button
-                  variant="outlined"
-                  startIcon={<DownloadIcon />}
-                  onClick={handleExportData}
-                  sx={{ ml: 2 }}
-                >
-                  Exporter
-                </Button>
-              </Box>
-            </Box>
-
-            <Divider />
-
             {/* Suppression du compte */}
             <Box>
               <Box
