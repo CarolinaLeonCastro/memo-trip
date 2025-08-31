@@ -151,12 +151,14 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                   variant="outlined"
                 />
 
-                <Chip
-                  icon={<LocationOnIcon />}
-                  label={`${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}`}
-                  size="small"
-                  variant="outlined"
-                />
+                {place.latitude != null && place.longitude != null && (
+                  <Chip
+                    icon={<LocationOnIcon />}
+                    label={`${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
 
                 {place.photos.length > 0 && (
                   <Chip

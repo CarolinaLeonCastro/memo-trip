@@ -36,7 +36,7 @@ const PlaceDetail: React.FC = () => {
     .find((p) => p.id === id);
 
   // Trouver le journal qui contient ce lieu
-  const journal = journals.find((j) => j.places.some((p) => p.id === id));
+  // const journal = journals.find((j) => j.places.some((p) => p.id === id));
 
   if (!place) {
     return (

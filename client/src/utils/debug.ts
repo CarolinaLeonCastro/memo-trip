@@ -40,7 +40,7 @@ export const initDebugTools = () => {
           console.log('  - Statut:', user.status);
         }
       } catch (error) {
-        console.log('  - Erreur:', error.message);
+        console.log('  - Erreur:', (error as Error).message);
       }
     },
   };

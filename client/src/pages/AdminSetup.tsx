@@ -94,7 +94,7 @@ const AdminSetup: React.FC = () => {
       setCreating(true);
       setError(null);
 
-      const response = await api.post('/setup/create-admin', {
+      await api.post('/setup/create-admin', {
         name: formData.name,
         email: formData.email,
         password: formData.password,

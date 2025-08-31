@@ -84,7 +84,7 @@ const PublicJournals: React.FC = () => {
   };
 
   const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
+    _event: React.ChangeEvent<unknown>,
     value: number
   ) => {
     setPage(value);

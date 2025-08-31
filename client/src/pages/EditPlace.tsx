@@ -137,8 +137,8 @@ const EditPlace: React.FC = () => {
       name: place.display_name,
       city: place.address?.city || '',
       country: place.address?.country || '',
-      latitude: place.latitude?.toString() || '',
-      longitude: place.longitude?.toString() || '',
+      latitude: place.coordinates?.latitude?.toString() || '',
+      longitude: place.coordinates?.longitude?.toString() || '',
     }));
   };
 

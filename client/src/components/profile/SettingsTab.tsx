@@ -119,7 +119,7 @@ const SettingsTab: React.FC = () => {
       )}
 
       {/* Sections de paramètres */}
-      {settingsSections.map((section, sectionIndex) => (
+      {settingsSections.map((section) => (
         <Card key={section.title} sx={{ borderRadius: 1, mb: 3 }}>
           <CardContent sx={{ p: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
