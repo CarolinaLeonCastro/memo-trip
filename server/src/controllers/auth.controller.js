@@ -20,9 +20,10 @@ const generateToken = (user) => {
 const getCookieOptions = () => ({
 	httpOnly: true,
 	secure: process.env.NODE_ENV === 'production', // HTTPS en production
-	sameSite: 'lax',
+	sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' pour cross-domain HTTPS
 	maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
-	path: '/'
+	path: '/',
+	domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined // Domaine partagé pour staging
 });
 
 // POST /api/auth/register

@@ -52,7 +52,7 @@ class AuthCookieService {
   // Connexion
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/auth/login`,
+      `${API_BASE_URL}/api/auth/login`,
       this.getRequestOptions('POST', credentials)
     );
 
@@ -69,7 +69,7 @@ class AuthCookieService {
   // Inscription
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     const response = await fetch(
-      `${API_BASE_URL}/auth/register`,
+      `${API_BASE_URL}/api/auth/register`,
       this.getRequestOptions('POST', userData)
     );
 
@@ -87,7 +87,7 @@ class AuthCookieService {
   async logout(): Promise<void> {
     try {
       await fetch(
-        `${API_BASE_URL}/auth/logout`,
+        `${API_BASE_URL}/api/auth/logout`,
         this.getRequestOptions('POST')
       );
       console.log('🍪 Déconnexion réussie - Cookie supprimé');
@@ -100,7 +100,7 @@ class AuthCookieService {
   // Vérifier l'utilisateur actuel
   async getCurrentUser(): Promise<{ user: AuthResponse['user'] }> {
     const response = await fetch(
-      `${API_BASE_URL}/auth/me`,
+      `${API_BASE_URL}/api/auth/me`,
       this.getRequestOptions('GET')
     );
 
