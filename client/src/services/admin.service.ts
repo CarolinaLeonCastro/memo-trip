@@ -52,7 +52,7 @@ export interface SystemSettings {
 class AdminService {
   // Statistiques
   async getStats(): Promise<AdminStats> {
-    const response = await api.get('/admin/stats');
+    const response = await api.get('/api/admin/stats');
     return response.data;
   }
 
@@ -64,12 +64,14 @@ class AdminService {
     role?: string;
     search?: string;
   }) {
-    const response = await api.get('/admin/users', { params });
+    const response = await api.get('/api/admin/users', { params });
     return response.data;
   }
 
   async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
-    const response = await api.patch(`/admin/users/${userId}/role`, { role });
+    const response = await api.patch(`/api/admin/users/${userId}/role`, {
+      role,
+    });
     return response.data;
   }
 
@@ -77,7 +79,7 @@ class AdminService {
     userId: string,
     status: 'active' | 'blocked'
   ): Promise<User> {
-    const response = await api.patch(`/admin/users/${userId}/status`, {
+    const response = await api.patch(`/api/admin/users/${userId}/status`, {
       status,
     });
     return response.data;
@@ -85,14 +87,14 @@ class AdminService {
 
   // Paramètres système
   async getSystemSettings(): Promise<SystemSettings> {
-    const response = await api.get('/admin/settings');
+    const response = await api.get('/api/admin/settings');
     return response.data;
   }
 
   async updateSystemSettings(
     settings: Partial<SystemSettings>
   ): Promise<SystemSettings> {
-    const response = await api.patch('/admin/settings', { settings });
+    const response = await api.patch('/api/admin/settings', { settings });
     return response.data;
   }
 }

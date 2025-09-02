@@ -40,7 +40,7 @@ const AdminSetup: React.FC = () => {
   const checkAdminExists = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/setup/check-admin');
+      const response = await api.get('/api/setup/check-admin');
       setHasAdmin(response.data.hasAdmin);
     } catch (err) {
       console.error('Error checking admin:', err);
@@ -94,7 +94,7 @@ const AdminSetup: React.FC = () => {
       setCreating(true);
       setError(null);
 
-      await api.post('/setup/create-admin', {
+      await api.post('/api/setup/create-admin', {
         name: formData.name,
         email: formData.email,
         password: formData.password,

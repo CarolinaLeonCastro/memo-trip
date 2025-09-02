@@ -123,7 +123,7 @@ class JournalApiService {
    * GET /api/journals - Liste paginée et filtrée des journaux
    */
   async getJournals(params?: JournalListParams): Promise<JournalListResponse> {
-    const response = await this.axiosInstance.get('/journals', { params });
+    const response = await this.axiosInstance.get('/api/journals', { params });
     return response.data as JournalListResponse;
   }
 
@@ -131,7 +131,7 @@ class JournalApiService {
    * POST /api/journals - Création d'un nouveau journal
    */
   async createJournal(data: JournalCreateRequest): Promise<Journal> {
-    const response = await this.axiosInstance.post('/journals', data);
+    const response = await this.axiosInstance.post('/api/journals', data);
     return response.data as Journal;
   }
 
@@ -139,7 +139,7 @@ class JournalApiService {
    * GET /api/journals/:id - Consultation d'un journal (ownership requis)
    */
   async getJournalById(id: string): Promise<Journal> {
-    const response = await this.axiosInstance.get(`/journals/${id}`);
+    const response = await this.axiosInstance.get(`/api/journals/${id}`);
     return response.data as Journal;
   }
 
@@ -150,7 +150,7 @@ class JournalApiService {
     id: string,
     data: JournalUpdateRequest
   ): Promise<Journal> {
-    const response = await this.axiosInstance.put(`/journals/${id}`, data);
+    const response = await this.axiosInstance.put(`/api/journals/${id}`, data);
     return response.data as Journal;
   }
 
@@ -158,7 +158,7 @@ class JournalApiService {
    * DELETE /api/journals/:id - Suppression d'un journal (et dépendances éventuelles)
    */
   async deleteJournal(id: string): Promise<void> {
-    await this.axiosInstance.delete(`/journals/${id}`);
+    await this.axiosInstance.delete(`/api/journals/${id}`);
   }
 
   /**
@@ -169,7 +169,7 @@ class JournalApiService {
     data: JournalTogglePublicRequest
   ): Promise<JournalTogglePublicResponse> {
     const response = await this.axiosInstance.patch(
-      `/journals/${id}/toggle-public`,
+      `/api/journals/${id}/toggle-public`,
       data
     );
     return response.data as JournalTogglePublicResponse;

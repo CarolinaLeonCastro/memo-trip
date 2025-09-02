@@ -11,6 +11,8 @@ const corsOptions = {
 		const allowedOrigins = [
 			'http://localhost:3000',
 			'http://localhost:5173', // Vite dev server
+			'https://dev-memo-trip.onrender.com', // Frontend staging
+			'https://memo-trip.onrender.com', // Frontend production
 			env.FRONTEND_URLS
 		].filter(Boolean);
 

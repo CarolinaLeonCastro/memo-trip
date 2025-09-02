@@ -119,19 +119,19 @@ class PublicService {
     limit?: number;
     search?: string;
   }) {
-    const response = await api.get('/public/journals', { params });
+    const response = await api.get('/api/public/journals', { params });
     return response.data.data;
   }
 
   // Récupérer un journal public par ID
   async getPublicJournalById(id: string) {
-    const response = await api.get(`/public/journals/${id}`);
+    const response = await api.get(`/api/public/journals/${id}`);
     return response.data.data;
   }
 
   // Récupérer les statistiques publiques
   async getPublicStats(): Promise<PublicStats> {
-    const response = await api.get('/public/stats');
+    const response = await api.get('/api/public/stats');
     return response.data.data;
   }
 
@@ -142,7 +142,7 @@ class PublicService {
     page: number;
     totalPages: number;
   }> {
-    const response = await api.get('/public/discover/posts', {
+    const response = await api.get('/api/public/discover/posts', {
       params: filters,
     });
     return response.data.data;
@@ -150,7 +150,7 @@ class PublicService {
 
   // Récupérer les statistiques de découverte
   async getDiscoverStats(): Promise<DiscoverStats> {
-    const response = await api.get('/public/discover/stats');
+    const response = await api.get('/api/public/discover/stats');
     return response.data.data;
   }
 
@@ -162,7 +162,9 @@ class PublicService {
     liked: boolean;
     likesCount: number;
   }> {
-    const response = await api.post(`/public/discover/${type}s/${postId}/like`);
+    const response = await api.post(
+      `/api/public/discover/${type}s/${postId}/like`
+    );
     return response.data.data;
   }
 
@@ -173,7 +175,7 @@ class PublicService {
       count: number;
     }>
   > {
-    const response = await api.get('/public/discover/trending-tags');
+    const response = await api.get('/api/public/discover/trending-tags');
     return response.data.data;
   }
 
@@ -187,7 +189,7 @@ class PublicService {
       journals_count: number;
     }>
   > {
-    const response = await api.get('/public/discover/active-travelers');
+    const response = await api.get('/api/public/discover/active-travelers');
     return response.data.data;
   }
 
@@ -199,7 +201,7 @@ class PublicService {
       count: number;
     }>
   > {
-    const response = await api.get('/public/discover/popular-destinations');
+    const response = await api.get('/api/public/discover/popular-destinations');
     return response.data.data;
   }
 }
