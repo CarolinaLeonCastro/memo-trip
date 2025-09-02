@@ -6,6 +6,14 @@ import logger from '../config/logger.config.js';
 // Middleware pour vérifier l'authentification JWT (via cookies HTTPOnly)
 export const authenticateToken = async (req, res, next) => {
 	try {
+		// Debug: Log des cookies reçus
+		logger.debug('Auth middleware debug', {
+			cookies: req.cookies,
+			origin: req.get('Origin'),
+			userAgent: req.get('User-Agent')?.substring(0, 100),
+			url: req.originalUrl
+		});
+
 		// Priorité 1: Cookie HTTPOnly sécurisé (recommandé)
 		let token = req.cookies['auth-token'];
 
@@ -16,6 +24,12 @@ export const authenticateToken = async (req, res, next) => {
 		}
 
 		if (!token) {
+			logger.warn('No authentication token found', {
+				cookies: Object.keys(req.cookies || {}),
+				hasAuthHeader: !!req.headers.authorization,
+				origin: req.get('Origin'),
+				url: req.originalUrl
+			});
 			return res.status(401).json({
 				success: false,
 				message: "Token d'authentification requis (cookie ou header)"

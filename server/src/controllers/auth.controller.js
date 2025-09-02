@@ -17,14 +17,19 @@ const generateToken = (user) => {
 };
 
 // Fonction utilitaire pour les options de cookies sécurisés
-const getCookieOptions = () => ({
-	httpOnly: true,
-	secure: process.env.NODE_ENV === 'production', // HTTPS en production
-	sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' pour cross-domain HTTPS
-	maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
-	path: '/',
-	domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined // Domaine partagé pour staging
-});
+const getCookieOptions = () => {
+	const isProduction = process.env.NODE_ENV === 'production';
+	const isRender = process.env.RENDER || process.env.PORT; // Détection Render
+
+	return {
+		httpOnly: true,
+		secure: isRender || isProduction, // HTTPS sur Render et production
+		sameSite: isRender || isProduction ? 'none' : 'lax', // 'none' pour cross-domain HTTPS
+		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours en millisecondes
+		path: '/'
+		// Pas de domaine spécifique pour permettre le cross-domain avec sameSite: 'none'
+	};
+};
 
 // POST /api/auth/register
 export async function register(req, res, next) {
@@ -117,7 +122,13 @@ export async function login(req, res, next) {
 		logger.info('User logged in successfully', { userId: user._id, email: user.email });
 
 		// Définir le cookie HTTPOnly sécurisé
-		res.cookie('auth-token', token, getCookieOptions());
+		const cookieOptions = getCookieOptions();
+		logger.info('Setting auth cookie', {
+			options: cookieOptions,
+			origin: req.get('Origin'),
+			userAgent: req.get('User-Agent')?.substring(0, 100)
+		});
+		res.cookie('auth-token', token, cookieOptions);
 
 		res.json({
 			message: 'Connexion réussie',
