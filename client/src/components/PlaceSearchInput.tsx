@@ -73,6 +73,12 @@ const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);
+      setShowResults(true); // Afficher les résultats (vides) avec un message d'erreur
+
+      // Optionnel: Afficher une notification d'erreur temporaire
+      setTimeout(() => {
+        setShowResults(false);
+      }, 3000);
     } finally {
       setLoading(false);
     }
@@ -111,7 +117,7 @@ const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         }}
       />
 
-      {showResults && (results.length > 0 || loading) && (
+      {showResults && (
         <Paper
           sx={{
             position: 'absolute',
@@ -125,41 +131,72 @@ const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           }}
         >
           <List dense>
-            {results.map((place, index) => (
-              <React.Fragment key={place.place_id}>
-                <ListItem
-                  component="button"
-                  onClick={() => handlePlaceSelect(place)}
-                  sx={{
-                    py: 1.5,
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    },
-                  }}
-                >
-                  <LocationIcon
+            {loading && (
+              <ListItem>
+                <ListItemText
+                  primary={
+                    <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                      Recherche en cours...
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            )}
+
+            {!loading && results.length === 0 && (
+              <ListItem>
+                <ListItemText
+                  primary={
+                    <Typography
+                      variant="body2"
+                      color="error"
+                      sx={{ textAlign: 'center' }}
+                    >
+                      Service de recherche temporairement indisponible.
+                      <br />
+                      Vous pouvez saisir le lieu manuellement.
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            )}
+
+            {!loading &&
+              results.map((place, index) => (
+                <React.Fragment key={place.place_id}>
+                  <ListItem
+                    component="button"
+                    onClick={() => handlePlaceSelect(place)}
                     sx={{
-                      mr: 2,
-                      color: 'primary.main',
-                      fontSize: 20,
+                      py: 1.5,
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
                     }}
-                  />
-                  <ListItemText
-                    primary={
-                      <Typography variant="body2" fontWeight={500}>
-                        {place.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography variant="caption" color="text.secondary">
-                        {place.display_name}
-                      </Typography>
-                    }
-                  />
-                </ListItem>
-                {index < results.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
+                  >
+                    <LocationIcon
+                      sx={{
+                        mr: 2,
+                        color: 'primary.main',
+                        fontSize: 20,
+                      }}
+                    />
+                    <ListItemText
+                      primary={
+                        <Typography variant="body2" fontWeight={500}>
+                          {place.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {place.display_name}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                  {index < results.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
           </List>
         </Paper>
       )}

@@ -197,24 +197,42 @@ export const placeValidation = {
 			'date.max': 'La date de visite ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
-		rating: Joi.number().integer().min(1).max(5).messages({
+		start_date: Joi.date().max('now').required().messages({
+			'any.required': 'La date de début de visite est obligatoire',
+			'date.max': 'La date de début ne peut pas être dans le futur',
+			'date.base': 'Format de date invalide'
+		}),
+		end_date: Joi.date().min(Joi.ref('start_date')).max('now').required().messages({
+			'any.required': 'La date de fin de visite est obligatoire',
+			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
+			'date.max': 'La date de fin ne peut pas être dans le futur',
+			'date.base': 'Format de date invalide'
+		}),
+		rating: Joi.number().integer().min(1).max(5).allow(null).messages({
 			'number.min': 'La note doit être entre 1 et 5',
 			'number.max': 'La note doit être entre 1 et 5',
 			'number.integer': 'La note doit être un nombre entier'
 		}),
-		weather: Joi.string().trim().max(50).allow('').messages({
+		weather: Joi.string().trim().max(50).allow('', null).messages({
 			'string.max': 'La météo ne peut pas dépasser 50 caractères'
 		}),
-		budget: Joi.number().min(0).messages({
+		budget: Joi.number().min(0).allow(null).messages({
 			'number.min': 'Le budget ne peut pas être négatif'
 		}),
-		tags: Joi.array().items(Joi.string().trim().min(1).max(30)).max(10).messages({
+		tags: Joi.array().items(Joi.string().trim().min(1).max(30)).max(10).default([]).messages({
 			'array.max': 'Maximum 10 tags autorisés',
 			'string.min': 'Un tag ne peut pas être vide',
 			'string.max': 'Un tag ne peut pas dépasser 30 caractères'
 		}),
 		is_favorite: Joi.boolean().default(false),
-		user_id: objectIdSchema.required(),
+		visit_duration: Joi.number().integer().min(1).allow(null).messages({
+			'number.min': 'La durée de visite doit être d\'au moins 1 minute',
+			'number.integer': 'La durée de visite doit être un nombre entier'
+		}),
+		notes: Joi.string().trim().max(2000).allow('', null).messages({
+			'string.max': 'Les notes ne peuvent pas dépasser 2000 caractères'
+		}),
+		user_id: objectIdSchema, // Optionnel car ajouté par le contrôleur depuis req.user.id
 		journal_id: objectIdSchema.required()
 	}),
 
@@ -248,6 +266,15 @@ export const placeValidation = {
 			'date.max': 'La date de visite ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
+		start_date: Joi.date().max('now').messages({
+			'date.max': 'La date de début ne peut pas être dans le futur',
+			'date.base': 'Format de date invalide'
+		}),
+		end_date: Joi.date().min(Joi.ref('start_date')).max('now').messages({
+			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
+			'date.max': 'La date de fin ne peut pas être dans le futur',
+			'date.base': 'Format de date invalide'
+		}),
 		rating: Joi.number().integer().min(1).max(5).messages({
 			'number.min': 'La note doit être entre 1 et 5',
 			'number.max': 'La note doit être entre 1 et 5',
@@ -264,7 +291,14 @@ export const placeValidation = {
 			'string.min': 'Un tag ne peut pas être vide',
 			'string.max': 'Un tag ne peut pas dépasser 30 caractères'
 		}),
-		is_favorite: Joi.boolean()
+		is_favorite: Joi.boolean(),
+		visit_duration: Joi.number().integer().min(1).messages({
+			'number.min': 'La durée de visite doit être d\'au moins 1 minute',
+			'number.integer': 'La durée de visite doit être un nombre entier'
+		}),
+		notes: Joi.string().trim().max(2000).allow('').messages({
+			'string.max': 'Les notes ne peuvent pas dépasser 2000 caractères'
+		})
 	})
 		.min(1)
 		.message('Au moins un champ doit être fourni pour la mise à jour'),

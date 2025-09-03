@@ -80,6 +80,8 @@ const AddPlacePage: React.FC = () => {
     country: '',
     description: '',
     dateVisited: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0], // Date de début de visite
+    endDate: new Date().toISOString().split('T')[0], // Date de fin de visite
     photos: [] as string[],
     tags: [] as string[],
     visited: false,
@@ -292,14 +294,21 @@ const AddPlacePage: React.FC = () => {
         ? parseFloat(formData.longitude)
         : undefined,
       dateVisited: new Date(formData.dateVisited),
+      startDate: new Date(formData.startDate),
+      endDate: new Date(formData.endDate),
       photos: formData.photos,
       tags: formData.tags,
       visited: formData.visited,
       rating: formData.rating || undefined,
     };
 
-    addPlace(journalId, placeData);
-    navigate('/journals'); // Rediriger vers la liste des journaux
+    try {
+      await addPlace(journalId, placeData);
+      navigate('/journals'); // Rediriger vers la liste des journaux
+    } catch (error) {
+      console.error('Erreur lors de la création de la place:', error);
+      alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    }
   };
 
   return (
@@ -730,13 +739,40 @@ const AddPlacePage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Date de visite"
+                    label="Date de début de visite"
                     type="date"
-                    value={formData.dateVisited}
-                    onChange={(e) =>
-                      handleChange('dateVisited', e.target.value)
-                    }
+                    value={formData.startDate}
+                    onChange={(e) => {
+                      handleChange('startDate', e.target.value);
+                      // Auto-remplir la date de fin si elle n'est pas définie
+                      if (
+                        !formData.endDate ||
+                        formData.endDate === formData.startDate
+                      ) {
+                        handleChange('endDate', e.target.value);
+                      }
+                      // Mettre à jour la date principale pour compatibilité
+                      handleChange('dateVisited', e.target.value);
+                    }}
                     InputLabelProps={{ shrink: true }}
+                    helperText="Date du premier jour de visite de ce lieu"
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Date de fin de visite"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => {
+                      handleChange('endDate', e.target.value);
+                      // Mettre à jour la date principale si c'est une visite d'un seul jour
+                      if (formData.startDate === e.target.value) {
+                        handleChange('dateVisited', e.target.value);
+                      }
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: formData.startDate }}
+                    helperText="Date du dernier jour (peut être la même que le début pour une visite d'un jour)"
                   />
                 </>
               )}
