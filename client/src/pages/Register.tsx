@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import CarouselSlides from '../components/auth/CarouselSlides';
+import { useThemeMode } from '../context/ThemeContext';
 
 interface FormErrors {
   name?: string;
@@ -39,7 +40,7 @@ const Register: React.FC = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const { register, isLoading, error, clearError, user } = useAuth();
   const navigate = useNavigate();
-
+  const { isDarkMode } = useThemeMode();
   // Rediriger si déjà connecté
   useEffect(() => {
     if (user) {
@@ -144,7 +145,11 @@ const Register: React.FC = () => {
             }}
           >
             <img
-              src=" ./src/assets/icon.png"
+              src={
+                isDarkMode
+                  ? ' ./src/assets/icon-white.png'
+                  : ' ./src/assets/icon.png'
+              }
               alt="Logo"
               style={{ width: 40, height: 40 }}
             />

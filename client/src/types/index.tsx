@@ -31,14 +31,22 @@ export interface Place {
   name: string;
   city: string;
   country: string;
-  description: string;
+  description?: string;
+  address?: string;
   latitude?: number;
   longitude?: number;
   dateVisited: Date;
+  startDate?: Date;
+  endDate?: Date;
   photos: string[];
   imageUrl?: string;
   tags: string[];
   visited: boolean;
   rating?: number;
+  weather?: string;
+  budget?: number;
+  isFavorite?: boolean;
+  visitDuration?: number;
+  notes?: string;
   journalId: string;
 }

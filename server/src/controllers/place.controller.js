@@ -1,4 +1,5 @@
 import Place from '../models/Place.js';
+import Journal from '../models/Journal.js';
 import logger from '../config/logger.config.js';
 import fs from 'fs';
 import path from 'path';
@@ -220,9 +221,66 @@ export const getPlaceById = async (req, res, next) => {
 // POST /api/places
 export const createPlace = async (req, res, next) => {
 	try {
-		const place = new Place(req.body);
+		// Debug: Log des données reçues
+		logger.info('Creating place - received data:', {
+			body: req.body,
+			userId: req.user?.id,
+			timestamp: new Date().toISOString()
+		});
+
+		// Ajouter l'ID de l'utilisateur authentifié
+		const placeData = {
+			...req.body,
+			user_id: req.user.id
+		};
+
+		// Vérifier que le journal appartient à l'utilisateur
+		const journal = await Journal.findOne({ 
+			_id: placeData.journal_id, 
+			user_id: req.user.id 
+		});
+		
+		if (!journal) {
+			return res.status(404).json({ 
+				message: 'Journal not found or not authorized' 
+			});
+		}
+
+		// S'assurer que start_date et end_date sont définies
+		if (!placeData.start_date) {
+			placeData.start_date = placeData.date_visited;
+		}
+		if (!placeData.end_date) {
+			placeData.end_date = placeData.date_visited;
+		}
+
+		// Debug: Log des données finales avant création
+		logger.info('Final place data before creation:', {
+			placeData,
+			location: placeData.location,
+			dates: {
+				date_visited: placeData.date_visited,
+				start_date: placeData.start_date,
+				end_date: placeData.end_date
+			}
+		});
+
+		const place = new Place(placeData);
 		await place.save();
 		await place.populate('user_id', 'name email');
+
+		// Ajouter la place au journal si elle n'y est pas déjà
+		if (!journal.places.includes(place._id)) {
+			journal.places.push(place._id);
+			await journal.save();
+		}
+
+		logger.info('Place created and added to journal', {
+			placeId: place._id,
+			journalId: journal._id,
+			userId: req.user.id
+		});
+
 		res.status(201).json(place);
 	} catch (err) {
 		next(err);
@@ -246,8 +304,40 @@ export const updatePlace = async (req, res, next) => {
 // DELETE /api/places/:id
 export const deletePlace = async (req, res, next) => {
 	try {
-		const result = await Place.deleteOne({ _id: req.params.id });
-		if (result.deletedCount === 0) return res.status(404).json({ message: 'Place not found' });
+		// Trouver la place avant de la supprimer pour récupérer le journal_id
+		const place = await Place.findOne({ 
+			_id: req.params.id, 
+			user_id: req.user.id 
+		});
+		
+		if (!place) {
+			return res.status(404).json({ 
+				message: 'Place not found or not authorized' 
+			});
+		}
+
+		// Supprimer la place du journal
+		await Journal.findByIdAndUpdate(
+			place.journal_id,
+			{ $pull: { places: place._id } }
+		);
+
+		// Supprimer la place
+		const result = await Place.deleteOne({ 
+			_id: req.params.id, 
+			user_id: req.user.id 
+		});
+		
+		if (result.deletedCount === 0) {
+			return res.status(404).json({ message: 'Place not found' });
+		}
+
+		logger.info('Place deleted and removed from journal', {
+			placeId: req.params.id,
+			journalId: place.journal_id,
+			userId: req.user.id
+		});
+
 		res.status(204).end();
 	} catch (err) {
 		next(err);

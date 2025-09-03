@@ -9,6 +9,7 @@ import React, {
 import type { Journal } from '../types';
 import type { Place } from '../types';
 import { journalApi } from '../services/journal-api';
+import { placeApi, type PlaceCreateRequest } from '../services/place-api';
 import { useAuth } from '../hooks/useAuth';
 
 interface JournalContextType {
@@ -17,7 +18,10 @@ interface JournalContextType {
   updateJournal: (id: string, journal: Partial<Journal>) => Promise<void>;
   deleteJournal: (id: string) => Promise<void>;
   getJournal: (id: string) => Journal | undefined;
-  addPlace: (journalId: string, place: Omit<Place, 'id' | 'journalId'>) => void;
+  addPlace: (
+    journalId: string,
+    place: Omit<Place, 'id' | 'journalId'>
+  ) => Promise<void>;
   updatePlace: (
     journalId: string,
     placeId: string,
@@ -76,7 +80,35 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         userId: journal.user_id,
         personalNotes: journal.personal_notes,
         tags: journal.tags || [],
-        places: [], // TODO: convertir les places si nécessaire
+        places: journal.places
+          ? journal.places.map((place: any) => ({
+              id: place._id,
+              name: place.name,
+              city: place.location?.city || '',
+              country: place.location?.country || '',
+              description: place.description || '',
+              address: place.location?.address || '',
+              latitude: place.location?.coordinates?.[1],
+              longitude: place.location?.coordinates?.[0],
+              dateVisited: new Date(place.date_visited),
+              startDate: place.start_date
+                ? new Date(place.start_date)
+                : new Date(place.date_visited),
+              endDate: place.end_date
+                ? new Date(place.end_date)
+                : new Date(place.date_visited),
+              photos: place.photos?.map((photo: any) => photo.url) || [],
+              tags: place.tags || [],
+              visited: true, // Si c'est dans la base, c'est visité
+              rating: place.rating,
+              weather: place.weather || '',
+              budget: place.budget,
+              isFavorite: place.is_favorite || false,
+              visitDuration: place.visit_duration,
+              notes: place.notes || '',
+              journalId: journal._id,
+            }))
+          : [],
         // ✅ Ajouter la photo de couverture récupérée
         mainPhoto: journal.cover_image || '',
       }));
@@ -219,23 +251,72 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     return journals.find((journal) => journal.id === id);
   };
 
-  const addPlace = (
+  const addPlace = async (
     journalId: string,
     placeData: Omit<Place, 'id' | 'journalId'>
   ) => {
-    const newPlace: Place = {
-      ...placeData,
-      id: Date.now().toString(),
-      journalId,
-    };
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    setJournals((prev) =>
-      prev.map((journal) =>
-        journal.id === journalId
-          ? { ...journal, places: [...journal.places, newPlace] }
-          : journal
-      )
-    );
+      // Préparer les données pour l'API
+      const placeCreateData: PlaceCreateRequest = {
+        name: placeData.name,
+        description: placeData.description || '',
+        journal_id: journalId,
+        location: {
+          coordinates:
+            placeData.latitude && placeData.longitude
+              ? [Number(placeData.longitude), Number(placeData.latitude)]
+              : [2.3488, 48.8534], // Coordonnées par défaut : Paris, France
+          address: placeData.address || '',
+          city: placeData.city || '',
+          country: placeData.country || '',
+        },
+        date_visited: new Date(placeData.dateVisited).toISOString(),
+        start_date: placeData.startDate
+          ? new Date(placeData.startDate).toISOString()
+          : new Date(placeData.dateVisited).toISOString(),
+        end_date: placeData.endDate
+          ? new Date(placeData.endDate).toISOString()
+          : new Date(placeData.dateVisited).toISOString(),
+        rating: placeData.rating || undefined,
+        weather: placeData.weather || '',
+        budget: placeData.budget || undefined,
+        tags: placeData.tags || [],
+        is_favorite: placeData.isFavorite || false,
+        visit_duration: placeData.visitDuration || undefined,
+        notes: placeData.notes || '',
+      };
+
+      // Nettoyer les valeurs undefined
+      const cleanData = Object.fromEntries(
+        Object.entries(placeCreateData).filter(
+          ([_, value]) => value !== undefined
+        )
+      ) as PlaceCreateRequest;
+
+      // Debug: Afficher les données envoyées
+      console.log("📍 Données envoyées à l'API:", cleanData);
+
+      // Créer la place via l'API
+      const createdPlace = await placeApi.createPlace(cleanData);
+
+      // Recharger les journaux pour avoir les données à jour
+      await loadJournals();
+
+      console.log('Place créée avec succès:', createdPlace);
+    } catch (error) {
+      console.error('Erreur lors de la création de la place:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la création de la place'
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updatePlace = (

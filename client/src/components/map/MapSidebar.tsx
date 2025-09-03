@@ -119,7 +119,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {places.map((place) => (
+            {places.slice(0, 4).map((place) => (
               <ListItem
                 key={place.id}
                 sx={{

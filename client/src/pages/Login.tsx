@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import CarouselSlides from '../components/auth/CarouselSlides';
+import { useThemeMode } from '../context/ThemeContext';
 
 interface FormErrors {
   email?: string;
@@ -33,7 +34,7 @@ const Login: React.FC = () => {
   const { login, isLoading, error, clearError, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { isDarkMode } = useThemeMode();
   // Récupérer la page d'origine depuis le state de navigation
   const from = location.state?.from?.pathname || '/';
 
@@ -113,7 +114,11 @@ const Login: React.FC = () => {
               }}
             >
               <img
-                src=" ./src/assets/icon.png"
+                src={
+                  isDarkMode
+                    ? ' ./src/assets/icon-white.png'
+                    : ' ./src/assets/icon.png'
+                }
                 alt="Logo"
                 style={{ width: 40, height: 40 }}
               />

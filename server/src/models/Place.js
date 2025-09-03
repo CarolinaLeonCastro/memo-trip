@@ -13,7 +13,9 @@ const placeSchema = new mongoose.Schema(
 			city: { type: String, trim: true },
 			country: { type: String, trim: true }
 		},
-		date_visited: { type: Date, required: true },
+		date_visited: { type: Date, required: true }, // Date principale pour compatibilité
+		start_date: { type: Date, required: true }, // Date de début de la visite
+		end_date: { type: Date, required: true }, // Date de fin de la visite
 		photos: [
 			{
 				url: {
