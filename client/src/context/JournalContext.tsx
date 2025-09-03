@@ -80,29 +80,35 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         userId: journal.user_id,
         personalNotes: journal.personal_notes,
         tags: journal.tags || [],
-        places: journal.places ? journal.places.map((place: any) => ({
-          id: place._id,
-          name: place.name,
-          city: place.location?.city || '',
-          country: place.location?.country || '',
-          description: place.description || '',
-          address: place.location?.address || '',
-          latitude: place.location?.coordinates?.[1],
-          longitude: place.location?.coordinates?.[0],
-          dateVisited: new Date(place.date_visited),
-          startDate: place.start_date ? new Date(place.start_date) : new Date(place.date_visited),
-          endDate: place.end_date ? new Date(place.end_date) : new Date(place.date_visited),
-          photos: place.photos?.map((photo: any) => photo.url) || [],
-          tags: place.tags || [],
-          visited: true, // Si c'est dans la base, c'est visité
-          rating: place.rating,
-          weather: place.weather || '',
-          budget: place.budget,
-          isFavorite: place.is_favorite || false,
-          visitDuration: place.visit_duration,
-          notes: place.notes || '',
-          journalId: journal._id,
-        })) : [],
+        places: journal.places
+          ? journal.places.map((place: any) => ({
+              id: place._id,
+              name: place.name,
+              city: place.location?.city || '',
+              country: place.location?.country || '',
+              description: place.description || '',
+              address: place.location?.address || '',
+              latitude: place.location?.coordinates?.[1],
+              longitude: place.location?.coordinates?.[0],
+              dateVisited: new Date(place.date_visited),
+              startDate: place.start_date
+                ? new Date(place.start_date)
+                : new Date(place.date_visited),
+              endDate: place.end_date
+                ? new Date(place.end_date)
+                : new Date(place.date_visited),
+              photos: place.photos?.map((photo: any) => photo.url) || [],
+              tags: place.tags || [],
+              visited: true, // Si c'est dans la base, c'est visité
+              rating: place.rating,
+              weather: place.weather || '',
+              budget: place.budget,
+              isFavorite: place.is_favorite || false,
+              visitDuration: place.visit_duration,
+              notes: place.notes || '',
+              journalId: journal._id,
+            }))
+          : [],
         // ✅ Ajouter la photo de couverture récupérée
         mainPhoto: journal.cover_image || '',
       }));
@@ -261,8 +267,8 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         location: {
           coordinates:
             placeData.latitude && placeData.longitude
-              ? [placeData.longitude, placeData.latitude]
-              : [0, 0],
+              ? [Number(placeData.longitude), Number(placeData.latitude)]
+              : [2.3488, 48.8534], // Coordonnées par défaut : Paris, France
           address: placeData.address || '',
           city: placeData.city || '',
           country: placeData.country || '',

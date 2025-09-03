@@ -224,7 +224,8 @@ export const createPlace = async (req, res, next) => {
 		// Debug: Log des données reçues
 		logger.info('Creating place - received data:', {
 			body: req.body,
-			userId: req.user?.id
+			userId: req.user?.id,
+			timestamp: new Date().toISOString()
 		});
 
 		// Ajouter l'ID de l'utilisateur authentifié
@@ -252,6 +253,17 @@ export const createPlace = async (req, res, next) => {
 		if (!placeData.end_date) {
 			placeData.end_date = placeData.date_visited;
 		}
+
+		// Debug: Log des données finales avant création
+		logger.info('Final place data before creation:', {
+			placeData,
+			location: placeData.location,
+			dates: {
+				date_visited: placeData.date_visited,
+				start_date: placeData.start_date,
+				end_date: placeData.end_date
+			}
+		});
 
 		const place = new Place(placeData);
 		await place.save();

@@ -23,6 +23,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -32,11 +33,24 @@ import {
   CloudUpload as CloudUploadIcon,
   MenuBook as MenuBookIcon,
   Delete as DeleteIcon,
+  // Nouvelles icônes pour la logique temporelle
+  Schedule as ScheduleIcon,
+  CheckCircle as CheckCircleIcon,
+  Event as EventIcon,
+  CalendarToday as CalendarTodayIcon,
+  EventAvailable as EventAvailableIcon,
+  EventNote as EventNoteIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import PlaceSearchInput from '../components/PlaceSearchInput';
 import type { GeocodingResult } from '../services/geocoding.service';
+import {
+  getTravelDateConstraints,
+  validatePlaceDate,
+  suggestDefaultDates,
+  type TravelDateConstraints,
+} from '../utils/travel-logic';
 
 // Tags prédéfinis suggérés
 const SUGGESTED_TAGS = [
@@ -114,11 +128,66 @@ const AddPlacePage: React.FC = () => {
     }
   }, [searchParams, journals]);
 
+  // 📅 Récupérer le journal sélectionné pour contraindre les dates
+  const selectedJournal = formData.selectedJournalId
+    ? journals.find((j) => j.id === formData.selectedJournalId)
+    : null;
+
+  // 📅 Calculer les contraintes de dates selon l'état temporel du voyage
+  const travelConstraints: TravelDateConstraints | null = selectedJournal
+    ? getTravelDateConstraints(selectedJournal)
+    : null;
+
+  // 📅 Récupérer les contraintes de dates selon le statut du lieu (visité/planifié)
+  const getDateConstraintsForCurrentStatus = () => {
+    if (!travelConstraints) return {};
+
+    const isVisited = formData.visited;
+    const dateConstraints = isVisited
+      ? travelConstraints.visitedDateConstraints
+      : travelConstraints.plannedDateConstraints;
+
+    if (!dateConstraints) {
+      return {
+        disabled: true,
+        helperText: isVisited
+          ? 'Vous ne pouvez pas marquer ce lieu comme visité pour ce voyage'
+          : 'Vous ne pouvez pas planifier de nouveaux lieux pour ce voyage',
+      };
+    }
+
+    return {
+      min: dateConstraints.min,
+      max: dateConstraints.max,
+      helperText: travelConstraints.helperText,
+    };
+  };
+
+  const dateConstraints = getDateConstraintsForCurrentStatus();
+
   const handleChange = (
     field: string,
     value: string | boolean | number | string[]
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+
+      // 📅 Ajuster les dates automatiquement quand on change le statut "visité"
+      if (field === 'visited' && travelConstraints) {
+        const isVisited = value as boolean;
+        const suggestedDates = suggestDefaultDates(
+          isVisited,
+          travelConstraints
+        );
+
+        newData.startDate = suggestedDates.startDate;
+        newData.endDate = suggestedDates.endDate;
+        newData.dateVisited = suggestedDates.startDate;
+      }
+
+      return newData;
+    });
+
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
@@ -248,6 +317,36 @@ const AddPlacePage: React.FC = () => {
 
     if (!formData.description.trim()) {
       newErrors.description = 'La description est requise';
+    }
+
+    // 📅 Validation des dates selon l'état temporel du voyage
+    if (travelConstraints) {
+      // Valider la date de début
+      const startDateValidation = validatePlaceDate(
+        formData.startDate,
+        formData.visited,
+        travelConstraints
+      );
+      if (!startDateValidation.isValid) {
+        newErrors.startDate =
+          startDateValidation.errorMessage || 'Date invalide';
+      }
+
+      // Valider la date de fin
+      const endDateValidation = validatePlaceDate(
+        formData.endDate,
+        formData.visited,
+        travelConstraints
+      );
+      if (!endDateValidation.isValid) {
+        newErrors.endDate = endDateValidation.errorMessage || 'Date invalide';
+      }
+
+      // Vérifier que la date de fin >= date de début
+      if (formData.endDate < formData.startDate) {
+        newErrors.endDate =
+          'La date de fin doit être après ou égale à la date de début';
+      }
     }
 
     setErrors(newErrors);
@@ -710,24 +809,215 @@ const AddPlacePage: React.FC = () => {
             </Typography>
 
             <Stack spacing={3}>
-              {/* J'ai visité ce lieu */}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.visited}
-                    onChange={(e) => handleChange('visited', e.target.checked)}
-                  />
-                }
-                label="J'ai visité ce lieu"
-              />
+              {/* Information sur le journal et l'état du voyage */}
+              {selectedJournal && travelConstraints && (
+                <>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: 'action.hover',
+                      borderRadius: 1,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
+                      }}
+                    >
+                      <MenuBookIcon
+                        sx={{ color: 'primary.main', fontSize: 18 }}
+                      />
+                      <Typography variant="body2" fontWeight={500}>
+                        Journal sélectionné : {selectedJournal.title}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CalendarTodayIcon
+                        sx={{ color: 'text.secondary', fontSize: 14 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Période du voyage :
+                        {selectedJournal.startDate.toLocaleDateString('fr-FR')}
+                        au {selectedJournal.endDate.toLocaleDateString('fr-FR')}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Message d'information selon l'état du voyage */}
+                  <Alert
+                    severity={
+                      travelConstraints.status === 'ongoing'
+                        ? 'info'
+                        : travelConstraints.status === 'future'
+                          ? 'warning'
+                          : 'success'
+                    }
+                    icon={
+                      travelConstraints.status === 'ongoing' ? (
+                        <ScheduleIcon />
+                      ) : travelConstraints.status === 'future' ? (
+                        <EventIcon />
+                      ) : (
+                        <CheckCircleIcon />
+                      )
+                    }
+                    sx={{ mt: 2 }}
+                  >
+                    <Typography variant="body2">
+                      {travelConstraints.infoMessage}
+                    </Typography>
+                  </Alert>
+                </>
+              )}
+
+              {/* Contrôle du statut de visite selon l'état du voyage */}
+              {travelConstraints && (
+                <Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 2,
+                    }}
+                  >
+                    <EventAvailableIcon
+                      sx={{ color: 'primary.main', fontSize: 20 }}
+                    />
+                    <Typography variant="body2" fontWeight={500}>
+                      Statut de visite
+                    </Typography>
+                  </Box>
+
+                  {travelConstraints.allowedStatuses.length === 1 ? (
+                    // Un seul statut autorisé - affichage en lecture seule
+                    <Box
+                      sx={{
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'grey.50',
+                      }}
+                    >
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        {travelConstraints.allowedStatuses[0] === 'visited' ? (
+                          <CheckCircleIcon
+                            sx={{ color: 'success.main', fontSize: 18 }}
+                          />
+                        ) : (
+                          <ScheduleIcon
+                            sx={{ color: 'warning.main', fontSize: 18 }}
+                          />
+                        )}
+                        <Typography variant="body2" color="text.secondary">
+                          {travelConstraints.allowedStatuses[0] === 'visited'
+                            ? 'Uniquement "Lieu visité" disponible pour ce voyage'
+                            : 'Uniquement "Lieu planifié" disponible pour ce voyage'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ) : (
+                    // Plusieurs statuts autorisés - choix libre
+                    <FormControl component="fieldset">
+                      <RadioGroup
+                        value={formData.visited ? 'visited' : 'planned'}
+                        onChange={(e) =>
+                          handleChange('visited', e.target.value === 'visited')
+                        }
+                      >
+                        <FormControlLabel
+                          value="visited"
+                          control={<Radio />}
+                          label={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                            >
+                              <CheckCircleIcon
+                                sx={{ color: 'success.main', fontSize: 18 }}
+                              />
+                              <span>J'ai visité ce lieu</span>
+                            </Box>
+                          }
+                          disabled={
+                            !travelConstraints.allowedStatuses.includes(
+                              'visited'
+                            )
+                          }
+                        />
+                        <FormControlLabel
+                          value="planned"
+                          control={<Radio />}
+                          label={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                            >
+                              <ScheduleIcon
+                                sx={{ color: 'warning.main', fontSize: 18 }}
+                              />
+                              <span>Je planifie visiter ce lieu</span>
+                            </Box>
+                          }
+                          disabled={
+                            !travelConstraints.allowedStatuses.includes(
+                              'planned'
+                            )
+                          }
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  )}
+                </Box>
+              )}
+
+              {/* Fallback si pas de journal sélectionné */}
+              {!travelConstraints && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.visited}
+                      onChange={(e) =>
+                        handleChange('visited', e.target.checked)
+                      }
+                    />
+                  }
+                  label="J'ai visité ce lieu"
+                />
+              )}
 
               {/* Note et date de visite (si visité) */}
               {formData.visited && (
                 <>
                   <Box>
-                    <Typography component="legend" sx={{ mb: 1 }}>
-                      Note
-                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
+                      }}
+                    >
+                      <CheckCircleIcon
+                        sx={{ color: 'success.main', fontSize: 18 }}
+                      />
+                      <Typography component="legend" fontWeight={500}>
+                        Note de visite
+                      </Typography>
+                    </Box>
                     <Rating
                       value={formData.rating || 0}
                       onChange={(_, value) =>
@@ -739,7 +1029,11 @@ const AddPlacePage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Date de début de visite"
+                    label={
+                      formData.visited
+                        ? 'Date de début de visite'
+                        : 'Date prévue de début'
+                    }
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => {
@@ -755,12 +1049,28 @@ const AddPlacePage: React.FC = () => {
                       handleChange('dateVisited', e.target.value);
                     }}
                     InputLabelProps={{ shrink: true }}
-                    helperText="Date du premier jour de visite de ce lieu"
+                    inputProps={{
+                      min: dateConstraints.min,
+                      max: dateConstraints.max,
+                    }}
+                    disabled={dateConstraints.disabled}
+                    error={!!errors.startDate}
+                    helperText={
+                      errors.startDate ||
+                      dateConstraints.helperText ||
+                      (formData.visited
+                        ? 'Date du premier jour de visite de ce lieu'
+                        : 'Date prévue pour la visite')
+                    }
                   />
 
                   <TextField
                     fullWidth
-                    label="Date de fin de visite"
+                    label={
+                      formData.visited
+                        ? 'Date de fin de visite'
+                        : 'Date prévue de fin'
+                    }
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => {
@@ -771,8 +1081,100 @@ const AddPlacePage: React.FC = () => {
                       }
                     }}
                     InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: formData.startDate }}
-                    helperText="Date du dernier jour (peut être la même que le début pour une visite d'un jour)"
+                    inputProps={{
+                      min: formData.startDate,
+                      max: dateConstraints.max,
+                    }}
+                    disabled={dateConstraints.disabled}
+                    error={!!errors.endDate}
+                    helperText={
+                      errors.endDate ||
+                      (formData.visited
+                        ? "Date du dernier jour (peut être la même que le début pour une visite d'un jour)"
+                        : "Date prévue de fin (peut être identique au début pour une visite d'un jour)")
+                    }
+                  />
+                </>
+              )}
+
+              {/* Dates pour lieux à visiter */}
+              {!formData.visited && (
+                <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mt: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <EventNoteIcon
+                      sx={{ color: 'primary.main', fontSize: 18 }}
+                    />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
+                      Planification de visite
+                    </Typography>
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label="Date prévue de début"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => {
+                      handleChange('startDate', e.target.value);
+                      // Auto-remplir la date de fin si elle n'est pas définie
+                      if (
+                        !formData.endDate ||
+                        formData.endDate === formData.startDate
+                      ) {
+                        handleChange('endDate', e.target.value);
+                      }
+                      // Mettre à jour la date principale pour compatibilité
+                      handleChange('dateVisited', e.target.value);
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: dateConstraints.min,
+                      max: dateConstraints.max,
+                    }}
+                    disabled={dateConstraints.disabled}
+                    error={!!errors.startDate}
+                    helperText={
+                      errors.startDate ||
+                      dateConstraints.helperText ||
+                      'Date prévue pour la visite'
+                    }
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Date prévue de fin"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => {
+                      handleChange('endDate', e.target.value);
+                      // Mettre à jour la date principale si c'est une visite d'un seul jour
+                      if (formData.startDate === e.target.value) {
+                        handleChange('dateVisited', e.target.value);
+                      }
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: formData.startDate,
+                      max: dateConstraints.max,
+                    }}
+                    disabled={dateConstraints.disabled}
+                    error={!!errors.endDate}
+                    helperText={
+                      errors.endDate ||
+                      "Date prévue de fin (peut être identique au début pour une visite d'un jour)"
+                    }
                   />
                 </>
               )}
@@ -842,13 +1244,6 @@ const AddPlacePage: React.FC = () => {
                   </Typography>
                 </FormControl>
               )}
-
-              <Button
-                variant="contained"
-                onClick={() => navigate('/journals/new')}
-              >
-                Créer un nouveau journal
-              </Button>
             </Stack>
           </Paper>
         </Grid>

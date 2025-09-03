@@ -197,15 +197,22 @@ class PlaceApiService {
   /**
    * GET /api/places/nearby - Places à proximité
    */
-  async getNearbyPlaces(params: NearbyPlacesParams): Promise<{ data: Place[] }> {
-    const response = await this.axiosInstance.get('/api/places/nearby', { params });
+  async getNearbyPlaces(
+    params: NearbyPlacesParams
+  ): Promise<{ data: Place[] }> {
+    const response = await this.axiosInstance.get('/api/places/nearby', {
+      params,
+    });
     return response.data;
   }
 
   /**
    * POST /api/places/:id/photos - Ajouter des photos à une place
    */
-  async addPhotos(placeId: string, formData: FormData): Promise<PhotoUploadResponse> {
+  async addPhotos(
+    placeId: string,
+    formData: FormData
+  ): Promise<PhotoUploadResponse> {
     const response = await this.axiosInstance.post(
       `/api/places/${placeId}/photos`,
       formData,
@@ -226,14 +233,19 @@ class PlaceApiService {
     photos: PlacePhoto[];
     total: number;
   }> {
-    const response = await this.axiosInstance.get(`/api/places/${placeId}/photos`);
+    const response = await this.axiosInstance.get(
+      `/api/places/${placeId}/photos`
+    );
     return response.data;
   }
 
   /**
    * DELETE /api/places/:id/photos/:photoId - Supprimer une photo
    */
-  async removePhoto(placeId: string, photoId: string): Promise<{
+  async removePhoto(
+    placeId: string,
+    photoId: string
+  ): Promise<{
     message: string;
     total_photos: number;
   }> {

@@ -179,7 +179,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
         <Button
           variant="contained"
           startIcon={<LocationIcon />}
-          onClick={() => navigate('/place/new')}
+          onClick={() => navigate('/journals/new')}
           sx={{
             ml: 1,
             background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
@@ -191,7 +191,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
             py: 0.8,
           }}
         >
-          Ajouter un lieu
+          Ajouter un journal
         </Button>
       </Box>
     </Box>

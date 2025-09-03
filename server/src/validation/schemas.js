@@ -176,11 +176,10 @@ export const placeValidation = {
 		}),
 		location: Joi.object({
 			type: Joi.string().valid('Point').default('Point'),
-			coordinates: Joi.array().items(Joi.number().min(-180).max(180)).length(2).required().messages({
+			coordinates: Joi.array().items(Joi.number().min(-180).max(180)).length(2).default([2.3488, 48.8534]).messages({
 				'array.length': 'Les coordonnées doivent contenir exactement 2 valeurs [longitude, latitude]',
 				'number.min': 'Les coordonnées doivent être entre -180 et 180',
-				'number.max': 'Les coordonnées doivent être entre -180 et 180',
-				'any.required': 'Les coordonnées sont obligatoires'
+				'number.max': 'Les coordonnées doivent être entre -180 et 180'
 			}),
 			address: Joi.string().trim().max(200).allow('').messages({
 				'string.max': "L'adresse ne peut pas dépasser 200 caractères"
@@ -192,20 +191,17 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}).required(),
-		date_visited: Joi.date().max('now').required().messages({
+		date_visited: Joi.date().required().messages({
 			'any.required': 'La date de visite est obligatoire',
-			'date.max': 'La date de visite ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
-		start_date: Joi.date().max('now').required().messages({
+		start_date: Joi.date().required().messages({
 			'any.required': 'La date de début de visite est obligatoire',
-			'date.max': 'La date de début ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).max('now').required().messages({
+		end_date: Joi.date().min(Joi.ref('start_date')).required().messages({
 			'any.required': 'La date de fin de visite est obligatoire',
 			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.max': 'La date de fin ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
 		rating: Joi.number().integer().min(1).max(5).allow(null).messages({
@@ -262,17 +258,14 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}),
-		date_visited: Joi.date().max('now').messages({
-			'date.max': 'La date de visite ne peut pas être dans le futur',
+		date_visited: Joi.date().messages({
 			'date.base': 'Format de date invalide'
 		}),
-		start_date: Joi.date().max('now').messages({
-			'date.max': 'La date de début ne peut pas être dans le futur',
+		start_date: Joi.date().messages({
 			'date.base': 'Format de date invalide'
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).max('now').messages({
+		end_date: Joi.date().min(Joi.ref('start_date')).messages({
 			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.max': 'La date de fin ne peut pas être dans le futur',
 			'date.base': 'Format de date invalide'
 		}),
 		rating: Joi.number().integer().min(1).max(5).messages({
