@@ -176,14 +176,14 @@ L'application utilise un système d'authentification JWT avec trois niveaux d'ac
 ### Carnets de voyage
 - Création avec titre, description, dates de voyage
 - Ajout de lieux visités avec géolocalisation
-- Upload d'images avec légendes
+- Upload d'images
+- Notes personnelles détaillées
 - Système de tags pour l'organisation
 - Partage public
 
 ### Lieux
 - Géolocalisation automatique
-- Photos multiples avec légendes
-- Notes personnelles détaillées
+- Photos multiples 
 - Évaluation par étoiles
 - Informations de budget
 - Durée de visite

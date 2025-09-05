@@ -12,6 +12,17 @@ import {
   Stack,
   Paper,
   Grid,
+  FormControlLabel,
+  Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  ButtonGroup,
+  Slider,
+  Radio,
+  RadioGroup,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -19,11 +30,22 @@ import {
   Image as ImageIcon,
   CloudUpload as CloudUploadIcon,
   Delete as DeleteIcon,
+  Schedule as ScheduleIcon,
+  CheckCircle as CheckCircleIcon,
+  Event as EventIcon,
+  CalendarToday as CalendarTodayIcon,
+  EventAvailable as EventAvailableIcon,
+  MenuBook as MenuBookIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import PlaceSearchInput from '../components/PlaceSearchInput';
 import type { GeocodingResult } from '../services/geocoding.service';
+import type { Place } from '../types/index';
+import {
+  getTravelDateConstraints,
+  type TravelDateConstraints,
+} from '../utils/travel-logic';
 
 // Tags prédéfinis suggérés
 const SUGGESTED_TAGS = [
@@ -67,18 +89,35 @@ const EditPlace: React.FC = () => {
     country: '',
     description: '',
     dateVisited: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     photos: [] as string[],
     tags: [] as string[],
     visited: false,
     rating: 0,
+    weather: '',
+    budget: '',
+    visitDuration: '',
+    notes: '',
+    isFavorite: false,
     latitude: '',
     longitude: '',
     journalId: '',
   });
 
-  const [originalPlace, setOriginalPlace] = useState<any>(null);
+  const [originalPlace, setOriginalPlace] = useState<Place | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customTag, setCustomTag] = useState('');
+
+  // 📅 Récupérer le journal du lieu pour contraindre les dates
+  const selectedJournal = originalPlace
+    ? journals.find((j) => j.id === formData.journalId)
+    : null;
+
+  // 📅 Calculer les contraintes de dates selon l'état temporel du voyage
+  const travelConstraints: TravelDateConstraints | null = selectedJournal
+    ? getTravelDateConstraints(selectedJournal)
+    : null;
 
   // Charger les données du lieu à modifier
   useEffect(() => {
@@ -105,10 +144,21 @@ const EditPlace: React.FC = () => {
         country: place.country || '',
         description: place.description || '',
         dateVisited: new Date(place.dateVisited).toISOString().split('T')[0],
+        startDate: place.startDate
+          ? new Date(place.startDate).toISOString().split('T')[0]
+          : new Date(place.dateVisited).toISOString().split('T')[0],
+        endDate: place.endDate
+          ? new Date(place.endDate).toISOString().split('T')[0]
+          : new Date(place.dateVisited).toISOString().split('T')[0],
         photos: place.photos || [],
         tags: place.tags || [],
         visited: new Date(place.dateVisited) <= new Date(),
         rating: place.rating || 0,
+        weather: place.weather || '',
+        budget: place.budget?.toString() || '',
+        visitDuration: place.visitDuration?.toString() || '',
+        notes: place.notes || '',
+        isFavorite: place.isFavorite || false,
         latitude: place.latitude?.toString() || '',
         longitude: place.longitude?.toString() || '',
         journalId,
@@ -128,6 +178,18 @@ const EditPlace: React.FC = () => {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleCustomChange = (
+    field: string,
+    value: string | number | boolean
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Clear error when user updates
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -211,18 +273,28 @@ const EditPlace: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateForm() || !originalPlace) return;
 
-    const updatedPlace = {
-      ...originalPlace,
+    const updatedPlace: Partial<Place> = {
       name: formData.name,
       city: formData.city,
       country: formData.country,
       description: formData.description,
       dateVisited: new Date(formData.dateVisited),
+      startDate: new Date(formData.startDate),
+      endDate: new Date(formData.endDate),
       photos: formData.photos,
       tags: formData.tags,
       rating: formData.rating,
-      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      weather: formData.weather,
+      budget: formData.budget ? Number(formData.budget) : undefined,
+      visitDuration: formData.visitDuration
+        ? Number(formData.visitDuration)
+        : undefined,
+      notes: formData.notes,
+      isFavorite: formData.isFavorite,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+      longitude: formData.longitude
+        ? parseFloat(formData.longitude)
+        : undefined,
     };
 
     try {
@@ -463,9 +535,264 @@ const EditPlace: React.FC = () => {
               </Box>
             </Stack>
           </Paper>
+
+          {/* Section 3: Informations de visite */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 1,
+              border: `1px solid ${theme.palette.divider}`,
+              mt: 3,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
+              Informations de visite
+            </Typography>
+
+            <Stack spacing={3}>
+              {/* Météo - Options prédéfinies */}
+              <FormControl fullWidth>
+                <InputLabel>Météo lors de la visite</InputLabel>
+                <Select
+                  name="weather"
+                  value={formData.weather}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      weather: e.target.value,
+                    }))
+                  }
+                  label="Météo lors de la visite"
+                >
+                  <MenuItem value="">Non spécifiée</MenuItem>
+                  <MenuItem value="☀️ Ensoleillé">☀️ Ensoleillé</MenuItem>
+                  <MenuItem value="⛅ Partiellement nuageux">
+                    ⛅ Partiellement nuageux
+                  </MenuItem>
+                  <MenuItem value="☁️ Nuageux">☁️ Nuageux</MenuItem>
+                  <MenuItem value="🌧️ Pluvieux">🌧️ Pluvieux</MenuItem>
+                  <MenuItem value="⛈️ Orageux">⛈️ Orageux</MenuItem>
+                  <MenuItem value="🌨️ Neigeux">🌨️ Neigeux</MenuItem>
+                  <MenuItem value="🌫️ Brouillard">🌫️ Brouillard</MenuItem>
+                  <MenuItem value="🌬️ Venteux">🌬️ Venteux</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Budget avec options rapides */}
+              <Box>
+                <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                  Budget approximatif (€)
+                </Typography>
+                <ButtonGroup
+                  variant="outlined"
+                  sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+                >
+                  <Button
+                    size="small"
+                    variant={formData.budget === '0' ? 'contained' : 'outlined'}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, budget: '0' }))
+                    }
+                  >
+                    Gratuit
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '10' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, budget: '10' }))
+                    }
+                  >
+                    ~10€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '25' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, budget: '25' }))
+                    }
+                  >
+                    ~25€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '50' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, budget: '50' }))
+                    }
+                  >
+                    ~50€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '100' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, budget: '100' }))
+                    }
+                  >
+                    ~100€
+                  </Button>
+                </ButtonGroup>
+                <TextField
+                  fullWidth
+                  label="Montant personnalisé"
+                  name="budget"
+                  type="number"
+                  size="small"
+                  value={formData.budget}
+                  onChange={handleChange}
+                  placeholder="Ou saisissez un montant précis..."
+                  InputProps={{
+                    endAdornment: <Typography variant="body2">€</Typography>,
+                  }}
+                />
+              </Box>
+
+              {/* Durée de visite avec slider */}
+              <Box>
+                <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                  Durée de visite :{' '}
+                  {formData.visitDuration
+                    ? `${Math.floor(Number(formData.visitDuration) / 60)}h ${Number(formData.visitDuration) % 60}min`
+                    : 'Non spécifiée'}
+                </Typography>
+                <ButtonGroup
+                  variant="outlined"
+                  sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+                >
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '30' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, visitDuration: '30' }))
+                    }
+                  >
+                    30min
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '60' ? 'contained' : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, visitDuration: '60' }))
+                    }
+                  >
+                    1h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '120'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, visitDuration: '120' }))
+                    }
+                  >
+                    2h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '240'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, visitDuration: '240' }))
+                    }
+                  >
+                    4h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '480'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, visitDuration: '480' }))
+                    }
+                  >
+                    Journée
+                  </Button>
+                </ButtonGroup>
+                <Box sx={{ px: 2 }}>
+                  <Slider
+                    value={Number(formData.visitDuration) || 60}
+                    onChange={(_, value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        visitDuration: value.toString(),
+                      }))
+                    }
+                    min={15}
+                    max={480}
+                    step={15}
+                    marks={[
+                      { value: 30, label: '30min' },
+                      { value: 120, label: '2h' },
+                      { value: 240, label: '4h' },
+                      { value: 480, label: '8h' },
+                    ]}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={(value) =>
+                      `${Math.floor(value / 60)}h ${value % 60}min`
+                    }
+                  />
+                </Box>
+              </Box>
+
+              {/* Notes */}
+              <TextField
+                fullWidth
+                label="Notes personnelles (optionnel)"
+                name="notes"
+                multiline
+                rows={3}
+                value={formData.notes}
+                onChange={handleChange}
+                placeholder="Vos impressions, conseils, anecdotes..."
+                helperText="Notes détaillées sur ce lieu"
+              />
+
+              {/* Favori */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isFavorite}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isFavorite: e.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="⭐ Marquer comme lieu favori"
+              />
+            </Stack>
+          </Paper>
         </Grid>
 
-        {/* Colonne droite - Photos, Date, Notes */}
+        {/* Colonne droite - Photos, Statut de visite, Dates, Notes */}
         <Grid size={{ xs: 12, md: 6 }}>
           {/* Section 1: Photos */}
           <Paper
@@ -600,7 +927,383 @@ const EditPlace: React.FC = () => {
             </Box>
           </Paper>
 
-          {/* Section 2: Date et évaluation */}
+          {/* Section 2: Statut de visite */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 1,
+              border: `1px solid ${theme.palette.divider}`,
+              mb: 3,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
+              Statut de visite
+            </Typography>
+
+            <Stack spacing={3}>
+              {/* Information sur le journal et l'état du voyage */}
+              {selectedJournal && travelConstraints && (
+                <>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: 'action.hover',
+                      borderRadius: 1,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
+                      }}
+                    >
+                      <MenuBookIcon
+                        sx={{ color: 'primary.main', fontSize: 18 }}
+                      />
+                      <Typography variant="body2" fontWeight={500}>
+                        Journal : {selectedJournal.title}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CalendarTodayIcon
+                        sx={{ color: 'text.secondary', fontSize: 14 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Période du voyage :
+                        {selectedJournal.startDate.toLocaleDateString('fr-FR')}
+                        au {selectedJournal.endDate.toLocaleDateString('fr-FR')}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Message d'information selon l'état du voyage */}
+                  <Alert
+                    severity={
+                      travelConstraints.status === 'ongoing'
+                        ? 'info'
+                        : travelConstraints.status === 'future'
+                          ? 'warning'
+                          : 'success'
+                    }
+                    icon={
+                      travelConstraints.status === 'ongoing' ? (
+                        <ScheduleIcon />
+                      ) : travelConstraints.status === 'future' ? (
+                        <EventIcon />
+                      ) : (
+                        <CheckCircleIcon />
+                      )
+                    }
+                    sx={{ mt: 2 }}
+                  >
+                    <Typography variant="body2">
+                      {travelConstraints.infoMessage}
+                    </Typography>
+                  </Alert>
+                </>
+              )}
+
+              {/* Contrôle du statut de visite selon l'état du voyage */}
+              {travelConstraints && (
+                <Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 2,
+                    }}
+                  >
+                    <EventAvailableIcon
+                      sx={{ color: 'primary.main', fontSize: 20 }}
+                    />
+                    <Typography variant="body2" fontWeight={500}>
+                      Statut de visite
+                    </Typography>
+                  </Box>
+
+                  {travelConstraints.allowedStatuses.length === 1 ? (
+                    // Un seul statut autorisé - affichage en lecture seule
+                    <Box
+                      sx={{
+                        p: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'grey.50',
+                      }}
+                    >
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        {travelConstraints.allowedStatuses[0] === 'visited' ? (
+                          <CheckCircleIcon
+                            sx={{ color: 'success.main', fontSize: 18 }}
+                          />
+                        ) : (
+                          <ScheduleIcon
+                            sx={{ color: 'warning.main', fontSize: 18 }}
+                          />
+                        )}
+                        <Typography variant="body2" color="text.secondary">
+                          {travelConstraints.allowedStatuses[0] === 'visited'
+                            ? 'Uniquement "Lieu visité" disponible pour ce voyage'
+                            : 'Uniquement "Lieu planifié" disponible pour ce voyage'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ) : (
+                    // Plusieurs statuts autorisés - choix libre
+                    <FormControl component="fieldset">
+                      <RadioGroup
+                        value={formData.visited ? 'visited' : 'planned'}
+                        onChange={(e) =>
+                          handleCustomChange(
+                            'visited',
+                            e.target.value === 'visited'
+                          )
+                        }
+                      >
+                        <FormControlLabel
+                          value="visited"
+                          control={<Radio />}
+                          label={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                            >
+                              <CheckCircleIcon
+                                sx={{ color: 'success.main', fontSize: 18 }}
+                              />
+                              <span>J'ai visité ce lieu</span>
+                            </Box>
+                          }
+                          disabled={
+                            !travelConstraints.allowedStatuses.includes(
+                              'visited'
+                            )
+                          }
+                        />
+                        <FormControlLabel
+                          value="planned"
+                          control={<Radio />}
+                          label={
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                            >
+                              <ScheduleIcon
+                                sx={{ color: 'warning.main', fontSize: 18 }}
+                              />
+                              <span>Je planifie visiter ce lieu</span>
+                            </Box>
+                          }
+                          disabled={
+                            !travelConstraints.allowedStatuses.includes(
+                              'planned'
+                            )
+                          }
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  )}
+                </Box>
+              )}
+
+              {/* Fallback si pas de journal sélectionné */}
+              {!travelConstraints && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.visited}
+                      onChange={(e) =>
+                        handleCustomChange('visited', e.target.checked)
+                      }
+                    />
+                  }
+                  label="J'ai visité ce lieu"
+                />
+              )}
+
+              {/* Note et dates de visite (si visité) */}
+              {formData.visited && (
+                <>
+                  <Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 1,
+                      }}
+                    >
+                      <CheckCircleIcon
+                        sx={{ color: 'success.main', fontSize: 18 }}
+                      />
+                      <Typography component="legend" fontWeight={500}>
+                        Note de visite
+                      </Typography>
+                    </Box>
+                    <Rating
+                      value={formData.rating || 0}
+                      onChange={(_, value) =>
+                        handleCustomChange('rating', value || 0)
+                      }
+                      size="large"
+                    />
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label={
+                      formData.visited
+                        ? 'Date de début de visite'
+                        : 'Date prévue de début'
+                    }
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => {
+                      handleCustomChange('startDate', e.target.value);
+                      // Auto-remplir la date de fin si elle n'est pas définie
+                      if (
+                        !formData.endDate ||
+                        formData.endDate === formData.startDate
+                      ) {
+                        handleCustomChange('endDate', e.target.value);
+                      }
+                      // Mettre à jour la date principale pour compatibilité
+                      handleCustomChange('dateVisited', e.target.value);
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    error={!!errors.startDate}
+                    helperText={
+                      errors.startDate ||
+                      (formData.visited
+                        ? 'Date du premier jour de visite de ce lieu'
+                        : 'Date prévue pour la visite')
+                    }
+                  />
+
+                  <TextField
+                    fullWidth
+                    label={
+                      formData.visited
+                        ? 'Date de fin de visite'
+                        : 'Date prévue de fin'
+                    }
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => {
+                      handleCustomChange('endDate', e.target.value);
+                      // Mettre à jour la date principale si c'est une visite d'un seul jour
+                      if (formData.startDate === e.target.value) {
+                        handleCustomChange('dateVisited', e.target.value);
+                      }
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: formData.startDate,
+                    }}
+                    error={!!errors.endDate}
+                    helperText={
+                      errors.endDate ||
+                      (formData.visited
+                        ? "Date du dernier jour (peut être la même que le début pour une visite d'un jour)"
+                        : "Date prévue de fin (peut être identique au début pour une visite d'un jour)")
+                    }
+                  />
+                </>
+              )}
+
+              {/* Dates pour lieux à visiter */}
+              {!formData.visited && (
+                <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mt: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <CalendarTodayIcon
+                      sx={{ color: 'primary.main', fontSize: 18 }}
+                    />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
+                      Planification de visite
+                    </Typography>
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label="Date prévue de début"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => {
+                      handleCustomChange('startDate', e.target.value);
+                      // Auto-remplir la date de fin si elle n'est pas définie
+                      if (
+                        !formData.endDate ||
+                        formData.endDate === formData.startDate
+                      ) {
+                        handleCustomChange('endDate', e.target.value);
+                      }
+                      // Mettre à jour la date principale pour compatibilité
+                      handleCustomChange('dateVisited', e.target.value);
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    error={!!errors.startDate}
+                    helperText={
+                      errors.startDate || 'Date prévue pour la visite'
+                    }
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Date prévue de fin"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => {
+                      handleCustomChange('endDate', e.target.value);
+                      // Mettre à jour la date principale si c'est une visite d'un seul jour
+                      if (formData.startDate === e.target.value) {
+                        handleCustomChange('dateVisited', e.target.value);
+                      }
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: formData.startDate,
+                    }}
+                    error={!!errors.endDate}
+                    helperText={
+                      errors.endDate ||
+                      "Date prévue de fin (peut être identique au début pour une visite d'un jour)"
+                    }
+                  />
+                </>
+              )}
+            </Stack>
+          </Paper>
+
+          {/* Section 3: Date principale (pour compatibilité) */}
           <Paper
             elevation={0}
             sx={{
@@ -617,14 +1320,14 @@ const EditPlace: React.FC = () => {
                 color: 'primary.main',
               }}
             >
-              Date et évaluation
+              Date principale
             </Typography>
 
             <Stack spacing={3}>
-              {/* Date de visite */}
+              {/* Date principale de visite (pour compatibilité backend) */}
               <TextField
                 fullWidth
-                label="Date de visite"
+                label="Date de visite principale"
                 name="dateVisited"
                 value={formData.dateVisited}
                 onChange={handleChange}
@@ -632,21 +1335,8 @@ const EditPlace: React.FC = () => {
                 InputLabelProps={{
                   shrink: true,
                 }}
+                helperText="Date principale utilisée pour le tri et l'affichage"
               />
-
-              {/* Évaluation */}
-              <Box>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-                  Évaluation :
-                </Typography>
-                <Rating
-                  value={formData.rating}
-                  onChange={(_, newValue) => {
-                    setFormData((prev) => ({ ...prev, rating: newValue || 0 }));
-                  }}
-                  size="large"
-                />
-              </Box>
             </Stack>
           </Paper>
         </Grid>

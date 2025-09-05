@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import {
   Box,
@@ -27,7 +27,6 @@ import {
   PhotoCamera as PhotoCameraIcon,
   Close as CloseIcon,
   LocationOn as LocationOnIcon,
-  Add as AddIcon,
   CheckCircle as CheckCircleIcon,
   CalendarToday as CalendarTodayIcon,
 } from '@mui/icons-material';
@@ -406,16 +405,6 @@ const EditJournal: React.FC = () => {
           >
             Lieux du voyage ({journal.places.length})
           </Typography>
-          <Button
-            component={Link}
-            to={`/place/new?journalId=${journal.id}`}
-            variant="outlined"
-            startIcon={<AddIcon />}
-            size="small"
-            sx={{ ml: 'auto' }}
-          >
-            Ajouter un lieu
-          </Button>
         </Box>
 
         {journal.places.length === 0 ? (
@@ -432,17 +421,10 @@ const EditJournal: React.FC = () => {
             <Typography variant="h6" color="text.secondary" gutterBottom>
               Aucun lieu ajouté
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Commencez par ajouter des lieux à votre voyage
+            <Typography variant="body2" color="text.secondary">
+              Retournez à la vue du journal pour ajouter des lieux à votre
+              voyage
             </Typography>
-            <Button
-              component={Link}
-              to={`/place/new?journalId=${journal.id}`}
-              variant="contained"
-              startIcon={<AddIcon />}
-            >
-              Ajouter votre premier lieu
-            </Button>
           </Box>
         ) : (
           <Grid container spacing={2}>

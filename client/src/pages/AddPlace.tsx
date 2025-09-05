@@ -24,6 +24,8 @@ import {
   MenuItem,
   InputLabel,
   Alert,
+  ButtonGroup,
+  Slider,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -100,6 +102,11 @@ const AddPlacePage: React.FC = () => {
     tags: [] as string[],
     visited: false,
     rating: 0,
+    weather: '',
+    budget: '',
+    visitDuration: '',
+    notes: '',
+    isFavorite: false,
     latitude: '',
     longitude: '',
     // Nouvelles propriétés pour le journal
@@ -399,6 +406,13 @@ const AddPlacePage: React.FC = () => {
       tags: formData.tags,
       visited: formData.visited,
       rating: formData.rating || undefined,
+      weather: formData.weather.trim(),
+      budget: formData.budget ? Number(formData.budget) : undefined,
+      visitDuration: formData.visitDuration
+        ? Number(formData.visitDuration)
+        : undefined,
+      notes: formData.notes.trim(),
+      isFavorite: formData.isFavorite,
     };
 
     try {
@@ -1181,7 +1195,228 @@ const AddPlacePage: React.FC = () => {
             </Stack>
           </Paper>
 
-          {/* Section 3: Journal associé */}
+          {/* Section 3: Informations de visite (weather, budget, notes) */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 1,
+              border: `1px solid ${theme.palette.divider}`,
+              mb: 3,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
+            >
+              Informations de visite
+            </Typography>
+
+            <Stack spacing={3}>
+              {/* Météo - Options prédéfinies */}
+              <FormControl fullWidth>
+                <InputLabel>Météo lors de la visite</InputLabel>
+                <Select
+                  value={formData.weather}
+                  onChange={(e) => handleChange('weather', e.target.value)}
+                  label="Météo lors de la visite"
+                >
+                  <MenuItem value="">Non spécifiée</MenuItem>
+                  <MenuItem value="☀️ Ensoleillé">☀️ Ensoleillé</MenuItem>
+                  <MenuItem value="⛅ Partiellement nuageux">
+                    ⛅ Partiellement nuageux
+                  </MenuItem>
+                  <MenuItem value="☁️ Nuageux">☁️ Nuageux</MenuItem>
+                  <MenuItem value="🌧️ Pluvieux">🌧️ Pluvieux</MenuItem>
+                  <MenuItem value="⛈️ Orageux">⛈️ Orageux</MenuItem>
+                  <MenuItem value="🌨️ Neigeux">🌨️ Neigeux</MenuItem>
+                  <MenuItem value="🌫️ Brouillard">🌫️ Brouillard</MenuItem>
+                  <MenuItem value="🌬️ Venteux">🌬️ Venteux</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Budget avec options rapides */}
+              <Box>
+                <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                  Budget approximatif (€)
+                </Typography>
+                <ButtonGroup
+                  variant="outlined"
+                  sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+                >
+                  <Button
+                    size="small"
+                    variant={formData.budget === '0' ? 'contained' : 'outlined'}
+                    onClick={() => handleChange('budget', '0')}
+                  >
+                    Gratuit
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '10' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('budget', '10')}
+                  >
+                    ~10€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '25' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('budget', '25')}
+                  >
+                    ~25€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '50' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('budget', '50')}
+                  >
+                    ~50€
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.budget === '100' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('budget', '100')}
+                  >
+                    ~100€
+                  </Button>
+                </ButtonGroup>
+                <TextField
+                  fullWidth
+                  label="Montant personnalisé"
+                  type="number"
+                  size="small"
+                  value={formData.budget}
+                  onChange={(e) => handleChange('budget', e.target.value)}
+                  placeholder="Ou saisissez un montant précis..."
+                  InputProps={{
+                    endAdornment: <Typography variant="body2">€</Typography>,
+                  }}
+                />
+              </Box>
+
+              {/* Durée de visite avec slider */}
+              <Box>
+                <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                  Durée de visite :{' '}
+                  {formData.visitDuration
+                    ? `${Math.floor(Number(formData.visitDuration) / 60)}h ${Number(formData.visitDuration) % 60}min`
+                    : 'Non spécifiée'}
+                </Typography>
+                <ButtonGroup
+                  variant="outlined"
+                  sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+                >
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '30' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('visitDuration', '30')}
+                  >
+                    30min
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '60' ? 'contained' : 'outlined'
+                    }
+                    onClick={() => handleChange('visitDuration', '60')}
+                  >
+                    1h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '120'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() => handleChange('visitDuration', '120')}
+                  >
+                    2h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '240'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() => handleChange('visitDuration', '240')}
+                  >
+                    4h
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={
+                      formData.visitDuration === '480'
+                        ? 'contained'
+                        : 'outlined'
+                    }
+                    onClick={() => handleChange('visitDuration', '480')}
+                  >
+                    Journée
+                  </Button>
+                </ButtonGroup>
+                <Box sx={{ px: 2 }}>
+                  <Slider
+                    value={Number(formData.visitDuration) || 60}
+                    onChange={(_, value) =>
+                      handleChange('visitDuration', value.toString())
+                    }
+                    min={15}
+                    max={480}
+                    step={15}
+                    marks={[
+                      { value: 30, label: '30min' },
+                      { value: 120, label: '2h' },
+                      { value: 240, label: '4h' },
+                      { value: 480, label: '8h' },
+                    ]}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={(value) =>
+                      `${Math.floor(value / 60)}h ${value % 60}min`
+                    }
+                  />
+                </Box>
+              </Box>
+
+              {/* Notes */}
+              <TextField
+                fullWidth
+                label="Notes personnelles (optionnel)"
+                multiline
+                rows={3}
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                placeholder="Vos impressions, conseils, anecdotes..."
+                helperText="Notes détaillées sur ce lieu"
+              />
+
+              {/* Favori */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isFavorite}
+                    onChange={(e) =>
+                      handleChange('isFavorite', e.target.checked)
+                    }
+                  />
+                }
+                label="⭐ Marquer comme lieu favori"
+              />
+            </Stack>
+          </Paper>
+
+          {/* Section 4: Journal associé */}
           <Paper
             elevation={0}
             sx={{

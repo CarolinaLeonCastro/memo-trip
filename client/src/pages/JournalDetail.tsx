@@ -152,6 +152,18 @@ const JournalDetail: React.FC = () => {
           >
             Lieux visités ({journal.places.length})
           </Typography>
+          {journal.places.length > 0 && (
+            <Button
+              component={Link}
+              to={`/place/new?journalId=${journal.id}`}
+              variant="outlined"
+              startIcon={<AddIcon />}
+              size="small"
+              sx={{ ml: 'auto' }}
+            >
+              Ajouter un lieu
+            </Button>
+          )}
         </Box>
 
         {journal.places.length === 0 ? (
