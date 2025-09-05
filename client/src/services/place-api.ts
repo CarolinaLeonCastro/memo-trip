@@ -203,7 +203,7 @@ class PlaceApiService {
     const response = await this.axiosInstance.get('/api/places/nearby', {
       params,
     });
-    return response.data;
+    return response.data as { data: Place[] };
   }
 
   /**
@@ -236,7 +236,11 @@ class PlaceApiService {
     const response = await this.axiosInstance.get(
       `/api/places/${placeId}/photos`
     );
-    return response.data;
+    return response.data as {
+      place_name: string;
+      photos: PlacePhoto[];
+      total: number;
+    };
   }
 
   /**
@@ -252,7 +256,7 @@ class PlaceApiService {
     const response = await this.axiosInstance.delete(
       `/api/places/${placeId}/photos/${photoId}`
     );
-    return response.data;
+    return response.data as { message: string; total_photos: number };
   }
 }
 

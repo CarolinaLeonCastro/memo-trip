@@ -26,7 +26,7 @@ import theme from '../../theme';
 interface PlaceWithJournal {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   latitude: number;
   longitude: number;
   dateVisited: string;

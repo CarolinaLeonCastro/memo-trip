@@ -58,7 +58,7 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({
       name: place.name,
       city: place.city || '',
       country: place.country || '',
-      description: place.description,
+      description: place.description || '',
       latitude: place.latitude?.toString() || '',
       longitude: place.longitude?.toString() || '',
       dateVisited: place.dateVisited.toISOString().split('T')[0],
