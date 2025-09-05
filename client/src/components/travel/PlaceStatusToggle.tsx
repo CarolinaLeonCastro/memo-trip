@@ -18,7 +18,6 @@ import {
   Warning,
   Info,
   CameraAlt,
-  AttachMoney,
   Notes,
 } from '@mui/icons-material';
 import {

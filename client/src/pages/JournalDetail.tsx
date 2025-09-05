@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
+import { placeApi } from '../services/place-api';
+import type { Place as ApiPlace } from '../services/place-api';
 
 import { formatWithOptions } from 'date-fns/fp';
 import { fr } from 'date-fns/locale';
@@ -24,7 +26,6 @@ import {
   CalendarToday as CalendarTodayIcon,
   CheckCircle as CheckCircleIcon,
   Share as ShareIcon,
-  Visibility as VisibilityIcon,
   Add as AddIcon,
 } from '@mui/icons-material';
 import PhotoGallery from '../components/PhotoGallery';
@@ -35,8 +36,45 @@ const JournalDetail: React.FC = () => {
   const { getJournal } = useJournals();
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [showGallery, setShowGallery] = useState(false);
+  const [placesDetails, setPlacesDetails] = useState<Map<string, ApiPlace>>(
+    new Map()
+  );
   const theme = useTheme();
   const journal = id ? getJournal(id) : undefined;
+
+  // Charger les données complètes des lieux depuis l'API
+  useEffect(() => {
+    const loadPlacesDetails = async () => {
+      if (!journal || journal.places.length === 0) return;
+
+      const newPlacesDetails = new Map<string, ApiPlace>();
+
+      for (const place of journal.places) {
+        try {
+          const apiPlace = await placeApi.getPlaceById(place.id);
+          newPlacesDetails.set(place.id, apiPlace);
+        } catch (error) {
+          console.error(
+            `Erreur lors du chargement du lieu ${place.name}:`,
+            error
+          );
+        }
+      }
+
+      setPlacesDetails(newPlacesDetails);
+    };
+
+    loadPlacesDetails();
+  }, [journal]);
+
+  // Calculer le nombre de jours pour un lieu
+  const calculateDays = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
 
   if (!journal) {
     return (
@@ -52,11 +90,6 @@ const JournalDetail: React.FC = () => {
       </Container>
     );
   }
-
-  const openGallery = (photos: string[]) => {
-    setSelectedPhotos(photos);
-    setShowGallery(true);
-  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -210,133 +243,138 @@ const JournalDetail: React.FC = () => {
           </Box>
         ) : (
           <Grid container spacing={2}>
-            {journal.places.map((place) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
-                <Card
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: 2,
-                    },
-                  }}
-                  onClick={() => navigate(`/place/${place.id}`)}
-                >
-                  <Box sx={{ position: 'relative' }}>
-                    <CardMedia
-                      component="img"
-                      height="150"
-                      image={
-                        place.photos[0] ||
-                        'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400'
-                      }
-                      alt={place.name}
-                    />
+            {journal.places.map((place) => {
+              const placeDetails = placesDetails.get(place.id);
+              const mainPhoto =
+                placeDetails?.photos?.[0]?.url ||
+                place.photos[0] ||
+                'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400';
 
-                    {/* Badge Visité */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        bgcolor: '#4CAF50',
-                        color: 'white',
-                        borderRadius: '50%',
-                        width: 24,
-                        height: 24,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <CheckCircleIcon sx={{ fontSize: '1rem' }} />
-                    </Box>
+              // Calculer le nombre de jours si on a les dates
+              const days = placeDetails
+                ? calculateDays(placeDetails.start_date, placeDetails.end_date)
+                : 1;
 
-                    {/* Badge Visité texte */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        bottom: 8,
-                        left: 8,
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Visité
-                    </Box>
-
-                    {/* Icône de vue */}
-                    <IconButton
-                      sx={{
-                        position: 'absolute',
-                        bottom: 8,
-                        right: 8,
-                        bgcolor: 'rgba(255,255,255,0.9)',
-                        width: 32,
-                        height: 32,
-                        '&:hover': { bgcolor: 'white' },
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (place.photos.length > 0) {
-                          openGallery(place.photos);
-                        }
-                      }}
-                    >
-                      <VisibilityIcon sx={{ fontSize: '1rem' }} />
-                    </IconButton>
-                  </Box>
-
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      sx={{ mb: 0.5 }}
-                    >
-                      {place.name.split(',')[0]}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        mb: 1,
-                      }}
-                    >
-                      <LocationOnIcon
-                        sx={{ fontSize: '0.875rem', color: 'text.secondary' }}
+              return (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
+                  <Card
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 2,
+                      },
+                    }}
+                    onClick={() => navigate(`/place/${place.id}`)}
+                  >
+                    <Box sx={{ position: 'relative' }}>
+                      <CardMedia
+                        component="img"
+                        height="150"
+                        image={mainPhoto}
+                        alt={placeDetails?.name || place.name}
                       />
-                      <Typography variant="caption" color="text.secondary">
-                        {place.name.split(',').slice(1).join(',').trim() ||
-                          'Paris, France'}
-                      </Typography>
+
+                      {/* Badge Visité */}
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          bgcolor: '#4CAF50',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: 24,
+                          height: 24,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <CheckCircleIcon sx={{ fontSize: '1rem' }} />
+                      </Box>
+
+                      {/* Badge Visité texte */}
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          bottom: 8,
+                          left: 8,
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Visité
+                      </Box>
                     </Box>
 
-                    {/* Note personnelle en italique */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontStyle: 'italic',
-                        color: 'text.secondary',
-                        fontSize: '0.8rem',
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      "
-                      {place.description ||
-                        'Une expérience inoubliable dans ce lieu magnifique.'}
-                      "
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{ mb: 0.5 }}
+                      >
+                        {(placeDetails?.name || place.name).split(',')[0]}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          mb: 1,
+                        }}
+                      >
+                        <LocationOnIcon
+                          sx={{ fontSize: '0.875rem', color: 'text.secondary' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {placeDetails?.location?.country ||
+                            place.country ||
+                            'Lieu non spécifié'}
+                        </Typography>
+                      </Box>
+
+                      {/* Description avec données API */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontStyle: 'italic',
+                          color: 'text.secondary',
+                          fontSize: '0.8rem',
+                          lineHeight: 1.3,
+                          mb: 1,
+                        }}
+                      >
+                        "
+                        {placeDetails?.description ||
+                          place.description ||
+                          'Une expérience inoubliable dans ce lieu magnifique.'}
+                        "
+                      </Typography>
+
+                      {/* Nombre de jours */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          color: 'primary.main',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {days} jour{days > 1 ? 's' : ''}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
           </Grid>
         )}
       </Box>

@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Divider,
-  Grid,
-  Alert,
-  Chip,
-} from '@mui/material';
+import { Box, Paper, Typography, Divider, Alert, Chip } from '@mui/material';
 import { Schedule, Event, DateRange } from '@mui/icons-material';
 import TravelSegmentSelector from './TravelSegmentSelector';
 import FallbackDatePicker from './FallbackDatePicker';
@@ -123,8 +115,12 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
 
     return {
       valid: startValidation.isValid && endValidation.isValid,
-      startError: startValidation.errorMessage,
-      endError: endValidation.errorMessage,
+      startError:
+        'errorMessage' in startValidation
+          ? startValidation.errorMessage || ''
+          : '',
+      endError:
+        'errorMessage' in endValidation ? endValidation.errorMessage || '' : '',
     };
   };
 
@@ -163,21 +159,26 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
             Dates de visite
           </Typography>
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexDirection: { xs: 'column', md: 'row' },
+            }}
+          >
+            <Box sx={{ flex: 1 }}>
               <FallbackDatePicker
                 label="Date de début de visite"
                 value={startDate}
                 onChange={onStartDateChange}
                 minDate={segmentConstraints.min}
                 maxDate={segmentConstraints.max}
-                error={errors.startDate || dateValidation.startError}
-                helperText="Date de début"
+                error={errors.startDate}
                 required
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} md={6}>
+            <Box sx={{ flex: 1 }}>
               <FallbackDatePicker
                 label="Date de fin de visite"
                 value={endDate}
@@ -188,11 +189,10 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
                     : segmentConstraints.min
                 }
                 maxDate={segmentConstraints.max}
-                error={errors.endDate || dateValidation.endError}
-                helperText="Date de fin (optionnelle)"
+                error={errors.endDate}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
       ) : (
         <>
@@ -201,8 +201,6 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
             constraints={constraints}
             selectedSegment={selectedSegment}
             onSegmentChange={handleSegmentChange}
-            journalStartDate={journal.startDate}
-            journalEndDate={journal.endDate}
           />
 
           <Divider sx={{ my: 3 }} />
@@ -229,21 +227,26 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
               Dates de {visited ? 'visite' : 'planification'}
             </Typography>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                flexDirection: { xs: 'column', md: 'row' },
+              }}
+            >
+              <Box sx={{ flex: 1 }}>
                 <FallbackDatePicker
                   label="Date de début"
                   value={startDate}
                   onChange={onStartDateChange}
                   minDate={segmentConstraints.min}
                   maxDate={segmentConstraints.max}
-                  error={errors.startDate || dateValidation.startError}
-                  helperText="Date de début"
+                  error={errors.startDate}
                   required
                 />
-              </Grid>
+              </Box>
 
-              <Grid item xs={12} md={6}>
+              <Box sx={{ flex: 1 }}>
                 <FallbackDatePicker
                   label="Date de fin"
                   value={endDate}
@@ -254,11 +257,10 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
                       : segmentConstraints.min
                   }
                   maxDate={segmentConstraints.max}
-                  error={errors.endDate || dateValidation.endError}
-                  helperText="Date de fin (optionnelle)"
+                  error={errors.endDate}
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
         </>
       )}

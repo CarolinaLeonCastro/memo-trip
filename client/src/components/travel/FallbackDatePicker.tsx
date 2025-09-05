@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  TextField,
-  Box,
-  Typography,
-  Alert,
-  FormHelperText,
-} from '@mui/material';
+import { TextField, Box, FormHelperText } from '@mui/material';
 import { CheckCircle, Warning, Error } from '@mui/icons-material';
 
 interface FallbackDatePickerProps {
@@ -46,21 +40,6 @@ export const FallbackDatePicker: React.FC<FallbackDatePickerProps> = ({
 
   return (
     <Box sx={{ mb: 2 }}>
-      {/* Information sur la période autorisée */}
-      <Alert
-        severity="info"
-        sx={{ mb: 2, fontSize: '0.875rem' }}
-        icon={<CheckCircle />}
-      >
-        <Typography variant="body2">
-          Dates autorisées pour ce voyage :
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
-          {new Date(minDate).toLocaleDateString('fr-FR')} →{' '}
-          {new Date(maxDate).toLocaleDateString('fr-FR')}
-        </Typography>
-      </Alert>
-
       {/* Input date HTML5 simple */}
       <TextField
         fullWidth

@@ -27,16 +27,12 @@ interface TravelSegmentSelectorProps {
   constraints: TravelDateConstraints;
   selectedSegment: string;
   onSegmentChange: (segmentId: string) => void;
-  journalStartDate: Date;
-  journalEndDate: Date;
 }
 
 export const TravelSegmentSelector: React.FC<TravelSegmentSelectorProps> = ({
   constraints,
   selectedSegment,
   onSegmentChange,
-  journalStartDate,
-  journalEndDate,
 }) => {
   const formatDate = formatWithOptions({ locale: fr }, 'dd MMM yyyy');
 
@@ -119,7 +115,7 @@ export const TravelSegmentSelector: React.FC<TravelSegmentSelectorProps> = ({
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Dates autorisées pour {selectedSegmentData.label.toLowerCase()} :
+              Dates autorisées pour ce voyage :
             </Typography>
             <Box
               sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}

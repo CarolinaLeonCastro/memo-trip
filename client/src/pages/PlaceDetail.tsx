@@ -286,6 +286,30 @@ const PlaceDetail: React.FC = () => {
                   </Typography>
                 </Box>
 
+                {place.weather && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Météo : {place.weather}
+                    </Typography>
+                  </Box>
+                )}
+
+                {place.budget && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Budget : {place.budget}€
+                    </Typography>
+                  </Box>
+                )}
+
+                {place.visit_duration && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Durée de visite : {place.visit_duration} minutes
+                    </Typography>
+                  </Box>
+                )}
+
                 {place.rating && (
                   <Box sx={{ mb: 3 }}>
                     <Typography
@@ -317,30 +341,6 @@ const PlaceDetail: React.FC = () => {
                     ) ||
                     'Adresse non spécifiée'}
                 </Typography>
-
-                {place.weather && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Météo : {place.weather}
-                    </Typography>
-                  </Box>
-                )}
-
-                {place.budget && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Budget : {place.budget}€
-                    </Typography>
-                  </Box>
-                )}
-
-                {place.visit_duration && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Durée de visite : {place.visit_duration} minutes
-                    </Typography>
-                  </Box>
-                )}
 
                 <Button
                   variant="outlined"
