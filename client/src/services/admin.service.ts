@@ -68,6 +68,11 @@ class AdminService {
     return response.data;
   }
 
+  async getAllUsersForExport() {
+    const response = await api.get('/api/admin/users/export');
+    return response.data;
+  }
+
   async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
     const response = await api.patch(`/api/admin/users/${userId}/role`, {
       role,

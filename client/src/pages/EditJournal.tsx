@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
+import { placeApi } from '../services/place-api';
+import type { Place as ApiPlace } from '../services/place-api';
 import {
   Box,
   Container,
@@ -9,7 +11,6 @@ import {
   Button,
   Grid,
   Card,
-  CardContent,
   CardMedia,
   IconButton,
   Chip,
@@ -27,7 +28,6 @@ import {
   PhotoCamera as PhotoCameraIcon,
   Close as CloseIcon,
   LocationOn as LocationOnIcon,
-  Add as AddIcon,
   CheckCircle as CheckCircleIcon,
   CalendarToday as CalendarTodayIcon,
 } from '@mui/icons-material';
@@ -82,6 +82,9 @@ const EditJournal: React.FC = () => {
     placeId: string;
     placeName: string;
   }>({ open: false, placeId: '', placeName: '' });
+  const [placesDetails, setPlacesDetails] = useState<Map<string, ApiPlace>>(
+    new Map()
+  );
 
   const journal = id ? getJournal(id) : undefined;
 
@@ -99,6 +102,31 @@ const EditJournal: React.FC = () => {
         setMainPhotoPreview(journal.mainPhoto);
       }
     }
+  }, [journal]);
+
+  // Charger les données complètes des lieux depuis l'API
+  useEffect(() => {
+    const loadPlacesDetails = async () => {
+      if (!journal || journal.places.length === 0) return;
+
+      const newPlacesDetails = new Map<string, ApiPlace>();
+
+      for (const place of journal.places) {
+        try {
+          const apiPlace = await placeApi.getPlaceById(place.id);
+          newPlacesDetails.set(place.id, apiPlace);
+        } catch (error) {
+          console.error(
+            `Erreur lors du chargement du lieu ${place.name}:`,
+            error
+          );
+        }
+      }
+
+      setPlacesDetails(newPlacesDetails);
+    };
+
+    loadPlacesDetails();
   }, [journal]);
 
   if (!journal) {
@@ -161,6 +189,15 @@ const EditJournal: React.FC = () => {
       deletePlace(journal.id, deleteConfirm.placeId);
       setDeleteConfirm({ open: false, placeId: '', placeName: '' });
     }
+  };
+
+  // Calculer le nombre de jours pour un lieu
+  const calculateDays = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 pour inclure le jour de départ
+    return diffDays;
   };
 
   const handleChange = (
@@ -406,16 +443,6 @@ const EditJournal: React.FC = () => {
           >
             Lieux du voyage ({journal.places.length})
           </Typography>
-          <Button
-            component={Link}
-            to={`/place/new?journalId=${journal.id}`}
-            variant="outlined"
-            startIcon={<AddIcon />}
-            size="small"
-            sx={{ ml: 'auto' }}
-          >
-            Ajouter un lieu
-          </Button>
         </Box>
 
         {journal.places.length === 0 ? (
@@ -432,120 +459,189 @@ const EditJournal: React.FC = () => {
             <Typography variant="h6" color="text.secondary" gutterBottom>
               Aucun lieu ajouté
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Commencez par ajouter des lieux à votre voyage
+            <Typography variant="body2" color="text.secondary">
+              Retournez à la vue du journal pour ajouter des lieux à votre
+              voyage
             </Typography>
-            <Button
-              component={Link}
-              to={`/place/new?journalId=${journal.id}`}
-              variant="contained"
-              startIcon={<AddIcon />}
-            >
-              Ajouter votre premier lieu
-            </Button>
           </Box>
         ) : (
-          <Grid container spacing={2}>
-            {journal.places.map((place) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
-                <Card
-                  sx={{
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: 2,
-                    },
-                  }}
-                >
-                  <Box sx={{ position: 'relative' }}>
+          <Grid container spacing={3}>
+            {journal.places.map((place) => {
+              const placeDetails = placesDetails.get(place.id);
+              const mainPhoto =
+                placeDetails?.photos?.[0]?.url ||
+                'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400';
+
+              // Calculer le nombre de jours si on a les dates
+              const days = placeDetails
+                ? calculateDays(placeDetails.start_date, placeDetails.end_date)
+                : 1;
+
+              return (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
+                  <Card
+                    sx={{
+                      position: 'relative',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 12px 28px rgba(0,0,0,0.15)',
+                      },
+                      height: 280,
+                    }}
+                  >
+                    {/* Image de fond */}
                     <CardMedia
                       component="img"
-                      height="150"
-                      image={
-                        place.photos[0] ||
-                        'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400'
-                      }
+                      sx={{
+                        height: '100%',
+                        width: '100%',
+                        objectFit: 'cover',
+                      }}
+                      image={mainPhoto}
                       alt={place.name}
                     />
 
-                    {/* Bouton de suppression */}
+                    {/* Overlay gradient */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background:
+                          'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
+                      }}
+                    />
+
+                    {/* Badge Visité en haut à gauche */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        bgcolor: '#4CAF50',
+                        color: 'white',
+                        borderRadius: '20px',
+                        px: 2,
+                        py: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: '0.875rem' }} />
+                      Visité
+                    </Box>
+
+                    {/* Bouton de suppression en haut à droite */}
                     <IconButton
                       onClick={() => handleDeletePlace(place.id, place.name)}
                       sx={{
                         position: 'absolute',
                         top: 8,
                         right: 8,
-                        bgcolor: 'error.main',
+                        bgcolor: 'rgba(244, 67, 54, 0.9)',
                         color: 'white',
-                        '&:hover': { bgcolor: 'error.dark' },
+                        '&:hover': {
+                          bgcolor: 'rgba(244, 67, 54, 1)',
+                          transform: 'scale(1.1)',
+                        },
                         width: 32,
                         height: 32,
+                        transition: 'all 0.2s ease',
                       }}
                       size="small"
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
 
-                    {/* Badge Visité */}
+                    {/* Contenu en bas */}
                     <Box
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        bgcolor: '#4CAF50',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        p: 2.5,
                         color: 'white',
-                        borderRadius: '50%',
-                        width: 24,
-                        height: 24,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
                       }}
                     >
-                      <CheckCircleIcon sx={{ fontSize: '1rem' }} />
-                    </Box>
-                  </Box>
+                      {/* Nom du lieu */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '1.25rem',
+                          mb: 0.5,
+                          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {placeDetails?.name || place.name}
+                      </Typography>
 
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      sx={{ mb: 0.5 }}
-                    >
-                      {place.name.split(',')[0]}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        mb: 1,
-                      }}
-                    >
-                      <LocationOnIcon
-                        sx={{ fontSize: '0.875rem', color: 'text.secondary' }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        {place.name.split(',').slice(1).join(',').trim() ||
-                          'Lieu non spécifié'}
+                      {/* Pays */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          opacity: 0.9,
+                          mb: 1,
+                          fontSize: '0.875rem',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {placeDetails?.location?.country || place.country}
+                      </Typography>
+
+                      {/* Description */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontStyle: 'italic',
+                          opacity: 0.85,
+                          mb: 1.5,
+                          fontSize: '0.8rem',
+                          lineHeight: 1.4,
+                          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        "
+                        {placeDetails?.description ||
+                          place.description ||
+                          'Aucune description disponible'}
+                        "
+                      </Typography>
+
+                      {/* Nombre de jours */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          color: '#4CAF50',
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {days} jour{days > 1 ? 's' : ''}
                       </Typography>
                     </Box>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontStyle: 'italic',
-                        color: 'text.secondary',
-                        fontSize: '0.8rem',
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      "{place.description || 'Aucune description disponible'}"
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                  </Card>
+                </Grid>
+              );
+            })}
           </Grid>
         )}
       </Box>

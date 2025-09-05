@@ -23,23 +23,23 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  Alert,
+  ButtonGroup,
+  Slider,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   LocationOn as LocationIcon,
   ExpandMore as ExpandMoreIcon,
-  Image as ImageIcon,
   CloudUpload as CloudUploadIcon,
   MenuBook as MenuBookIcon,
   Delete as DeleteIcon,
-  // Nouvelles icônes pour la logique temporelle
-  Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon,
-  Event as EventIcon,
-  CalendarToday as CalendarTodayIcon,
-  EventAvailable as EventAvailableIcon,
-  EventNote as EventNoteIcon,
+  DateRange as DateRangeIcon,
+  Star as StarIcon,
+  Camera as CameraIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
@@ -51,6 +51,7 @@ import {
   suggestDefaultDates,
   type TravelDateConstraints,
 } from '../utils/travel-logic';
+import { SmartPlaceDateForm } from '../components/travel';
 
 // Tags prédéfinis suggérés
 const SUGGESTED_TAGS = [
@@ -88,6 +89,9 @@ const AddPlacePage: React.FC = () => {
   const { addPlace, journals } = useJournals();
   const [searchParams] = useSearchParams();
 
+  // État du stepper
+  const [activeStep, setActiveStep] = useState(0);
+
   const [formData, setFormData] = useState({
     name: '',
     city: '',
@@ -100,6 +104,11 @@ const AddPlacePage: React.FC = () => {
     tags: [] as string[],
     visited: false,
     rating: 0,
+    weather: '',
+    budget: '',
+    visitDuration: '',
+    notes: '',
+    isFavorite: false,
     latitude: '',
     longitude: '',
     // Nouvelles propriétés pour le journal
@@ -111,6 +120,36 @@ const AddPlacePage: React.FC = () => {
   const [, setSelectedPlace] = useState<GeocodingResult | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customTag, setCustomTag] = useState('');
+
+  // Configuration des étapes avec couleur unifiée
+  const stepperColor = '#4F86F7';
+  const steps = [
+    {
+      label: 'Informations de base',
+      description: 'Nom, ville et description du lieu',
+      icon: <LocationIcon />,
+    },
+    {
+      label: 'Statut & Dates',
+      description: 'Visité ou à visiter, dates de visite',
+      icon: <DateRangeIcon />,
+    },
+    {
+      label: 'Photos & Médias',
+      description: 'Images et tags du lieu',
+      icon: <CameraIcon />,
+    },
+    {
+      label: 'Expérience de visite',
+      description: 'Note, météo, budget et notes',
+      icon: <StarIcon />,
+    },
+    {
+      label: 'Journal & Sauvegarde',
+      description: 'Association au journal et finalisation',
+      icon: <MenuBookIcon />,
+    },
+  ];
 
   // 🎯 Pré-sélectionner le journal depuis l'URL (quand on vient de EditJournal)
   useEffect(() => {
@@ -138,32 +177,41 @@ const AddPlacePage: React.FC = () => {
     ? getTravelDateConstraints(selectedJournal)
     : null;
 
-  // 📅 Récupérer les contraintes de dates selon le statut du lieu (visité/planifié)
-  const getDateConstraintsForCurrentStatus = () => {
-    if (!travelConstraints) return {};
+  // 📅 Mettre à jour les dates par défaut selon le journal sélectionné
+  useEffect(() => {
+    if (
+      selectedJournal &&
+      travelConstraints &&
+      formData.startDate === new Date().toISOString().split('T')[0]
+    ) {
+      const constraints =
+        travelConstraints.status === 'past'
+          ? travelConstraints.visitedDateConstraints
+          : formData.visited
+            ? travelConstraints.visitedDateConstraints
+            : travelConstraints.plannedDateConstraints;
 
-    const isVisited = formData.visited;
-    const dateConstraints = isVisited
-      ? travelConstraints.visitedDateConstraints
-      : travelConstraints.plannedDateConstraints;
-
-    if (!dateConstraints) {
-      return {
-        disabled: true,
-        helperText: isVisited
-          ? 'Vous ne pouvez pas marquer ce lieu comme visité pour ce voyage'
-          : 'Vous ne pouvez pas planifier de nouveaux lieux pour ce voyage',
-      };
+      if (constraints) {
+        // Utiliser la première date autorisée du journal, pas aujourd'hui
+        const defaultDate = constraints.min;
+        setFormData((prev) => ({
+          ...prev,
+          startDate: defaultDate,
+          endDate: defaultDate, // Par défaut même date, mais modifiable
+          dateVisited: defaultDate,
+          // Pour les voyages passés, forcer le statut "visité"
+          visited: travelConstraints.status === 'past' ? true : prev.visited,
+        }));
+      }
     }
+  }, [
+    selectedJournal,
+    travelConstraints,
+    formData.startDate,
+    formData.visited,
+  ]);
 
-    return {
-      min: dateConstraints.min,
-      max: dateConstraints.max,
-      helperText: travelConstraints.helperText,
-    };
-  };
-
-  const dateConstraints = getDateConstraintsForCurrentStatus();
+  // Plus de contraintes de dates nécessaires ici grâce à SmartPlaceDateForm
 
   const handleChange = (
     field: string,
@@ -300,6 +348,99 @@ const AddPlacePage: React.FC = () => {
     }
   };
 
+  // Navigation du stepper
+  const handleNext = () => {
+    if (validateCurrentStep()) {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  // Validation par étape
+  const validateCurrentStep = () => {
+    const newErrors: Record<string, string> = {};
+
+    switch (activeStep) {
+      case 0: // Informations de base
+        if (!formData.name.trim()) {
+          newErrors.name = 'Le nom du lieu est requis';
+        }
+        if (!formData.city.trim()) {
+          newErrors.city = 'La ville est requise';
+        }
+        if (!formData.country.trim()) {
+          newErrors.country = 'Le pays est requis';
+        }
+        if (!formData.description.trim()) {
+          newErrors.description = 'La description est requise';
+        }
+        break;
+
+      case 1: // Statut & Dates
+        if (travelConstraints) {
+          const startDateValidation = validatePlaceDate(
+            formData.startDate,
+            formData.visited,
+            travelConstraints
+          );
+          if (!startDateValidation.isValid) {
+            newErrors.startDate =
+              startDateValidation.errorMessage || 'Date invalide';
+          }
+
+          const endDateValidation = validatePlaceDate(
+            formData.endDate,
+            formData.visited,
+            travelConstraints
+          );
+          if (!endDateValidation.isValid) {
+            newErrors.endDate =
+              endDateValidation.errorMessage || 'Date invalide';
+          }
+
+          if (formData.endDate < formData.startDate) {
+            newErrors.endDate =
+              'La date de fin doit être après ou égale à la date de début';
+          }
+        }
+        break;
+
+      case 2: // Photos & Médias
+        // Pas de validation obligatoire pour cette étape
+        break;
+
+      case 3: // Expérience de visite
+        // Pas de validation obligatoire pour cette étape
+        break;
+
+      case 4: // Journal & Sauvegarde
+        if (
+          formData.journalOption === 'existing' &&
+          !formData.selectedJournalId
+        ) {
+          newErrors.selectedJournalId =
+            'Veuillez sélectionner un journal existant';
+        }
+        if (
+          formData.journalOption === 'new' &&
+          !formData.newJournalTitle.trim()
+        ) {
+          newErrors.newJournalTitle =
+            'Veuillez entrer un titre pour le nouveau journal';
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -399,6 +540,13 @@ const AddPlacePage: React.FC = () => {
       tags: formData.tags,
       visited: formData.visited,
       rating: formData.rating || undefined,
+      weather: formData.weather.trim(),
+      budget: formData.budget ? Number(formData.budget) : undefined,
+      visitDuration: formData.visitDuration
+        ? Number(formData.visitDuration)
+        : undefined,
+      notes: formData.notes.trim(),
+      isFavorite: formData.isFavorite,
     };
 
     try {
@@ -410,8 +558,554 @@ const AddPlacePage: React.FC = () => {
     }
   };
 
+  // Rendu des étapes
+  const renderStepContent = (step: number) => {
+    switch (step) {
+      case 0:
+        return renderBasicInfoStep();
+      case 1:
+        return renderDatesStep();
+      case 2:
+        return renderPhotosStep();
+      case 3:
+        return renderExperienceStep();
+      case 4:
+        return renderJournalStep();
+      default:
+        return null;
+    }
+  };
+
+  // Étape 1: Informations de base
+  const renderBasicInfoStep = () => (
+    <Box sx={{ py: 2 }}>
+      <Stack spacing={3}>
+        {/* Recherche de lieu (optionnelle) */}
+        <PlaceSearchInput
+          onPlaceSelect={handlePlaceSelect}
+          placeholder="Rechercher un lieu (ex: Tour Eiffel, Paris) - Optionnel"
+          label="Rechercher un lieu (optionnel)"
+          helperText="Recherche pour pré-remplir automatiquement les informations"
+        />
+
+        {/* Nom du lieu */}
+        <TextField
+          fullWidth
+          label="Nom du lieu *"
+          value={formData.name}
+          onChange={(e) => handleChange('name', e.target.value)}
+          error={!!errors.name}
+          helperText={errors.name}
+          placeholder="Ex: Tour Eiffel"
+        />
+
+        {/* Ville et Pays */}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            fullWidth
+            label="Ville *"
+            value={formData.city}
+            onChange={(e) => handleChange('city', e.target.value)}
+            error={!!errors.city}
+            helperText={errors.city}
+            placeholder="Ex: Paris"
+          />
+          <TextField
+            fullWidth
+            label="Pays *"
+            value={formData.country}
+            onChange={(e) => handleChange('country', e.target.value)}
+            error={!!errors.country}
+            helperText={errors.country}
+            placeholder="Ex: France"
+          />
+        </Box>
+
+        {/* Description */}
+        <TextField
+          fullWidth
+          label="Description *"
+          multiline
+          rows={4}
+          value={formData.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          error={!!errors.description}
+          helperText={errors.description}
+          placeholder="Décrivez ce lieu..."
+        />
+
+        {/* Coordonnées GPS (optionnel) */}
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle2">
+              Coordonnées GPS (optionnel)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Latitude"
+                value={formData.latitude}
+                onChange={(e) => handleChange('latitude', e.target.value)}
+                placeholder="48.8584"
+                type="number"
+                inputProps={{ step: 'any' }}
+              />
+              <TextField
+                fullWidth
+                label="Longitude"
+                value={formData.longitude}
+                onChange={(e) => handleChange('longitude', e.target.value)}
+                placeholder="2.2945"
+                type="number"
+                inputProps={{ step: 'any' }}
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      </Stack>
+    </Box>
+  );
+
+  // Étape 2: Statut & Dates
+  const renderDatesStep = () => (
+    <Box sx={{ py: 2 }}>
+      {selectedJournal && travelConstraints ? (
+        <SmartPlaceDateForm
+          journal={selectedJournal}
+          visited={formData.visited}
+          onVisitedChange={(visited) => handleChange('visited', visited)}
+          startDate={formData.startDate ? new Date(formData.startDate) : null}
+          onStartDateChange={(date) => {
+            const dateString = date?.toISOString().split('T')[0] || '';
+            handleChange('startDate', dateString);
+            if (!formData.endDate || formData.endDate === formData.startDate) {
+              handleChange('endDate', dateString);
+            }
+            handleChange('dateVisited', dateString);
+          }}
+          endDate={formData.endDate ? new Date(formData.endDate) : null}
+          onEndDateChange={(date) => {
+            const dateString = date?.toISOString().split('T')[0] || '';
+            handleChange('endDate', dateString);
+            if (formData.startDate === dateString) {
+              handleChange('dateVisited', dateString);
+            }
+          }}
+          errors={{
+            startDate: errors.startDate,
+            endDate: errors.endDate,
+            visited: errors.visited,
+          }}
+          hasAttachments={formData.photos.length > 0 || !!formData.notes}
+        />
+      ) : (
+        <Stack spacing={3}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.visited}
+                onChange={(e) => handleChange('visited', e.target.checked)}
+              />
+            }
+            label="J'ai visité ce lieu"
+          />
+
+          <TextField
+            fullWidth
+            label="Date de visite"
+            type="date"
+            value={formData.startDate}
+            onChange={(e) => {
+              handleChange('startDate', e.target.value);
+              handleChange('endDate', e.target.value);
+              handleChange('dateVisited', e.target.value);
+            }}
+            InputLabelProps={{ shrink: true }}
+            error={!!errors.startDate}
+            helperText={errors.startDate}
+          />
+        </Stack>
+      )}
+    </Box>
+  );
+
+  // Étape 3: Photos & Médias
+  const renderPhotosStep = () => (
+    <Box sx={{ py: 2 }}>
+      <Stack spacing={3}>
+        {/* Upload de photos */}
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Photos ({formData.photos.length}/4)
+          </Typography>
+
+          {formData.photos.length < 4 && (
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              fullWidth
+              sx={{ mb: 2 }}
+            >
+              Ajouter des photos ({formData.photos.length}/4)
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+              />
+            </Button>
+          )}
+
+          {/* Grille des photos */}
+          {formData.photos.length > 0 && (
+            <Grid container spacing={2}>
+              {formData.photos.map((photo, index) => (
+                <Grid size={{ xs: 6, sm: 3 }} key={index}>
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      height: 120,
+                      border: '1px solid',
+                      borderColor: 'grey.300',
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => handleRemovePhoto(index)}
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        bgcolor: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' },
+                      }}
+                    >
+                      <DeleteIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+
+        {/* Tags */}
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Tags et catégories
+          </Typography>
+
+          {/* Tags actuels */}
+          {formData.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {formData.tags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  onDelete={() => handleTagRemove(tag)}
+                  variant="filled"
+                />
+              ))}
+            </Box>
+          )}
+
+          {/* Ajouter un tag personnalisé */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              fullWidth
+              placeholder="Ajouter un tag personnalisé..."
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleCustomTagAdd();
+                }
+              }}
+              size="small"
+            />
+            <Button onClick={handleCustomTagAdd} variant="outlined">
+              Ajouter
+            </Button>
+          </Box>
+
+          {/* Tags suggérés */}
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+            Tags suggérés :
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {SUGGESTED_TAGS.filter((tag) => !formData.tags.includes(tag))
+              .slice(0, 12)
+              .map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  onClick={() => handleTagAdd(tag)}
+                  variant="outlined"
+                  size="small"
+                />
+              ))}
+          </Box>
+        </Box>
+      </Stack>
+    </Box>
+  );
+
+  // Étape 4: Expérience de visite
+  const renderExperienceStep = () => (
+    <Box sx={{ py: 2 }}>
+      <Stack spacing={3}>
+        {/* Note de visite (si visité) */}
+        {formData.visited && (
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Note de visite
+            </Typography>
+            <Rating
+              value={formData.rating || 0}
+              onChange={(_, value) => handleChange('rating', value || 0)}
+              size="large"
+            />
+          </Box>
+        )}
+
+        {/* Météo */}
+        <FormControl fullWidth>
+          <InputLabel>Météo lors de la visite</InputLabel>
+          <Select
+            value={formData.weather}
+            onChange={(e) => handleChange('weather', e.target.value)}
+            label="Météo lors de la visite"
+          >
+            <MenuItem value="">Non spécifiée</MenuItem>
+            <MenuItem value="☀️ Ensoleillé">☀️ Ensoleillé</MenuItem>
+            <MenuItem value="⛅ Partiellement nuageux">
+              ⛅ Partiellement nuageux
+            </MenuItem>
+            <MenuItem value="☁️ Nuageux">☁️ Nuageux</MenuItem>
+            <MenuItem value="🌧️ Pluvieux">🌧️ Pluvieux</MenuItem>
+            <MenuItem value="⛈️ Orageux">⛈️ Orageux</MenuItem>
+            <MenuItem value="🌨️ Neigeux">🌨️ Neigeux</MenuItem>
+            <MenuItem value="🌫️ Brouillard">🌫️ Brouillard</MenuItem>
+            <MenuItem value="🌬️ Venteux">🌬️ Venteux</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Budget */}
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Budget approximatif (€)
+          </Typography>
+          <ButtonGroup
+            variant="outlined"
+            sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+          >
+            {['0', '10', '25', '50', '100'].map((amount) => (
+              <Button
+                key={amount}
+                size="small"
+                variant={formData.budget === amount ? 'contained' : 'outlined'}
+                onClick={() => handleChange('budget', amount)}
+              >
+                {amount === '0' ? 'Gratuit' : `~${amount}€`}
+              </Button>
+            ))}
+          </ButtonGroup>
+          <TextField
+            fullWidth
+            label="Montant personnalisé"
+            type="number"
+            size="small"
+            value={formData.budget}
+            onChange={(e) => handleChange('budget', e.target.value)}
+            placeholder="Ou saisissez un montant précis..."
+            InputProps={{
+              endAdornment: <Typography variant="body2">€</Typography>,
+            }}
+          />
+        </Box>
+
+        {/* Durée de visite */}
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Durée de visite :{' '}
+            {formData.visitDuration
+              ? `${Math.floor(Number(formData.visitDuration) / 60)}h ${Number(formData.visitDuration) % 60}min`
+              : 'Non spécifiée'}
+          </Typography>
+          <ButtonGroup
+            variant="outlined"
+            sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}
+          >
+            {[
+              { value: '30', label: '30min' },
+              { value: '60', label: '1h' },
+              { value: '120', label: '2h' },
+              { value: '240', label: '4h' },
+              { value: '480', label: 'Journée' },
+            ].map((duration) => (
+              <Button
+                key={duration.value}
+                size="small"
+                variant={
+                  formData.visitDuration === duration.value
+                    ? 'contained'
+                    : 'outlined'
+                }
+                onClick={() => handleChange('visitDuration', duration.value)}
+              >
+                {duration.label}
+              </Button>
+            ))}
+          </ButtonGroup>
+          <Box sx={{ px: 2 }}>
+            <Slider
+              value={Number(formData.visitDuration) || 60}
+              onChange={(_, value) =>
+                handleChange('visitDuration', value.toString())
+              }
+              min={15}
+              max={480}
+              step={15}
+              marks={[
+                { value: 30, label: '30min' },
+                { value: 120, label: '2h' },
+                { value: 240, label: '4h' },
+                { value: 480, label: '8h' },
+              ]}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(value) =>
+                `${Math.floor(value / 60)}h ${value % 60}min`
+              }
+            />
+          </Box>
+        </Box>
+
+        {/* Notes */}
+        <TextField
+          fullWidth
+          label="Notes personnelles"
+          multiline
+          rows={4}
+          value={formData.notes}
+          onChange={(e) => handleChange('notes', e.target.value)}
+          placeholder="Vos impressions, conseils, anecdotes..."
+        />
+
+        {/* Favori */}
+        <FormControlLabel
+          control={
+            <Switch
+              checked={formData.isFavorite}
+              onChange={(e) => handleChange('isFavorite', e.target.checked)}
+            />
+          }
+          label="⭐ Marquer comme lieu favori"
+        />
+      </Stack>
+    </Box>
+  );
+
+  // Étape 5: Journal & Sauvegarde
+  const renderJournalStep = () => (
+    <Box sx={{ py: 2 }}>
+      <Stack spacing={3}>
+        <Typography variant="h6">Journal associé</Typography>
+
+        <FormControl component="fieldset">
+          <RadioGroup
+            value={formData.journalOption}
+            onChange={(e) => handleChange('journalOption', e.target.value)}
+          >
+            <FormControlLabel
+              value="existing"
+              control={<Radio />}
+              label="Ajouter à un journal existant"
+            />
+          </RadioGroup>
+        </FormControl>
+
+        {/* Sélection journal existant */}
+        {formData.journalOption === 'existing' && (
+          <FormControl fullWidth error={!!errors.selectedJournalId}>
+            <InputLabel>Choisissez un journal existant</InputLabel>
+            <Select
+              value={formData.selectedJournalId}
+              onChange={(e) =>
+                handleChange('selectedJournalId', e.target.value)
+              }
+              label="Choisissez un journal existant"
+            >
+              {journals.map((journal) => (
+                <MenuItem key={journal.id} value={journal.id}>
+                  {journal.title}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.selectedJournalId && (
+              <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                {errors.selectedJournalId}
+              </Typography>
+            )}
+          </FormControl>
+        )}
+
+        {/* Résumé avant sauvegarde */}
+        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Résumé
+          </Typography>
+          <Stack spacing={1}>
+            <Typography>
+              <strong>Lieu :</strong> {formData.name || 'Non défini'}
+            </Typography>
+            <Typography>
+              <strong>Ville :</strong> {formData.city || 'Non définie'},{' '}
+              {formData.country || 'Non défini'}
+            </Typography>
+            <Typography>
+              <strong>Statut :</strong>{' '}
+              {formData.visited ? 'Visité' : 'À visiter'}
+            </Typography>
+            <Typography>
+              <strong>Date :</strong> {formData.startDate || 'Non définie'}
+            </Typography>
+            <Typography>
+              <strong>Photos :</strong> {formData.photos.length} photo(s)
+            </Typography>
+            <Typography>
+              <strong>Tags :</strong> {formData.tags.length} tag(s)
+            </Typography>
+            {formData.visited && (
+              <Typography>
+                <strong>Note :</strong> {formData.rating}/5 étoiles
+              </Typography>
+            )}
+          </Stack>
+        </Paper>
+      </Stack>
+    </Box>
+  );
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header avec bouton retour */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
         <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }} size="large">
@@ -430,865 +1124,175 @@ const AddPlacePage: React.FC = () => {
             Ajouter un nouveau lieu
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Créez une nouvelle destination pour vos voyages
+            Créez une nouvelle destination pour vos voyages -{' '}
+            {steps[activeStep].description}
           </Typography>
         </Box>
       </Box>
 
-      <Grid container spacing={4}>
-        {/* Colonne gauche - Informations de base, GPS, Tags */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          {/* Section 1: Informations de base */}
-          <Paper
-            elevation={0}
+      {/* Indicateur de progression coloré */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="body2"
+          sx={{ mb: 1, color: 'text.secondary', textAlign: 'center' }}
+        >
+          Étape {activeStep + 1} sur {steps.length}
+        </Typography>
+        <Box
+          sx={{
+            width: '100%',
+            height: 6,
+            backgroundColor: 'grey.200',
+            borderRadius: 3,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
             sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
+              width: `${((activeStep + 1) / steps.length) * 100}%`,
+              height: '100%',
+              backgroundColor: stepperColor,
+              borderRadius: 3,
+              transition: 'all 0.5s ease',
+              boxShadow: `0 0 10px ${stepperColor}66`,
             }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <LocationIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography
-                variant="h6"
-                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
-              >
-                Informations de base
-              </Typography>
-            </Box>
+          />
+        </Box>
+      </Box>
 
-            <Stack spacing={3}>
-              {/* Recherche de lieu (optionnelle) */}
-              <PlaceSearchInput
-                onPlaceSelect={handlePlaceSelect}
-                placeholder="Rechercher un lieu (ex: Tour Eiffel, Paris) - Optionnel"
-                label="Rechercher un lieu (optionnel)"
-                helperText="Recherche pour pré-remplir automatiquement les informations"
-              />
-
-              {/* Nom du lieu */}
-              <TextField
-                fullWidth
-                label="Nom du lieu *"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                error={!!errors.name}
-                helperText={errors.name}
-                placeholder="Ex: Tour Eiffel"
-              />
-
-              {/* Ville et Pays */}
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  label="Ville *"
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  error={!!errors.city}
-                  helperText={errors.city}
-                  placeholder="Ex: Paris"
-                />
-                <TextField
-                  fullWidth
-                  label="Pays *"
-                  value={formData.country}
-                  onChange={(e) => handleChange('country', e.target.value)}
-                  error={!!errors.country}
-                  helperText={errors.country}
-                  placeholder="Ex: France"
-                />
-              </Box>
-
-              {/* Description */}
-              <TextField
-                fullWidth
-                label="Description *"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                error={!!errors.description}
-                helperText={errors.description}
-                placeholder="Décrivez ce lieu..."
-              />
-            </Stack>
-          </Paper>
-
-          {/* Section 2: Localisation GPS (optionnel) */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
-            }}
-          >
-            <Accordion
-              elevation={0}
-              sx={{
-                border: 'none',
-                boxShadow: 'none',
-                '&:before': { display: 'none' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="gps-content"
-                id="gps-header"
-                sx={{ px: 0 }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-                  <Typography
-                    variant="h6"
-                    sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+      {/* Stepper avec couleurs */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          border: `2px solid ${stepperColor}22`,
+          borderRadius: 2,
+        }}
+      >
+        <Stepper
+          activeStep={activeStep}
+          orientation="vertical"
+          sx={{
+            '& .MuiStepConnector-line': {
+              borderColor: `${stepperColor}44`,
+            },
+          }}
+        >
+          {steps.map((step, index) => (
+            <Step key={step.label}>
+              <StepLabel
+                icon={
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor:
+                        index === activeStep
+                          ? stepperColor
+                          : index < activeStep
+                            ? '#4CAF50'
+                            : 'grey.300',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      boxShadow:
+                        index === activeStep
+                          ? `0 0 10px ${stepperColor}66`
+                          : 'none',
+                    }}
                   >
-                    Localisation GPS (optionnel)
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 0 }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Latitude"
-                    value={formData.latitude}
-                    onChange={(e) => handleChange('latitude', e.target.value)}
-                    placeholder="48.8584"
-                    type="number"
-                    inputProps={{ step: 'any' }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Longitude"
-                    value={formData.longitude}
-                    onChange={(e) => handleChange('longitude', e.target.value)}
-                    placeholder="2.2945"
-                    type="number"
-                    inputProps={{ step: 'any' }}
-                  />
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          </Paper>
-
-          {/* Section 3: Tags et catégories */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
-            >
-              Tags et catégories
-            </Typography>
-
-            <Stack spacing={3}>
-              {/* Tags actuels */}
-              {formData.tags.length > 0 && (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {formData.tags.map((tag) => (
-                    <Chip
-                      key={tag}
-                      label={tag}
-                      onDelete={() => handleTagRemove(tag)}
-                      variant="filled"
-                      sx={{
-                        backgroundColor: 'tertiary.main',
-                        color: 'primary.main',
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-
-              {/* Ajouter un tag personnalisé */}
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Ajouter un tag personnalisé..."
-                  value={customTag}
-                  onChange={(e) => setCustomTag(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleCustomTagAdd();
-                    }
-                  }}
-                  size="small"
-                />
-                <Button
-                  onClick={handleCustomTagAdd}
-                  variant="outlined"
-                  sx={{ whiteSpace: 'nowrap' }}
-                >
-                  Ajouter
-                </Button>
-              </Box>
-
-              {/* Tags suggérés */}
-              <Box>
-                <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
-                  Tags suggérés :
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {SUGGESTED_TAGS.filter((tag) => !formData.tags.includes(tag))
-                    .slice(0, 12)
-                    .map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        onClick={() => handleTagAdd(tag)}
-                        variant="filled"
-                        size="small"
-                      />
-                    ))}
-                </Box>
-              </Box>
-            </Stack>
-          </Paper>
-        </Grid>
-
-        {/* Colonne droite - Aperçu image, Statut visite, Journal associé, Notes */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          {/* Section 1: Aperçu de l'image */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <ImageIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography
-                variant="h6"
-                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+                    {React.cloneElement(step.icon, {
+                      sx: { fontSize: 16, color: 'white' },
+                    })}
+                  </Box>
+                }
+                sx={{
+                  '& .MuiStepLabel-label': {
+                    fontWeight: index === activeStep ? 600 : 500,
+                    color: index === activeStep ? stepperColor : 'text.primary',
+                    transition: 'all 0.3s ease',
+                  },
+                }}
               >
-                Photos ({formData.photos.length}/4)
-              </Typography>
-            </Box>
+                {step.label}
+              </StepLabel>
+              <StepContent
+                sx={{
+                  borderLeft: `2px solid ${index === activeStep ? stepperColor + '44' : 'grey.300'}`,
+                  ml: 1.5,
+                  pl: 2,
+                }}
+              >
+                {renderStepContent(index)}
 
-            {/* Zone d'upload compacte */}
-            <Box sx={{ mb: 3 }}>
-              {formData.photos.length < 4 && (
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<CloudUploadIcon />}
-                  fullWidth
-                  sx={{
-                    mb: 2,
-                    borderColor: 'error.main',
-                    color: 'error.main',
-                    '&:hover': {
-                      borderColor: 'error.dark',
-                      color: 'error.dark',
-                    },
-                  }}
-                >
-                  Ajouter des photos ({formData.photos.length}/4)
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                  />
-                </Button>
-              )}
-
-              {/* Carrousel horizontal des photos */}
-              {formData.photos.length > 0 && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    overflowX: 'auto',
-                    pb: 1,
-                    '&::-webkit-scrollbar': {
-                      height: 6,
-                    },
-                    '&::-webkit-scrollbar-track': {
-                      bgcolor: 'grey.100',
-                      borderRadius: 3,
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      bgcolor: 'grey.400',
-                      borderRadius: 3,
-                    },
-                  }}
-                >
-                  {formData.photos.map((photo, index) => (
-                    <Box
-                      key={index}
+                {/* Boutons de navigation */}
+                <Box sx={{ mt: 3 }}>
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      disabled={activeStep === 0}
+                      onClick={handleBack}
+                      variant="outlined"
                       sx={{
-                        position: 'relative',
-                        minWidth: 120,
-                        height: 80,
-                        border: '1px solid',
-                        borderColor: 'grey.300',
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        flexShrink: 0,
+                        borderColor: 'error.main',
+                        color: 'error.main',
+                        '&:hover': {
+                          borderColor: 'error.dark',
+                          color: 'error.dark',
+                        },
+                        '&:disabled': {
+                          borderColor: 'grey.300',
+                          color: 'grey.400',
+                        },
                       }}
                     >
-                      <img
-                        src={photo}
-                        alt={`Photo ${index + 1}`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={() => handleRemovePhoto(index)}
+                      Précédent
+                    </Button>
+
+                    {activeStep === steps.length - 1 ? (
+                      <Button
+                        variant="contained"
+                        onClick={handleSubmit}
                         sx={{
-                          position: 'absolute',
-                          top: 4,
-                          right: 4,
-                          bgcolor: 'rgba(0,0,0,0.6)',
-                          color: 'white',
-                          width: 24,
-                          height: 24,
+                          background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
                           '&:hover': {
-                            bgcolor: 'rgba(0,0,0,0.8)',
+                            background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+                          },
+                        }}
+                        startIcon={<CloudUploadIcon />}
+                      >
+                        Sauvegarder
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        sx={{
+                          background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                          '&:hover': {
+                            background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
                           },
                         }}
                       >
-                        <DeleteIcon sx={{ fontSize: 14 }} />
-                      </IconButton>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          position: 'absolute',
-                          bottom: 2,
-                          left: 4,
-                          color: 'white',
-                          bgcolor: 'rgba(0,0,0,0.6)',
-                          px: 0.5,
-                          borderRadius: 0.5,
-                          fontSize: '0.65rem',
-                        }}
-                      >
-                        {index + 1}
-                      </Typography>
-                    </Box>
-                  ))}
+                        Suivant
+                      </Button>
+                    )}
+                  </Stack>
                 </Box>
-              )}
-            </Box>
-          </Paper>
+              </StepContent>
+            </Step>
+          ))}
+        </Stepper>
+      </Paper>
 
-          {/* Section 2: Statut de visite */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ mb: 3, fontFamily: '"Chau Philomene One", cursive' }}
-            >
-              Statut de visite
-            </Typography>
-
-            <Stack spacing={3}>
-              {/* Information sur le journal et l'état du voyage */}
-              {selectedJournal && travelConstraints && (
-                <>
-                  <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: 'action.hover',
-                      borderRadius: 1,
-                      border: `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <MenuBookIcon
-                        sx={{ color: 'primary.main', fontSize: 18 }}
-                      />
-                      <Typography variant="body2" fontWeight={500}>
-                        Journal sélectionné : {selectedJournal.title}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CalendarTodayIcon
-                        sx={{ color: 'text.secondary', fontSize: 14 }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        Période du voyage :
-                        {selectedJournal.startDate.toLocaleDateString('fr-FR')}
-                        au {selectedJournal.endDate.toLocaleDateString('fr-FR')}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Message d'information selon l'état du voyage */}
-                  <Alert
-                    severity={
-                      travelConstraints.status === 'ongoing'
-                        ? 'info'
-                        : travelConstraints.status === 'future'
-                          ? 'warning'
-                          : 'success'
-                    }
-                    icon={
-                      travelConstraints.status === 'ongoing' ? (
-                        <ScheduleIcon />
-                      ) : travelConstraints.status === 'future' ? (
-                        <EventIcon />
-                      ) : (
-                        <CheckCircleIcon />
-                      )
-                    }
-                    sx={{ mt: 2 }}
-                  >
-                    <Typography variant="body2">
-                      {travelConstraints.infoMessage}
-                    </Typography>
-                  </Alert>
-                </>
-              )}
-
-              {/* Contrôle du statut de visite selon l'état du voyage */}
-              {travelConstraints && (
-                <Box>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      mb: 2,
-                    }}
-                  >
-                    <EventAvailableIcon
-                      sx={{ color: 'primary.main', fontSize: 20 }}
-                    />
-                    <Typography variant="body2" fontWeight={500}>
-                      Statut de visite
-                    </Typography>
-                  </Box>
-
-                  {travelConstraints.allowedStatuses.length === 1 ? (
-                    // Un seul statut autorisé - affichage en lecture seule
-                    <Box
-                      sx={{
-                        p: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        bgcolor: 'grey.50',
-                      }}
-                    >
-                      <Box
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                      >
-                        {travelConstraints.allowedStatuses[0] === 'visited' ? (
-                          <CheckCircleIcon
-                            sx={{ color: 'success.main', fontSize: 18 }}
-                          />
-                        ) : (
-                          <ScheduleIcon
-                            sx={{ color: 'warning.main', fontSize: 18 }}
-                          />
-                        )}
-                        <Typography variant="body2" color="text.secondary">
-                          {travelConstraints.allowedStatuses[0] === 'visited'
-                            ? 'Uniquement "Lieu visité" disponible pour ce voyage'
-                            : 'Uniquement "Lieu planifié" disponible pour ce voyage'}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ) : (
-                    // Plusieurs statuts autorisés - choix libre
-                    <FormControl component="fieldset">
-                      <RadioGroup
-                        value={formData.visited ? 'visited' : 'planned'}
-                        onChange={(e) =>
-                          handleChange('visited', e.target.value === 'visited')
-                        }
-                      >
-                        <FormControlLabel
-                          value="visited"
-                          control={<Radio />}
-                          label={
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                              }}
-                            >
-                              <CheckCircleIcon
-                                sx={{ color: 'success.main', fontSize: 18 }}
-                              />
-                              <span>J'ai visité ce lieu</span>
-                            </Box>
-                          }
-                          disabled={
-                            !travelConstraints.allowedStatuses.includes(
-                              'visited'
-                            )
-                          }
-                        />
-                        <FormControlLabel
-                          value="planned"
-                          control={<Radio />}
-                          label={
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                              }}
-                            >
-                              <ScheduleIcon
-                                sx={{ color: 'warning.main', fontSize: 18 }}
-                              />
-                              <span>Je planifie visiter ce lieu</span>
-                            </Box>
-                          }
-                          disabled={
-                            !travelConstraints.allowedStatuses.includes(
-                              'planned'
-                            )
-                          }
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                  )}
-                </Box>
-              )}
-
-              {/* Fallback si pas de journal sélectionné */}
-              {!travelConstraints && (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.visited}
-                      onChange={(e) =>
-                        handleChange('visited', e.target.checked)
-                      }
-                    />
-                  }
-                  label="J'ai visité ce lieu"
-                />
-              )}
-
-              {/* Note et date de visite (si visité) */}
-              {formData.visited && (
-                <>
-                  <Box>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <CheckCircleIcon
-                        sx={{ color: 'success.main', fontSize: 18 }}
-                      />
-                      <Typography component="legend" fontWeight={500}>
-                        Note de visite
-                      </Typography>
-                    </Box>
-                    <Rating
-                      value={formData.rating || 0}
-                      onChange={(_, value) =>
-                        handleChange('rating', value || 0)
-                      }
-                      size="large"
-                    />
-                  </Box>
-
-                  <TextField
-                    fullWidth
-                    label={
-                      formData.visited
-                        ? 'Date de début de visite'
-                        : 'Date prévue de début'
-                    }
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => {
-                      handleChange('startDate', e.target.value);
-                      // Auto-remplir la date de fin si elle n'est pas définie
-                      if (
-                        !formData.endDate ||
-                        formData.endDate === formData.startDate
-                      ) {
-                        handleChange('endDate', e.target.value);
-                      }
-                      // Mettre à jour la date principale pour compatibilité
-                      handleChange('dateVisited', e.target.value);
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      min: dateConstraints.min,
-                      max: dateConstraints.max,
-                    }}
-                    disabled={dateConstraints.disabled}
-                    error={!!errors.startDate}
-                    helperText={
-                      errors.startDate ||
-                      dateConstraints.helperText ||
-                      (formData.visited
-                        ? 'Date du premier jour de visite de ce lieu'
-                        : 'Date prévue pour la visite')
-                    }
-                  />
-
-                  <TextField
-                    fullWidth
-                    label={
-                      formData.visited
-                        ? 'Date de fin de visite'
-                        : 'Date prévue de fin'
-                    }
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => {
-                      handleChange('endDate', e.target.value);
-                      // Mettre à jour la date principale si c'est une visite d'un seul jour
-                      if (formData.startDate === e.target.value) {
-                        handleChange('dateVisited', e.target.value);
-                      }
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      min: formData.startDate,
-                      max: dateConstraints.max,
-                    }}
-                    disabled={dateConstraints.disabled}
-                    error={!!errors.endDate}
-                    helperText={
-                      errors.endDate ||
-                      (formData.visited
-                        ? "Date du dernier jour (peut être la même que le début pour une visite d'un jour)"
-                        : "Date prévue de fin (peut être identique au début pour une visite d'un jour)")
-                    }
-                  />
-                </>
-              )}
-
-              {/* Dates pour lieux à visiter */}
-              {!formData.visited && (
-                <>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      mt: 2,
-                      mb: 2,
-                    }}
-                  >
-                    <EventNoteIcon
-                      sx={{ color: 'primary.main', fontSize: 18 }}
-                    />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      fontWeight={500}
-                    >
-                      Planification de visite
-                    </Typography>
-                  </Box>
-
-                  <TextField
-                    fullWidth
-                    label="Date prévue de début"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => {
-                      handleChange('startDate', e.target.value);
-                      // Auto-remplir la date de fin si elle n'est pas définie
-                      if (
-                        !formData.endDate ||
-                        formData.endDate === formData.startDate
-                      ) {
-                        handleChange('endDate', e.target.value);
-                      }
-                      // Mettre à jour la date principale pour compatibilité
-                      handleChange('dateVisited', e.target.value);
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      min: dateConstraints.min,
-                      max: dateConstraints.max,
-                    }}
-                    disabled={dateConstraints.disabled}
-                    error={!!errors.startDate}
-                    helperText={
-                      errors.startDate ||
-                      dateConstraints.helperText ||
-                      'Date prévue pour la visite'
-                    }
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Date prévue de fin"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => {
-                      handleChange('endDate', e.target.value);
-                      // Mettre à jour la date principale si c'est une visite d'un seul jour
-                      if (formData.startDate === e.target.value) {
-                        handleChange('dateVisited', e.target.value);
-                      }
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      min: formData.startDate,
-                      max: dateConstraints.max,
-                    }}
-                    disabled={dateConstraints.disabled}
-                    error={!!errors.endDate}
-                    helperText={
-                      errors.endDate ||
-                      "Date prévue de fin (peut être identique au début pour une visite d'un jour)"
-                    }
-                  />
-                </>
-              )}
-            </Stack>
-          </Paper>
-
-          {/* Section 3: Journal associé */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <MenuBookIcon sx={{ color: 'primary.main', fontSize: 24 }} />
-              <Typography
-                variant="h6"
-                sx={{ fontFamily: '"Chau Philomene One", cursive' }}
-              >
-                Journal associé
-              </Typography>
-            </Box>
-
-            <Stack spacing={3}>
-              <FormControl component="fieldset">
-                <RadioGroup
-                  value={formData.journalOption}
-                  onChange={(e) =>
-                    handleChange('journalOption', e.target.value)
-                  }
-                >
-                  <FormControlLabel
-                    value="existing"
-                    control={<Radio />}
-                    label="Ajouter à un journal existant"
-                  />
-                </RadioGroup>
-              </FormControl>
-
-              {/* Sélection journal existant */}
-              {formData.journalOption === 'existing' && (
-                <FormControl fullWidth>
-                  <InputLabel>Choisissez un journal existant</InputLabel>
-                  <Select
-                    value={formData.selectedJournalId}
-                    onChange={(e) =>
-                      handleChange('selectedJournalId', e.target.value)
-                    }
-                    label="Choisissez un journal existant"
-                  >
-                    {journals.map((journal) => (
-                      <MenuItem key={journal.id} value={journal.id}>
-                        {journal.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1 }}
-                  >
-                    Le lieu sera ajouté comme référence dans le journal
-                    sélectionné
-                  </Typography>
-                </FormControl>
-              )}
-            </Stack>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Boutons d'action */}
-
-      <Stack
-        direction="row"
-        spacing={2}
-        justifyContent="flex-end"
-        sx={{ mt: 4 }}
-      >
-        <Button
-          variant="outlined"
-          onClick={() => navigate(-1)}
-          size="large"
-          sx={{
-            px: 4,
-            borderColor: 'error.main',
-            color: 'error.main',
-            '&:hover': {
-              borderColor: 'error.dark',
-              color: 'error.dark',
-            },
-          }}
-        >
-          Annuler
+      {/* Bouton d'annulation global */}
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Button variant="text" onClick={() => navigate(-1)} color="error">
+          Annuler et retourner
         </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          size="large"
-          sx={{
-            px: 4,
-            background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
-            '&:hover': {
-              background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
-            },
-          }}
-          startIcon={<CloudUploadIcon />}
-        >
-          Sauvegarder
-        </Button>
-      </Stack>
+      </Box>
     </Container>
   );
 };

@@ -119,7 +119,9 @@ const SystemSettings: React.FC = () => {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h6">Paramètres système</Typography>
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Paramètres système
+        </Typography>
         <Box display="flex" gap={2}>
           <Button
             startIcon={<RefreshIcon />}
@@ -264,52 +266,50 @@ const SystemSettings: React.FC = () => {
 
         {/* Informations système */}
         <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Informations système
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Box textAlign="center">
-                    <Typography variant="h4" color="primary">
-                      <SettingsIcon fontSize="large" />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Version {settings.app.version}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Box textAlign="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Dernière mise à jour
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {new Date().toLocaleDateString('fr-FR')}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Box textAlign="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Environnement
-                    </Typography>
-                    <Chip label="development" color="success" size="small" />
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Box textAlign="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Base de données
-                    </Typography>
-                    <Chip label="MongoDB" color="info" size="small" />
-                  </Box>
-                </Grid>
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ ml: 2 }}>
+              Informations système
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Box textAlign="center">
+                  <Typography variant="h4" color="primary">
+                    <SettingsIcon fontSize="large" />
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Version {settings.app.version}
+                  </Typography>
+                </Box>
               </Grid>
-            </CardContent>
-          </Card>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Dernière mise à jour
+                  </Typography>
+                  <Typography variant="body1" fontWeight="bold">
+                    {new Date().toLocaleDateString('fr-FR')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Environnement
+                  </Typography>
+                  <Chip label="development" color="success" size="small" />
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Base de données
+                  </Typography>
+                  <Chip label="MongoDB" color="info" size="small" />
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
         </Grid>
       </Grid>
     </Box>

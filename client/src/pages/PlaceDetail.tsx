@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Grid,
@@ -12,6 +12,7 @@ import {
   IconButton,
   Rating,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -21,6 +22,8 @@ import {
   Map as MapIcon,
 } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
+import { placeApi } from '../services/place-api';
+import type { Place } from '../services/place-api';
 import PhotoGallery from '../components/PhotoGallery';
 
 const PlaceDetail: React.FC = () => {
@@ -29,20 +32,60 @@ const PlaceDetail: React.FC = () => {
   const { journals } = useJournals();
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [showGallery, setShowGallery] = useState(false);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Trouver le lieu par ID
-  const place = journals
-    .flatMap((journal) => journal.places)
-    .find((p) => p.id === id);
+  // Récupérer les données du lieu via l'API
+  useEffect(() => {
+    const fetchPlace = async () => {
+      if (!id) return;
 
-  // Trouver le journal qui contient ce lieu
-  // const journal = journals.find((j) => j.places.some((p) => p.id === id));
+      try {
+        setLoading(true);
+        setError(null);
 
-  if (!place) {
+        // D'abord essayer de trouver dans le contexte local pour avoir une référence rapide
+        const localPlace = journals
+          .flatMap((journal) => journal.places)
+          .find((p) => p.id === id);
+
+        if (localPlace) {
+          // Convertir les données locales vers le format API pour l'appel
+          const apiPlace = await placeApi.getPlaceById(id);
+          setPlace(apiPlace);
+        } else {
+          // Si pas trouvé localement, essayer directement l'API
+          const apiPlace = await placeApi.getPlaceById(id);
+          setPlace(apiPlace);
+        }
+      } catch (err) {
+        console.error('Erreur lors du chargement du lieu:', err);
+        setError('Impossible de charger les données du lieu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlace();
+  }, [id, journals]);
+
+  if (loading) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Chargement des données du lieu...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error || !place) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
         <Typography variant="h5" color="text.secondary">
-          Lieu non trouvé
+          {error || 'Lieu non trouvé'}
         </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -57,8 +100,10 @@ const PlaceDetail: React.FC = () => {
 
   // Photos du lieu avec fallback
   const photos =
-    place.photos.length > 0
-      ? place.photos
+    place.photos && place.photos.length > 0
+      ? place.photos.map((photo) =>
+          typeof photo === 'string' ? photo : photo.url
+        )
       : [
           'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=800',
         ];
@@ -94,23 +139,27 @@ const PlaceDetail: React.FC = () => {
             </Button>
             <Box>
               <Typography variant="h5" fontWeight={700}>
-                {place.name.split(',')[0]}
+                {place.name}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Italy
+                  {place.location?.city && place.location?.country
+                    ? `${place.location.city}, ${place.location.country}`
+                    : place.location?.country || 'Localisation non spécifiée'}
                 </Typography>
+                {place.tags && place.tags.length > 0 && (
+                  <Chip
+                    label={place.tags[0]}
+                    size="small"
+                    sx={{
+                      bgcolor: '#FFF3E0',
+                      color: '#E65100',
+                      fontWeight: 500,
+                    }}
+                  />
+                )}
                 <Chip
-                  label="Historic"
-                  size="small"
-                  sx={{
-                    bgcolor: '#FFF3E0',
-                    color: '#E65100',
-                    fontWeight: 500,
-                  }}
-                />
-                <Chip
-                  label="Visité le 15 Mai 2024"
+                  label={`Visité le ${new Date(place.date_visited).toLocaleDateString('fr-FR')}`}
                   size="small"
                   sx={{
                     bgcolor: '#E8F5E8',
@@ -123,7 +172,11 @@ const PlaceDetail: React.FC = () => {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton sx={{ color: 'text.secondary' }}>
+            <IconButton
+              sx={{
+                color: place.is_favorite ? 'error.main' : 'text.secondary',
+              }}
+            >
               <FavoriteIcon />
             </IconButton>
             <IconButton sx={{ color: 'text.secondary' }}>
@@ -133,7 +186,7 @@ const PlaceDetail: React.FC = () => {
               startIcon={<EditIcon />}
               variant="outlined"
               sx={{ ml: 1 }}
-              onClick={() => navigate(`/place/${place.id}/edit`)}
+              onClick={() => navigate(`/place/${place._id}/edit`)}
             >
               Modifier
             </Button>
@@ -233,16 +286,42 @@ const PlaceDetail: React.FC = () => {
                   </Typography>
                 </Box>
 
-                <Box sx={{ mb: 3 }}>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 0.5 }}
-                  >
-                    Note
-                  </Typography>
-                  <Rating value={5} readOnly size="small" />
-                </Box>
+                {place.weather && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Météo : {place.weather}
+                    </Typography>
+                  </Box>
+                )}
+
+                {place.budget && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Budget : {place.budget}€
+                    </Typography>
+                  </Box>
+                )}
+
+                {place.visit_duration && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Durée de visite : {place.visit_duration} minutes
+                    </Typography>
+                  </Box>
+                )}
+
+                {place.rating && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      Note
+                    </Typography>
+                    <Rating value={place.rating} readOnly size="small" />
+                  </Box>
+                )}
 
                 <Divider sx={{ my: 2 }} />
 
@@ -255,7 +334,12 @@ const PlaceDetail: React.FC = () => {
                   color="text.secondary"
                   sx={{ mb: 2 }}
                 >
-                  Piazza del Colosseo, 1, 00184 Roma RM, Italy
+                  {place.location?.address ||
+                    `${place.location?.city || ''}, ${place.location?.country || ''}`.replace(
+                      /^,\s*|,\s*$/g,
+                      ''
+                    ) ||
+                    'Adresse non spécifiée'}
                 </Typography>
 
                 <Button
@@ -275,44 +359,45 @@ const PlaceDetail: React.FC = () => {
                   Voir sur la carte
                 </Button>
 
-                <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                  Tags
-                </Typography>
+                {place.tags && place.tags.length > 0 && (
+                  <>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                      Tags
+                    </Typography>
 
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip
-                    label="UNESCO"
-                    size="small"
-                    sx={{
-                      bgcolor: '#E3F2FD',
-                      color: '#1976D2',
-                    }}
-                  />
-                  <Chip
-                    label="Antique"
-                    size="small"
-                    sx={{
-                      bgcolor: '#F3E5F5',
-                      color: '#7B1FA2',
-                    }}
-                  />
-                  <Chip
-                    label="Architecture"
-                    size="small"
-                    sx={{
-                      bgcolor: '#E8F5E8',
-                      color: '#2E7D32',
-                    }}
-                  />
-                  <Chip
-                    label="Monument"
-                    size="small"
-                    sx={{
-                      bgcolor: '#FFF3E0',
-                      color: '#E65100',
-                    }}
-                  />
-                </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {place.tags.map((tag, index) => (
+                        <Chip
+                          key={index}
+                          label={tag}
+                          size="small"
+                          sx={{
+                            bgcolor: [
+                              '#E3F2FD',
+                              '#F3E5F5',
+                              '#E8F5E8',
+                              '#FFF3E0',
+                            ][index % 4],
+                            color: ['#1976D2', '#7B1FA2', '#2E7D32', '#E65100'][
+                              index % 4
+                            ],
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </>
+                )}
+
+                {place.notes && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+                      Notes
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {place.notes}
+                    </Typography>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Grid>

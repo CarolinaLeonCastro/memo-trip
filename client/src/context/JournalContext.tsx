@@ -26,7 +26,7 @@ interface JournalContextType {
     journalId: string,
     placeId: string,
     place: Partial<Place>
-  ) => void;
+  ) => Promise<void>;
   deletePlace: (journalId: string, placeId: string) => void;
   loadJournals: () => Promise<void>;
   isLoading: boolean;
@@ -319,23 +319,88 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     }
   };
 
-  const updatePlace = (
-    journalId: string,
+  const updatePlace = async (
+    _journalId: string,
     placeId: string,
     updates: Partial<Place>
   ) => {
-    setJournals((prev) =>
-      prev.map((journal) =>
-        journal.id === journalId
-          ? {
-              ...journal,
-              places: journal.places.map((place) =>
-                place.id === placeId ? { ...place, ...updates } : place
-              ),
-            }
-          : journal
-      )
-    );
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Préparer les données pour l'API en convertissant le format local vers le format API
+      interface UpdateData {
+        name?: string;
+        description?: string;
+        location?: {
+          type: string;
+          coordinates: [number, number];
+          address: string;
+          city: string;
+          country: string;
+        };
+        date_visited?: string;
+        start_date?: string;
+        end_date?: string;
+        rating?: number;
+        weather?: string;
+        budget?: number;
+        tags?: string[];
+        is_favorite?: boolean;
+        visit_duration?: number;
+        notes?: string;
+      }
+
+      const updateData: UpdateData = {};
+
+      if (updates.name) updateData.name = updates.name;
+      if (updates.description !== undefined)
+        updateData.description = updates.description;
+      if (updates.latitude !== undefined && updates.longitude !== undefined) {
+        updateData.location = {
+          type: 'Point',
+          coordinates: [Number(updates.longitude), Number(updates.latitude)],
+          address: updates.address || '',
+          city: updates.city || '',
+          country: updates.country || '',
+        };
+      }
+      if (updates.dateVisited)
+        updateData.date_visited = new Date(updates.dateVisited).toISOString();
+      if (updates.startDate)
+        updateData.start_date = new Date(updates.startDate).toISOString();
+      if (updates.endDate)
+        updateData.end_date = new Date(updates.endDate).toISOString();
+      if (updates.rating !== undefined) updateData.rating = updates.rating;
+      if (updates.weather !== undefined) updateData.weather = updates.weather;
+      if (updates.budget !== undefined) updateData.budget = updates.budget;
+      if (updates.tags) updateData.tags = updates.tags;
+      if (updates.isFavorite !== undefined)
+        updateData.is_favorite = updates.isFavorite;
+      if (updates.visitDuration !== undefined)
+        updateData.visit_duration = updates.visitDuration;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+
+      console.log('📝 Mise à jour de la place - données envoyées:', updateData);
+
+      // Appeler l'API pour mettre à jour la place
+      await placeApi.updatePlace(placeId, updateData);
+
+      // Recharger les journaux pour avoir les données à jour
+      await loadJournals();
+
+      console.log('Place mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la place:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la mise à jour de la place'
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deletePlace = (journalId: string, placeId: string) => {

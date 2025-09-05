@@ -8,7 +8,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Chip,
   Avatar,
   IconButton,
@@ -35,6 +34,7 @@ import {
   Person as PersonIcon,
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
+  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material';
 
 import { adminService, type User } from '../../services/admin.service';
@@ -190,6 +190,87 @@ const UserManagement: React.FC = () => {
     setFilters((prev) => ({ ...prev, page: value }));
   };
 
+  // Fonction pour exporter les utilisateurs en CSV
+  const exportUsersToCSV = async () => {
+    try {
+      setLoading(true);
+
+      // Récupérer tous les utilisateurs sans pagination
+      const response = await adminService.getAllUsersForExport();
+      const allUsers = response.users;
+
+      // Définir les en-têtes CSV
+      const headers = [
+        'ID',
+        'Nom',
+        'Email',
+        'Rôle',
+        'Statut',
+        "Date d'inscription",
+        'Dernière connexion',
+        'Avatar URL',
+      ];
+
+      // Convertir les données en format CSV
+      const csvData = [
+        headers,
+        ...allUsers.map((user: User) => [
+          user._id,
+          user.name,
+          user.email,
+          user.role === 'admin' ? 'Administrateur' : 'Utilisateur',
+          user.status === 'active' ? 'Actif' : 'Bloqué',
+          new Date(user.created_at).toLocaleDateString('fr-FR'),
+          user.last_login
+            ? new Date(user.last_login).toLocaleDateString('fr-FR')
+            : 'Jamais',
+          user.avatar?.url || '',
+        ]),
+      ];
+
+      // Créer le contenu CSV
+      const csvContent = csvData
+        .map((row) =>
+          row
+            .map((field: string | number) => {
+              // Échapper les guillemets et entourer de guillemets si nécessaire
+              return typeof field === 'string' &&
+                (field.includes(',') ||
+                  field.includes('"') ||
+                  field.includes('\n'))
+                ? `"${field.replace(/"/g, '""')}"`
+                : field;
+            })
+            .join(',')
+        )
+        .join('\n');
+
+      // Créer et télécharger le fichier
+      const blob = new Blob(['\uFEFF' + csvContent], {
+        type: 'text/csv;charset=utf-8;',
+      });
+      const link = document.createElement('a');
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute(
+          'download',
+          `utilisateurs_${new Date().toISOString().split('T')[0]}.csv`
+        );
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error('Error exporting users:', err);
+      setError("Erreur lors de l'export des utilisateurs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading && users.length === 0) {
     return (
       <Box
@@ -205,9 +286,25 @@ const UserManagement: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Gestion des utilisateurs
-      </Typography>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h6" sx={{ ml: 2 }}>
+          Gestion des utilisateurs
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<FileDownloadIcon />}
+          onClick={exportUsersToCSV}
+          disabled={loading}
+          sx={{ mr: 2 }}
+        >
+          Exporter CSV
+        </Button>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -216,8 +313,8 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* Filtres */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 3, ml: 2 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <TextField
             fullWidth
             label="Rechercher"
@@ -230,7 +327,7 @@ const UserManagement: React.FC = () => {
             }}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 2 }}>
           <FormControl fullWidth>
             <InputLabel>Statut</InputLabel>
             <Select
@@ -244,7 +341,7 @@ const UserManagement: React.FC = () => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 2 }}>
           <FormControl fullWidth>
             <InputLabel>Rôle</InputLabel>
             <Select
@@ -261,7 +358,7 @@ const UserManagement: React.FC = () => {
       </Grid>
 
       {/* Tableau des utilisateurs */}
-      <TableContainer component={Paper}>
+      <TableContainer>
         <Table>
           <TableHead>
             <TableRow>

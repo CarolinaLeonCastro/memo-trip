@@ -147,7 +147,7 @@ const AdminAnalytics: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" sx={{ ml: 2 }} gutterBottom>
         Analytiques et métriques
       </Typography>
 

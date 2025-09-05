@@ -28,6 +28,7 @@ import PublicPlaceDetail from './pages/PublicPlaceDetail';
 import Discover from './pages/Discover';
 import Login from './pages/Login';
 import Register from './pages/Register';
+// Démonstration des composants Travel
 //import AuthDebug from './components/debug/AuthDebug';
 
 function App() {

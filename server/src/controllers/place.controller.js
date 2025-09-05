@@ -235,14 +235,14 @@ export const createPlace = async (req, res, next) => {
 		};
 
 		// Vérifier que le journal appartient à l'utilisateur
-		const journal = await Journal.findOne({ 
-			_id: placeData.journal_id, 
-			user_id: req.user.id 
+		const journal = await Journal.findOne({
+			_id: placeData.journal_id,
+			user_id: req.user.id
 		});
-		
+
 		if (!journal) {
-			return res.status(404).json({ 
-				message: 'Journal not found or not authorized' 
+			return res.status(404).json({
+				message: 'Journal not found or not authorized'
 			});
 		}
 
@@ -290,11 +290,60 @@ export const createPlace = async (req, res, next) => {
 // PUT /api/places/:id
 export const updatePlace = async (req, res, next) => {
 	try {
-		const place = await Place.findByIdAndUpdate(req.params.id, req.body, {
+		// Vérifier que la place existe et appartient à l'utilisateur
+		const existingPlace = await Place.findOne({
+			_id: req.params.id,
+			user_id: req.user.id
+		});
+
+		if (!existingPlace) {
+			return res.status(404).json({
+				message: 'Place not found or not authorized'
+			});
+		}
+
+		// Vérifier que le journal appartient à l'utilisateur si journal_id est modifié
+		if (req.body.journal_id && req.body.journal_id !== existingPlace.journal_id.toString()) {
+			const journal = await Journal.findOne({
+				_id: req.body.journal_id,
+				user_id: req.user.id
+			});
+
+			if (!journal) {
+				return res.status(404).json({
+					message: 'Journal not found or not authorized'
+				});
+			}
+		}
+
+		// S'assurer que start_date et end_date sont cohérentes
+		const updateData = { ...req.body };
+		if (updateData.date_visited && !updateData.start_date) {
+			updateData.start_date = updateData.date_visited;
+		}
+		if (updateData.date_visited && !updateData.end_date) {
+			updateData.end_date = updateData.date_visited;
+		}
+
+		// Debug: Log des données de mise à jour
+		logger.info('Updating place', {
+			placeId: req.params.id,
+			userId: req.user.id,
+			updateData,
+			timestamp: new Date().toISOString()
+		});
+
+		// Effectuer la mise à jour
+		const place = await Place.findByIdAndUpdate(req.params.id, updateData, {
 			new: true,
 			runValidators: true
 		}).populate('user_id', 'name email');
-		if (!place) return res.status(404).json({ message: 'Place not found' });
+
+		logger.info('Place updated successfully', {
+			placeId: place._id,
+			userId: req.user.id
+		});
+
 		res.json(place);
 	} catch (err) {
 		next(err);
@@ -305,29 +354,26 @@ export const updatePlace = async (req, res, next) => {
 export const deletePlace = async (req, res, next) => {
 	try {
 		// Trouver la place avant de la supprimer pour récupérer le journal_id
-		const place = await Place.findOne({ 
-			_id: req.params.id, 
-			user_id: req.user.id 
+		const place = await Place.findOne({
+			_id: req.params.id,
+			user_id: req.user.id
 		});
-		
+
 		if (!place) {
-			return res.status(404).json({ 
-				message: 'Place not found or not authorized' 
+			return res.status(404).json({
+				message: 'Place not found or not authorized'
 			});
 		}
 
 		// Supprimer la place du journal
-		await Journal.findByIdAndUpdate(
-			place.journal_id,
-			{ $pull: { places: place._id } }
-		);
+		await Journal.findByIdAndUpdate(place.journal_id, { $pull: { places: place._id } });
 
 		// Supprimer la place
-		const result = await Place.deleteOne({ 
-			_id: req.params.id, 
-			user_id: req.user.id 
+		const result = await Place.deleteOne({
+			_id: req.params.id,
+			user_id: req.user.id
 		});
-		
+
 		if (result.deletedCount === 0) {
 			return res.status(404).json({ message: 'Place not found' });
 		}

@@ -19,7 +19,7 @@ export const DiscoverStatsCard: React.FC<DiscoverStatsCardProps> = ({
       sx={{
         p: 3,
         bgcolor: 'white',
-        borderRadius: 2,
+        borderRadius: 1,
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid #f0f0f0',
         transition: 'all 0.3s ease',

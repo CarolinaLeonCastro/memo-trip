@@ -3,6 +3,7 @@ import { authenticateToken, requireRoles } from '../middleware/auth.middleware.j
 import {
 	getAdminStats,
 	getAllUsers,
+	exportUsers,
 	updateUserRole,
 	updateUserStatus,
 	getPendingContent,
@@ -22,6 +23,7 @@ router.get('/stats', getAdminStats);
 
 // Routes gestion des utilisateurs
 router.get('/users', getAllUsers);
+router.get('/users/export', exportUsers);
 router.patch('/users/:userId/role', updateUserRole);
 router.patch('/users/:userId/status', updateUserStatus);
 

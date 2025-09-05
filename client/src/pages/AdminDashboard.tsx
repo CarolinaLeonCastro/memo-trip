@@ -147,42 +147,35 @@ const AdminDashboard: React.FC = () => {
 
         {/* Contenu des onglets */}
         <TabPanel value={tabValue} index={0}>
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Vue d'ensemble de l'administration
-            </Typography>
+          <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Actions rapides
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.users?.newThisMonth || 0} nouveaux utilisateurs
-                      ce mois
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    Actions rapides
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    • {stats?.users?.newThisMonth || 0} nouveaux utilisateurs ce
+                    mois
+                  </Typography>
+                </Box>
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Activité récente
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.journals?.newThisMonth || 0} nouveaux journaux
-                      ce mois
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.users?.active || 0} utilisateurs actifs
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      • {stats?.journals?.published || 0} journaux publiés
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <Box sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Activité récente
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    • {stats?.journals?.newThisMonth || 0} nouveaux journaux ce
+                    mois
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    • {stats?.users?.active || 0} utilisateurs actifs
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    • {stats?.journals?.published || 0} journaux publiés
+                  </Typography>
+                </Box>
               </Grid>
             </Grid>
           </Box>
