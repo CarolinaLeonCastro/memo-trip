@@ -15,6 +15,7 @@ import {
   CardContent,
   IconButton,
   Chip,
+  useTheme,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -34,7 +35,7 @@ const JournalDetail: React.FC = () => {
   const { getJournal } = useJournals();
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [showGallery, setShowGallery] = useState(false);
-
+  const theme = useTheme();
   const journal = id ? getJournal(id) : undefined;
 
   if (!journal) {
@@ -189,7 +190,13 @@ const JournalDetail: React.FC = () => {
               to={`/place/new?journalId=${journal.id}`}
               variant="contained"
               startIcon={<AddIcon />}
-              sx={{ mr: 2 }}
+              sx={{
+                mr: 2,
+                background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                '&:hover': {
+                  background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+                },
+              }}
             >
               Ajouter un lieu
             </Button>

@@ -235,14 +235,14 @@ export const createPlace = async (req, res, next) => {
 		};
 
 		// Vérifier que le journal appartient à l'utilisateur
-		const journal = await Journal.findOne({ 
-			_id: placeData.journal_id, 
-			user_id: req.user.id 
+		const journal = await Journal.findOne({
+			_id: placeData.journal_id,
+			user_id: req.user.id
 		});
-		
+
 		if (!journal) {
-			return res.status(404).json({ 
-				message: 'Journal not found or not authorized' 
+			return res.status(404).json({
+				message: 'Journal not found or not authorized'
 			});
 		}
 
@@ -354,29 +354,26 @@ export const updatePlace = async (req, res, next) => {
 export const deletePlace = async (req, res, next) => {
 	try {
 		// Trouver la place avant de la supprimer pour récupérer le journal_id
-		const place = await Place.findOne({ 
-			_id: req.params.id, 
-			user_id: req.user.id 
+		const place = await Place.findOne({
+			_id: req.params.id,
+			user_id: req.user.id
 		});
-		
+
 		if (!place) {
-			return res.status(404).json({ 
-				message: 'Place not found or not authorized' 
+			return res.status(404).json({
+				message: 'Place not found or not authorized'
 			});
 		}
 
 		// Supprimer la place du journal
-		await Journal.findByIdAndUpdate(
-			place.journal_id,
-			{ $pull: { places: place._id } }
-		);
+		await Journal.findByIdAndUpdate(place.journal_id, { $pull: { places: place._id } });
 
 		// Supprimer la place
-		const result = await Place.deleteOne({ 
-			_id: req.params.id, 
-			user_id: req.user.id 
+		const result = await Place.deleteOne({
+			_id: req.params.id,
+			user_id: req.user.id
 		});
-		
+
 		if (result.deletedCount === 0) {
 			return res.status(404).json({ message: 'Place not found' });
 		}

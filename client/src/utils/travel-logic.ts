@@ -61,7 +61,6 @@ export const getTravelDateConstraints = (
   journal: Journal
 ): TravelDateConstraints => {
   const status = getTravelStatus(journal);
-  const today = new Date().toISOString().split('T')[0];
   const startDate = journal.startDate.toISOString().split('T')[0];
   const endDate = journal.endDate.toISOString().split('T')[0];
 
@@ -87,14 +86,14 @@ export const getTravelDateConstraints = (
         allowedStatuses: ['visited', 'planned'],
         visitedDateConstraints: {
           min: startDate,
-          max: today, // Limité à aujourd'hui maximum
+          max: endDate, // Permettre toute la période du voyage
         },
         plannedDateConstraints: {
-          min: today, // À partir d'aujourd'hui
+          min: startDate, // Permettre dès le début du voyage
           max: endDate,
         },
         infoMessage:
-          'Ce voyage est en cours. Vous pouvez ajouter vos visites passées et planifier celles à venir.',
+          'Ce voyage est en cours. Vous pouvez ajouter vos visites et planifier celles à venir.',
         helperText: `Voyage en cours : ${formatDate(journal.startDate)} au ${formatDate(journal.endDate)}`,
       };
 
@@ -154,18 +153,14 @@ export const validatePlaceDate = (
   if (date < dateConstraints.min) {
     return {
       isValid: false,
-      errorMessage: isVisited
-        ? 'La date ne peut pas être avant le début du voyage'
-        : 'La date ne peut pas être dans le passé',
+      errorMessage: 'La date ne peut pas être avant le début du voyage',
     };
   }
 
   if (date > dateConstraints.max) {
     return {
       isValid: false,
-      errorMessage: isVisited
-        ? "La date ne peut pas être après la fin du voyage ou aujourd'hui"
-        : 'La date ne peut pas être après la fin du voyage',
+      errorMessage: 'La date ne peut pas être après la fin du voyage',
     };
   }
 

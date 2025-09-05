@@ -106,9 +106,7 @@ export const getAllUsers = async (req, res) => {
 // Export de tous les utilisateurs pour CSV
 export const exportUsers = async (req, res) => {
 	try {
-		const users = await User.find({})
-			.select('-password')
-			.sort({ created_at: -1 });
+		const users = await User.find({}).select('-password').sort({ created_at: -1 });
 
 		res.json({
 			success: true,
@@ -120,7 +118,7 @@ export const exportUsers = async (req, res) => {
 		logger.error('Error exporting users:', error);
 		res.status(500).json({
 			success: false,
-			message: 'Erreur lors de l\'export des utilisateurs'
+			message: "Erreur lors de l'export des utilisateurs"
 		});
 	}
 };

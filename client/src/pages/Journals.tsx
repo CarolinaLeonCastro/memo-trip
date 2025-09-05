@@ -232,16 +232,9 @@ const Journals: React.FC = () => {
                 variant="contained"
                 startIcon={<AddIcon />}
                 sx={{
-                  bgcolor: '#4F86F7',
-                  color: 'white',
-                  borderRadius: 2,
+                  background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
                   px: 3,
                   py: 1.5,
-                  boxShadow: '0 4px 20px rgba(79, 134, 247, 0.3)',
-                  '&:hover': {
-                    bgcolor: '#3A73E0',
-                    boxShadow: '0 6px 24px rgba(79, 134, 247, 0.4)',
-                  },
                 }}
               >
                 Créer mon premier journal

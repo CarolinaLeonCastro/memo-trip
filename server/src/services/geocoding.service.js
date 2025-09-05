@@ -23,13 +23,13 @@ export class GeocodingService {
 
 				// Ajouter un délai pour respecter les limites de taux
 				if (attempt > 1) {
-					await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
 				}
 
 				const response = await fetch(`${NOMINATIM_BASE_URL}/search?${params}`, {
 					headers: {
 						'User-Agent': 'MemoTrip/1.0 (contact@memotrip.app)',
-						'Accept': 'application/json',
+						Accept: 'application/json',
 						'Accept-Language': 'fr,en'
 					},
 					timeout: 10000 // 10 secondes de timeout
@@ -79,14 +79,13 @@ export class GeocodingService {
 							}
 						: null
 				}));
-
 			} catch (error) {
-				logger.error(`Geocoding search error on attempt ${attempt}`, { 
-					error: error.message, 
-					query, 
-					attempt 
+				logger.error(`Geocoding search error on attempt ${attempt}`, {
+					error: error.message,
+					query,
+					attempt
 				});
-				
+
 				// Si c'est le dernier essai, propager l'erreur
 				if (attempt === 3) {
 					throw new Error('Failed to search places after 3 attempts');
@@ -110,7 +109,7 @@ export class GeocodingService {
 			const response = await fetch(`${NOMINATIM_BASE_URL}/reverse?${params}`, {
 				headers: {
 					'User-Agent': 'MemoTrip/1.0 (contact@memotrip.app)',
-					'Accept': 'application/json',
+					Accept: 'application/json',
 					'Accept-Language': 'fr,en'
 				},
 				timeout: 10000

@@ -222,7 +222,7 @@ export const placeValidation = {
 		}),
 		is_favorite: Joi.boolean().default(false),
 		visit_duration: Joi.number().integer().min(1).allow(null).messages({
-			'number.min': 'La durée de visite doit être d\'au moins 1 minute',
+			'number.min': "La durée de visite doit être d'au moins 1 minute",
 			'number.integer': 'La durée de visite doit être un nombre entier'
 		}),
 		notes: Joi.string().trim().max(2000).allow('', null).messages({
@@ -286,7 +286,7 @@ export const placeValidation = {
 		}),
 		is_favorite: Joi.boolean(),
 		visit_duration: Joi.number().integer().min(1).messages({
-			'number.min': 'La durée de visite doit être d\'au moins 1 minute',
+			'number.min': "La durée de visite doit être d'au moins 1 minute",
 			'number.integer': 'La durée de visite doit être un nombre entier'
 		}),
 		notes: Joi.string().trim().max(2000).allow('').messages({
