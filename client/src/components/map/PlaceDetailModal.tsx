@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 interface PlaceWithJournal {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   latitude: number;
   longitude: number;
   dateVisited: string;

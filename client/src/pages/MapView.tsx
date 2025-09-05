@@ -46,7 +46,7 @@ const toVisitIcon = new L.Icon({
 interface PlaceWithJournal {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   latitude: number;
   longitude: number;
   dateVisited: string;
@@ -139,7 +139,8 @@ const MapView: React.FC = () => {
       filteredPlaces = filteredPlaces.filter(
         (place) =>
           place.name.toLowerCase().includes(query) ||
-          place.description.toLowerCase().includes(query) ||
+          (place.description &&
+            place.description.toLowerCase().includes(query)) ||
           place.journalTitle.toLowerCase().includes(query)
       );
     }

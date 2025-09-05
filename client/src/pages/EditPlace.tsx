@@ -103,7 +103,7 @@ const EditPlace: React.FC = () => {
         name: place.name,
         city: place.city || '',
         country: place.country || '',
-        description: place.description,
+        description: place.description || '',
         dateVisited: new Date(place.dateVisited).toISOString().split('T')[0],
         photos: place.photos || [],
         tags: place.tags || [],
