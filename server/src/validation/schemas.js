@@ -301,13 +301,15 @@ export const placeValidation = {
 		id: objectIdSchema.required()
 	}),
 
-	// Validation pour l'ajout de photos
-	addPhotos: Joi.object({
-		captions: Joi.array().items(Joi.string().trim().max(200).allow('')).max(5).messages({
-			'array.max': 'Maximum 5 captions autorisées',
-			'string.max': 'Une caption ne peut pas dépasser 200 caractères'
-		})
-	})
+	// Validation pour l'ajout de photos - FormData flexible
+	addPhotos: Joi.object()
+		.pattern(
+			/^captions\[\d+\]$/, // Accepte captions[0], captions[1], etc.
+			Joi.string().trim().max(200).allow('').messages({
+				'string.max': 'Une caption ne peut pas dépasser 200 caractères'
+			})
+		)
+		.unknown(true) // Permet d'autres champs (comme les métadonnées de Multer)
 };
 
 // Validation pour les requêtes de géolocalisation

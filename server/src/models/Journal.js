@@ -7,7 +7,16 @@ const journalSchema = new mongoose.Schema(
 		personal_notes: { type: String, trim: true }, // Notes personnelles de l'utilisateur
 		start_date: { type: Date, required: true },
 		end_date: { type: Date, required: true },
-		cover_image: { type: String }, // Image de couverture
+		cover_image: { type: String }, // URL de l'image de couverture
+		// Nouveaux champs Cloudinary pour l'image de couverture
+		cover_image_public_id: { type: String }, // ID public Cloudinary
+		cover_image_variants: {
+			thumbnail: { type: String },
+			small: { type: String },
+			medium: { type: String },
+			large: { type: String },
+			original: { type: String }
+		},
 		status: {
 			type: String,
 			enum: ['draft', 'published', 'archived'],

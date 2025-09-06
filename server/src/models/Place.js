@@ -22,6 +22,31 @@ const placeSchema = new mongoose.Schema(
 					type: String,
 					required: false
 				},
+				// Nouveaux champs Cloudinary
+				public_id: {
+					type: String,
+					required: false // Pour compatibilité avec les anciennes données
+				},
+				width: {
+					type: Number,
+					required: false
+				},
+				height: {
+					type: Number,
+					required: false
+				},
+				format: {
+					type: String,
+					required: false
+				},
+				variants: {
+					thumbnail: { type: String },
+					small: { type: String },
+					medium: { type: String },
+					large: { type: String },
+					original: { type: String }
+				},
+				// Champs existants (legacy)
 				filename: {
 					type: String,
 					required: false

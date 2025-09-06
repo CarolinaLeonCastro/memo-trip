@@ -302,10 +302,58 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       // Créer la place via l'API
       const createdPlace = await placeApi.createPlace(cleanData);
 
-      // Recharger les journaux pour avoir les données à jour
-      await loadJournals();
-
       console.log('Place créée avec succès:', createdPlace);
+
+      // 📸 Gérer l'upload des photos si il y en a
+      if (placeData.photos && placeData.photos.length > 0) {
+        try {
+          console.log(
+            `📷 Upload de ${placeData.photos.length} photos pour la place ${createdPlace._id}`
+          );
+
+          // Convertir les photos base64 en FormData
+          const formData = new FormData();
+          const captions: string[] = [];
+
+          for (let i = 0; i < placeData.photos.length; i++) {
+            const photoBase64 = placeData.photos[i];
+
+            // Convertir base64 en blob avec le bon type MIME
+            const response = await fetch(photoBase64);
+            const blob = await response.blob();
+
+            // Créer un blob avec le type MIME correct
+            const imageBlob = new Blob([blob], { type: 'image/jpeg' });
+
+            // Ajouter au FormData avec un nom de fichier unique
+            formData.append(
+              'photos',
+              imageBlob,
+              `place_photo_${Date.now()}_${i}.jpg`
+            );
+            captions.push(''); // Caption vide pour l'instant
+
+            console.log(`📸 Photo ${i + 1} ajoutée: ${imageBlob.size} bytes`);
+          }
+
+          // Ajouter les captions
+          captions.forEach((caption, index) => {
+            formData.append(`captions[${index}]`, caption);
+          });
+
+          // Upload vers Cloudinary
+          await placeApi.addPhotos(createdPlace._id, formData);
+
+          console.log('✅ Photos uploadées avec succès vers Cloudinary');
+        } catch (photoError) {
+          console.error("❌ Erreur lors de l'upload des photos:", photoError);
+          // Ne pas faire échouer la création de la place à cause des photos
+          // L'utilisateur peut les ajouter plus tard
+        }
+      }
+
+      // Recharger les journaux pour avoir les données à jour (avec photos)
+      await loadJournals();
     } catch (error) {
       console.error('Erreur lors de la création de la place:', error);
       setError(
@@ -403,17 +451,43 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     }
   };
 
-  const deletePlace = (journalId: string, placeId: string) => {
-    setJournals((prev) =>
-      prev.map((journal) =>
-        journal.id === journalId
-          ? {
-              ...journal,
-              places: journal.places.filter((place) => place.id !== placeId),
-            }
-          : journal
-      )
-    );
+  const deletePlace = async (journalId: string, placeId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log(`🗑️ Suppression du lieu ${placeId} du journal ${journalId}`);
+
+      // Appeler l'API pour supprimer réellement le lieu
+      await placeApi.deletePlace(placeId);
+
+      console.log('✅ Lieu supprimé avec succès du serveur');
+
+      // Mettre à jour l'état local après suppression réussie
+      setJournals((prev) =>
+        prev.map((journal) =>
+          journal.id === journalId
+            ? {
+                ...journal,
+                places: journal.places.filter((place) => place.id !== placeId),
+              }
+            : journal
+        )
+      );
+
+      console.log("✅ État local mis à jour - lieu retiré de l'interface");
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression du lieu:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la suppression du lieu'
+      );
+      // Ne pas mettre à jour l'état local si l'API échoue
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

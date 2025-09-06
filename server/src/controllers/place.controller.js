@@ -4,59 +4,132 @@ import logger from '../config/logger.config.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { uploadImage, deleteImage, generateImageVariants } from '../config/cloudinary.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ajouter des photos à un lieu (avec upload)
+// Ajouter des photos à un lieu (avec upload vers Cloudinary)
 export const addPhotoToPlace = async (req, res, next) => {
 	try {
 		const { id } = req.params;
 		const { captions } = req.body; // Array de captions pour chaque photo
 
+		// Debug: Logs détaillés de ce qui est reçu
+		logger.info('📸 Upload de photos - Données reçues:', {
+			placeId: id,
+			filesCount: req.files ? req.files.length : 0,
+			bodyKeys: Object.keys(req.body),
+			body: req.body,
+			filesInfo: req.files
+				? req.files.map((f) => ({
+						fieldname: f.fieldname,
+						originalname: f.originalname,
+						mimetype: f.mimetype,
+						size: f.size
+					}))
+				: []
+		});
+
 		if (!req.files || req.files.length === 0) {
+			logger.warn("❌ Aucun fichier reçu pour l'upload de photos", {
+				placeId: id,
+				body: req.body
+			});
 			return res.status(400).json({ message: 'Aucune photo uploadée' });
 		}
 
-		const place = await Place.findById(id);
+		// Vérifier que la place existe et appartient à l'utilisateur
+		const place = await Place.findOne({
+			_id: id,
+			user_id: req.user.id
+		});
+
 		if (!place) {
-			return res.status(404).json({ message: 'Place not found' });
+			return res.status(404).json({ message: 'Place not found or not authorized' });
 		}
 
-		// Traiter chaque fichier uploadé
-		const newPhotos = req.files.map((file, index) => ({
-			url: `/uploads/${file.filename}`,
-			filename: file.filename,
-			caption: captions && captions[index] ? captions[index] : '',
-			uploadedAt: new Date(),
-			size: file.size,
-			mimetype: file.mimetype
-		}));
+		const newPhotos = [];
+		const uploadedFiles = []; // Pour nettoyer en cas d'erreur
 
-		// Ajouter les photos au lieu
-		place.photos.push(...newPhotos);
-		await place.save();
+		try {
+			// Traiter chaque fichier uploadé vers Cloudinary
+			for (let i = 0; i < req.files.length; i++) {
+				const file = req.files[i];
 
-		logger.info('Photos added to place', {
-			placeId: id,
-			photoCount: newPhotos.length,
-			filenames: newPhotos.map((p) => p.filename)
-		});
+				// Upload vers Cloudinary
+				const cloudinaryResult = await uploadImage(
+					file.path,
+					`memo-trip/places/${place._id}`,
+					`${place._id}_${Date.now()}_${i}`
+				);
 
-		res.status(201).json({
-			message: 'Photos ajoutées avec succès',
-			photos: newPhotos,
-			total_photos: place.photos.length
-		});
+				uploadedFiles.push(cloudinaryResult.public_id);
+
+				// Créer l'objet photo avec les URLs transformées
+				const photoData = {
+					url: cloudinaryResult.url,
+					public_id: cloudinaryResult.public_id,
+					caption: captions && captions[i] ? captions[i] : '',
+					uploadedAt: new Date(),
+					size: cloudinaryResult.size,
+					width: cloudinaryResult.width,
+					height: cloudinaryResult.height,
+					format: cloudinaryResult.format,
+					// Générer les variantes d'images
+					variants: generateImageVariants(cloudinaryResult.public_id)
+				};
+
+				newPhotos.push(photoData);
+
+				// Supprimer le fichier temporaire local
+				fs.unlink(file.path, (unlinkErr) => {
+					if (unlinkErr) {
+						logger.warn('Error deleting temporary file', {
+							path: file.path,
+							error: unlinkErr.message
+						});
+					}
+				});
+			}
+
+			// Ajouter les photos au lieu
+			place.photos.push(...newPhotos);
+			await place.save();
+
+			logger.info('Photos added to place via Cloudinary', {
+				placeId: id,
+				photoCount: newPhotos.length,
+				cloudinaryIds: newPhotos.map((p) => p.public_id)
+			});
+
+			res.status(201).json({
+				message: 'Photos ajoutées avec succès',
+				photos: newPhotos,
+				total_photos: place.photos.length
+			});
+		} catch (cloudinaryError) {
+			// En cas d'erreur, supprimer les images déjà uploadées sur Cloudinary
+			for (const publicId of uploadedFiles) {
+				try {
+					await deleteImage(publicId);
+				} catch (deleteError) {
+					logger.error('Error deleting Cloudinary image during cleanup', {
+						public_id: publicId,
+						error: deleteError.message
+					});
+				}
+			}
+			throw cloudinaryError;
+		}
 	} catch (err) {
-		// En cas d'erreur, supprimer les fichiers uploadés
+		// Nettoyer les fichiers temporaires locaux
 		if (req.files) {
 			req.files.forEach((file) => {
-				const filePath = path.join(__dirname, '../../uploads', file.filename);
-				fs.unlink(filePath, (unlinkErr) => {
+				fs.unlink(file.path, (unlinkErr) => {
 					if (unlinkErr) {
-						logger.error('Error deleting uploaded file', {
-							filename: file.filename,
+						logger.warn('Error deleting temporary file during cleanup', {
+							path: file.path,
 							error: unlinkErr.message
 						});
 					}
@@ -67,49 +140,88 @@ export const addPhotoToPlace = async (req, res, next) => {
 	}
 };
 
-// Supprimer une photo d'un lieu
+// Supprimer une photo d'un lieu (depuis Cloudinary)
 export const removePhotoFromPlace = async (req, res, next) => {
 	try {
 		const { id, photoId } = req.params;
 
-		const place = await Place.findById(id);
+		// Vérifier que la place appartient à l'utilisateur
+		const place = await Place.findOne({
+			_id: id,
+			user_id: req.user.id
+		});
+
 		if (!place) {
-			return res.status(404).json({ message: 'Place not found' });
+			return res.status(404).json({ message: 'Place not found or not authorized' });
 		}
 
-		// Trouver la photo à supprimer pour récupérer le nom du fichier
+		// Trouver la photo à supprimer
 		const photoToRemove = place.photos.find((photo) => photo._id.toString() === photoId);
 
 		if (!photoToRemove) {
 			return res.status(404).json({ message: 'Photo not found' });
 		}
 
-		// Supprimer le fichier physique
-		if (photoToRemove.filename) {
-			const filePath = path.join(__dirname, '../../uploads', photoToRemove.filename);
-			fs.unlink(filePath, (unlinkErr) => {
-				if (unlinkErr) {
-					logger.error('Error deleting photo file', {
-						filename: photoToRemove.filename,
-						error: unlinkErr.message
-					});
-				} else {
-					logger.info('Photo file deleted successfully', {
-						filename: photoToRemove.filename,
-						placeId: id
-					});
-				}
+		try {
+			// Supprimer l'image de Cloudinary si elle a un public_id
+			if (photoToRemove.public_id) {
+				await deleteImage(photoToRemove.public_id);
+
+				logger.info('Photo deleted from Cloudinary', {
+					public_id: photoToRemove.public_id,
+					placeId: id,
+					photoId
+				});
+			} else if (photoToRemove.filename) {
+				// Fallback : supprimer le fichier local pour les anciennes données
+				const filePath = path.join(__dirname, '../../uploads', photoToRemove.filename);
+				fs.unlink(filePath, (unlinkErr) => {
+					if (unlinkErr) {
+						logger.warn('Error deleting legacy photo file', {
+							filename: photoToRemove.filename,
+							error: unlinkErr.message
+						});
+					} else {
+						logger.info('Legacy photo file deleted', {
+							filename: photoToRemove.filename,
+							placeId: id
+						});
+					}
+				});
+			}
+
+			// Supprimer la photo de la base de données
+			place.photos = place.photos.filter((photo) => photo._id.toString() !== photoId);
+			await place.save();
+
+			logger.info('Photo removed from place', {
+				placeId: id,
+				photoId,
+				totalPhotosRemaining: place.photos.length
+			});
+
+			res.json({
+				message: 'Photo supprimée avec succès',
+				total_photos: place.photos.length
+			});
+		} catch (cloudinaryError) {
+			logger.error('Error deleting photo from Cloudinary', {
+				public_id: photoToRemove.public_id,
+				error: cloudinaryError.message,
+				placeId: id,
+				photoId
+			});
+
+			// Continuer avec la suppression de la base de données même si Cloudinary échoue
+			place.photos = place.photos.filter((photo) => photo._id.toString() !== photoId);
+			await place.save();
+
+			res.status(207).json({
+				message: 'Photo supprimée de la base de données, mais erreur avec Cloudinary',
+				warning: cloudinaryError.message,
+				total_photos: place.photos.length
 			});
 		}
-
-		// Supprimer la photo de la base de données
-		place.photos = place.photos.filter((photo) => photo._id.toString() !== photoId);
-		await place.save();
-
-		res.json({
-			message: 'Photo supprimée avec succès',
-			total_photos: place.photos.length
-		});
 	} catch (err) {
 		next(err);
 	}
@@ -353,7 +465,7 @@ export const updatePlace = async (req, res, next) => {
 // DELETE /api/places/:id
 export const deletePlace = async (req, res, next) => {
 	try {
-		// Trouver la place avant de la supprimer pour récupérer le journal_id
+		// Trouver la place avant de la supprimer pour récupérer le journal_id et les photos
 		const place = await Place.findOne({
 			_id: req.params.id,
 			user_id: req.user.id
@@ -365,10 +477,68 @@ export const deletePlace = async (req, res, next) => {
 			});
 		}
 
-		// Supprimer la place du journal
-		await Journal.findByIdAndUpdate(place.journal_id, { $pull: { places: place._id } });
+		logger.info('🗑️ Suppression du lieu avec photos Cloudinary', {
+			placeId: req.params.id,
+			photosCount: place.photos ? place.photos.length : 0,
+			photos: place.photos ? place.photos.map(p => ({ 
+				public_id: p.public_id, 
+				url: p.url 
+			})) : []
+		});
 
-		// Supprimer la place
+		// 🌩️ ÉTAPE 1: Supprimer toutes les images de Cloudinary
+		if (place.photos && place.photos.length > 0) {
+			const deletionErrors = [];
+			
+			for (const photo of place.photos) {
+				try {
+					if (photo.public_id) {
+						// Supprimer l'image de Cloudinary
+						await deleteImage(photo.public_id);
+						logger.info('✅ Image Cloudinary supprimée', { 
+							public_id: photo.public_id,
+							placeId: req.params.id 
+						});
+					} else if (photo.filename) {
+						// Fallback : supprimer fichier local legacy
+						const filePath = path.join(__dirname, '../../uploads', photo.filename);
+						fs.unlink(filePath, (unlinkErr) => {
+							if (unlinkErr) {
+								logger.warn('Erreur suppression fichier legacy', {
+									filename: photo.filename,
+									error: unlinkErr.message
+								});
+							}
+						});
+					}
+				} catch (cloudinaryError) {
+					// Logger l'erreur mais ne pas faire échouer la suppression
+					logger.error('❌ Erreur suppression image Cloudinary', {
+						public_id: photo.public_id,
+						error: cloudinaryError.message,
+						placeId: req.params.id
+					});
+					deletionErrors.push({
+						public_id: photo.public_id,
+						error: cloudinaryError.message
+					});
+				}
+			}
+
+			if (deletionErrors.length > 0) {
+				logger.warn('⚠️ Certaines images n\'ont pas pu être supprimées de Cloudinary', {
+					placeId: req.params.id,
+					errors: deletionErrors
+				});
+			}
+		}
+
+		// 🗄️ ÉTAPE 2: Supprimer la place du journal
+		await Journal.findByIdAndUpdate(place.journal_id, { 
+			$pull: { places: place._id } 
+		});
+
+		// 🗄️ ÉTAPE 3: Supprimer la place de la base de données
 		const result = await Place.deleteOne({
 			_id: req.params.id,
 			user_id: req.user.id
@@ -378,14 +548,20 @@ export const deletePlace = async (req, res, next) => {
 			return res.status(404).json({ message: 'Place not found' });
 		}
 
-		logger.info('Place deleted and removed from journal', {
+		logger.info('✅ Lieu supprimé complètement (DB + Cloudinary)', {
 			placeId: req.params.id,
 			journalId: place.journal_id,
-			userId: req.user.id
+			userId: req.user.id,
+			photosDeleted: place.photos ? place.photos.length : 0
 		});
 
 		res.status(204).end();
 	} catch (err) {
+		logger.error('❌ Erreur lors de la suppression du lieu', {
+			placeId: req.params.id,
+			error: err.message,
+			stack: err.stack
+		});
 		next(err);
 	}
 };

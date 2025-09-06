@@ -188,10 +188,18 @@ const EditJournal: React.FC = () => {
     });
   };
 
-  const confirmDeletePlace = () => {
+  const confirmDeletePlace = async () => {
     if (deleteConfirm.placeId && journal) {
-      deletePlace(journal.id, deleteConfirm.placeId);
-      setDeleteConfirm({ open: false, placeId: '', placeName: '' });
+      try {
+        await deletePlace(journal.id, deleteConfirm.placeId);
+        setDeleteConfirm({ open: false, placeId: '', placeName: '' });
+        // Optionnel : Afficher une notification de succès
+        console.log("✅ Lieu supprimé avec succès de l'interface");
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression:', error);
+        // Optionnel : Afficher une notification d'erreur à l'utilisateur
+        alert('Erreur lors de la suppression du lieu. Veuillez réessayer.');
+      }
     }
   };
 
