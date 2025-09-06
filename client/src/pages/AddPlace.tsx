@@ -55,32 +55,19 @@ import { SmartPlaceDateForm } from '../components/travel';
 
 // Tags prédéfinis suggérés
 const SUGGESTED_TAGS = [
-  'Histoire',
-  'Architecture',
-  'UNESCO',
-  'Monuments',
-  'Vue panoramique',
-  'Romantique',
-  'Plages',
-  'Coucher de soleil',
-  'Château',
-  'Alpes',
-  'Conte de fées',
-  'Randonnée',
-  'Merveilles du monde',
-  'Gastronomie',
-  'Culture',
-  'Art',
-  'Nature',
-  'Aventure',
+  'Restaurant',
   'Musée',
-  'Cathédrale',
-  'Jardin',
-  'Lac',
+  'Monument',
+  'Nature',
+  'Plage',
   'Montagne',
   'Ville',
-  'Village',
-  'Marché',
+  'Shopping',
+  'Parc',
+  'Architecture',
+  'Culture',
+  'Aventure',
+  'Détente',
 ];
 
 const AddPlacePage: React.FC = () => {
@@ -852,7 +839,7 @@ const AddPlacePage: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {SUGGESTED_TAGS.filter((tag) => !formData.tags.includes(tag))
-              .slice(0, 12)
+              .slice(0, 10)
               .map((tag) => (
                 <Chip
                   key={tag}

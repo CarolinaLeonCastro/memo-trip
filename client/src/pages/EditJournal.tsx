@@ -30,37 +30,41 @@ import {
   LocationOn as LocationOnIcon,
   CheckCircle as CheckCircleIcon,
   CalendarToday as CalendarTodayIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 
 // Tags prédéfinis suggérés pour les journaux
 const SUGGESTED_JOURNAL_TAGS = [
-  'Histoire',
-  'Architecture',
-  'UNESCO',
-  'Monuments',
-  'Vue panoramique',
-  'Romantique',
-  'Plages',
-  'Coucher de soleil',
-  'Château',
-  'Alpes',
-  'Conte de fées',
-  'Randonnée',
-  'Merveilles du monde',
-  'Gastronomie',
-  'Culture',
-  'Art',
-  'Nature',
-  'Aventure',
+  'Restaurant',
   'Musée',
-  'Cathédrale',
-  'Jardin',
-  'Lac',
+  'Monument',
+  'Nature',
+  'Plage',
   'Montagne',
   'Ville',
-  'Village',
-  'Marché',
+  'Shopping',
+  'Parc',
+  'Architecture',
+  'Culture',
+  'Aventure',
+  'Détente',
 ];
+
+// Déterminer le statut de visite d'un lieu
+const getVisitStatus = (placeDetails: ApiPlace | undefined) => {
+  if (!placeDetails?.date_visited) return null;
+
+  const visitDate = new Date(placeDetails.date_visited);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Remettre à minuit pour comparaison précise
+  visitDate.setHours(0, 0, 0, 0);
+
+  if (visitDate <= today) {
+    return 'visited'; // Déjà visité
+  } else {
+    return 'to_visit'; // À visiter
+  }
+};
 
 const EditJournal: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +135,7 @@ const EditJournal: React.FC = () => {
 
   if (!journal) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 2 }}>
         <Typography variant="h4">Journal non trouvé</Typography>
         <Button
           onClick={() => navigate('/journals')}
@@ -477,12 +481,14 @@ const EditJournal: React.FC = () => {
                 ? calculateDays(placeDetails.start_date, placeDetails.end_date)
                 : 1;
 
+              const visited = getVisitStatus(placeDetails);
+
               return (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={place.id}>
                   <Card
                     sx={{
                       position: 'relative',
-                      borderRadius: 3,
+                      borderRadius: 1,
                       overflow: 'hidden',
                       transition: 'all 0.3s ease',
                       '&:hover': {
@@ -517,50 +523,61 @@ const EditJournal: React.FC = () => {
                       }}
                     />
 
-                    {/* Badge Visité en haut à gauche */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        bgcolor: '#4CAF50',
-                        color: 'white',
-                        borderRadius: '20px',
-                        px: 2,
-                        py: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      <CheckCircleIcon sx={{ fontSize: '0.875rem' }} />
-                      Visité
-                    </Box>
+                    {/* Badge de statut de visite */}
+                    {(() => {
+                      const visitStatus = getVisitStatus(placeDetails);
+                      if (!visitStatus) return null;
+
+                      const isVisited = visitStatus === 'visited';
+                      return (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 10,
+                            left: 12,
+                            bgcolor: isVisited ? '#E8F5E8' : '#FFF3E0',
+                            color: isVisited ? '#2E7D32' : '#F57C00',
+                            borderRadius: '20px',
+                            px: 1.5,
+                            py: 0.3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.3,
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            boxShadow: 2,
+                          }}
+                        >
+                          {isVisited ? (
+                            <CheckCircleIcon sx={{ fontSize: '0.9rem' }} />
+                          ) : (
+                            <ScheduleIcon sx={{ fontSize: '0.9rem' }} />
+                          )}
+                          {isVisited ? 'Visité' : 'À visiter'}
+                        </Box>
+                      );
+                    })()}
 
                     {/* Bouton de suppression en haut à droite */}
                     <IconButton
                       onClick={() => handleDeletePlace(place.id, place.name)}
                       sx={{
                         position: 'absolute',
-                        top: 8,
+                        top: 6,
                         right: 8,
-                        bgcolor: 'rgba(244, 67, 54, 0.9)',
+                        bgcolor: 'error.main',
                         color: 'white',
                         '&:hover': {
-                          bgcolor: 'rgba(244, 67, 54, 1)',
+                          bgcolor: 'error.dark',
                           transform: 'scale(1.1)',
                         },
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         transition: 'all 0.2s ease',
                       }}
                       size="small"
                     >
-                      <DeleteIcon fontSize="small" />
+                      <DeleteIcon fontSize="small" sx={{ fontSize: 16 }} />
                     </IconButton>
 
                     {/* Contenu en bas */}
@@ -576,27 +593,19 @@ const EditJournal: React.FC = () => {
                     >
                       {/* Nom du lieu */}
                       <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '1.25rem',
-                          mb: 0.5,
-                          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                        }}
+                        variant="subtitle1"
+                        fontWeight={600}
+                        sx={{ mb: 0.5 }}
                       >
                         {placeDetails?.name || place.name}
                       </Typography>
 
                       {/* Pays */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          opacity: 0.9,
-                          mb: 1,
-                          fontSize: '0.875rem',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                        }}
-                      >
+                      <Typography variant="caption">
+                        <LocationOnIcon
+                          sx={{ fontSize: '0.875rem', color: 'error.main' }}
+                        />
+
                         {placeDetails?.location?.country || place.country}
                       </Typography>
 
@@ -616,11 +625,9 @@ const EditJournal: React.FC = () => {
                           overflow: 'hidden',
                         }}
                       >
-                        "
                         {placeDetails?.description ||
                           place.description ||
                           'Aucune description disponible'}
-                        "
                       </Typography>
 
                       {/* Nombre de jours */}
@@ -629,9 +636,8 @@ const EditJournal: React.FC = () => {
                         sx={{
                           fontWeight: 600,
                           fontSize: '0.75rem',
-                          color: '#4CAF50',
-                          textTransform: 'uppercase',
-                          letterSpacing: 0.5,
+                          color: visited === 'visited' ? '#81C784' : '#FFB74D',
+
                           textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                         }}
                       >

@@ -9,16 +9,16 @@ import {
 import { useParams } from 'react-router-dom';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
-// Import des nouveaux composants
+// Import des composants publics
 import {
-  JournalHeader,
   JournalAuthorInfo,
-  JournalTravelInfo,
   JournalStats,
   VisitedPlaceCard,
   PhotoGalleryGrid,
-  JournalContent,
-} from '../components';
+} from '../components/journalPublic';
+
+// Import du composant content (partagé)
+import { JournalContent } from '../components/journal';
 
 // Types
 interface User {
@@ -72,7 +72,6 @@ interface PublicJournal {
 const PublicJournalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [journal, setJournal] = useState<PublicJournal | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Données mockées pour le développement
@@ -336,22 +335,10 @@ This 21-day journey through Europe showed us the incredible diversity of culture
       const journalData = id ? mockJournals[id] : null;
       if (journalData) {
         setJournal(journalData);
-        setIsLiked(journalData.is_liked);
       }
       setLoading(false);
     }, 500);
   }, [id, mockJournals]);
-
-  const handleLike = () => {
-    if (journal) {
-      setJournal({
-        ...journal,
-        likes: isLiked ? journal.likes - 1 : journal.likes + 1,
-        is_liked: !isLiked,
-      });
-      setIsLiked(!isLiked);
-    }
-  };
 
   if (loading) {
     return (
@@ -374,14 +361,58 @@ This 21-day journey through Europe showed us the incredible diversity of culture
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
       {/* Header avec image de couverture */}
-      <JournalHeader
-        title={journal.title}
-        subtitle={journal.subtitle}
-        coverImage={journal.cover_image}
-        tags={journal.tags}
-        isLiked={isLiked}
-        onLike={handleLike}
-      />
+      <Box
+        sx={{
+          position: 'relative',
+          height: 400,
+          backgroundImage: `url(${'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200'})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'flex-end',
+          color: 'white',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background:
+              'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
+          }}
+        />
+        <Container maxWidth="xl" sx={{ position: 'relative', pb: 4 }}>
+          <Typography variant="h2" fontWeight={700} sx={{ mb: 2 }}>
+            {journal.title}
+          </Typography>
+          {journal.subtitle && (
+            <Typography variant="h5" sx={{ mb: 2, opacity: 0.9 }}>
+              {journal.subtitle}
+            </Typography>
+          )}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {journal.tags?.map((tag, index) => (
+              <Box
+                key={index}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(4px)',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 2,
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                }}
+              >
+                {tag}
+              </Box>
+            ))}
+          </Box>
+        </Container>
+      </Box>
 
       {/* Informations de l'auteur */}
       <JournalAuthorInfo
@@ -389,13 +420,67 @@ This 21-day journey through Europe showed us the incredible diversity of culture
         publishedDate={journal.created_at}
       />
 
-      {/* Informations de voyage et statistiques */}
-      <JournalTravelInfo travelInfo={journal.travel_info} />
+      {/* Informations de voyage (simplifiées pour la version publique) */}
+      <Box sx={{ bgcolor: 'white', px: 3, py: 4 }}>
+        <Container maxWidth="xl">
+          <Typography
+            variant="h5"
+            fontWeight="700"
+            sx={{ color: '#1F2937', mb: 3, textAlign: 'center' }}
+          >
+            Informations de voyage
+          </Typography>
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold" color="primary">
+                  {journal.travel_info?.duration || '0'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Jours
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold" color="success.main">
+                  {journal.travel_info?.distance || '0'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  km
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold" color="warning.main">
+                  {journal.travel_info?.season || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Saison
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold" color="error.main">
+                  {journal.travel_info?.budget || '0'}€
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Budget
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
       <JournalStats
-        likes={journal.likes}
-        comments={journal.comments}
-        views={journal.views}
-        shares={journal.shares}
+        stats={{
+          favorites: journal.likes || 0,
+          views: journal.views || 0,
+          places: journal.places?.length || 0,
+          photos: journal.gallery?.length || 0,
+        }}
       />
 
       {/* Contenu principal */}
@@ -421,7 +506,7 @@ This 21-day journey through Europe showed us the incredible diversity of culture
         <PhotoGalleryGrid photos={journal.gallery} />
 
         {/* Journal de voyage */}
-        <JournalContent content={journal.journal_content} />
+        <JournalContent journal={{ description: journal.journal_content }} />
       </Container>
     </Box>
   );
