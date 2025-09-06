@@ -71,7 +71,7 @@ export const PlaceStatusToggle: React.FC<PlaceStatusToggleProps> = ({
   };
 
   const handleStatusChange = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newStatus: string | null
   ) => {
     if (newStatus === null || disabled) return;

@@ -34,7 +34,7 @@ const JournalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getJournal } = useJournals();
-  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [selectedPhotos] = useState<string[]>([]);
   const [showGallery, setShowGallery] = useState(false);
   const [placesDetails, setPlacesDetails] = useState<Map<string, ApiPlace>>(
     new Map()
