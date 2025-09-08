@@ -785,7 +785,7 @@ const EditJournal: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {SUGGESTED_JOURNAL_TAGS.filter((tag) => !tags.includes(tag))
-              .slice(0, 8)
+              .slice(0, 10)
               .map((tag) => (
                 <Chip
                   key={tag}

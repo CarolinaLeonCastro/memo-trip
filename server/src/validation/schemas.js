@@ -164,7 +164,7 @@ export const journalValidation = {
 
 // Schéma de validation pour Place
 export const placeValidation = {
-	// Création d'un lieu
+	// Création d'un lieu avec validation conditionnelle selon le statut
 	create: Joi.object({
 		name: Joi.string().trim().min(2).max(100).required().messages({
 			'string.min': 'Le nom du lieu doit contenir au moins 2 caractères',
@@ -173,6 +173,10 @@ export const placeValidation = {
 		}),
 		description: Joi.string().trim().max(1000).allow('').messages({
 			'string.max': 'La description ne peut pas dépasser 1000 caractères'
+		}),
+		// Statut du lieu : planned pour journaux futurs, visited pour lieux visités
+		status: Joi.string().valid('planned', 'visited').default('visited').messages({
+			'any.only': 'Le statut doit être "planned" ou "visited"'
 		}),
 		location: Joi.object({
 			type: Joi.string().valid('Point').default('Point'),
@@ -191,21 +195,61 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}).required(),
-		date_visited: Joi.date().max('now').required().messages({
-			'any.required': 'La date de visite est obligatoire',
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		
+		// === DATES POUR LIEUX VISITÉS (status = 'visited') ===
+		date_visited: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').required().messages({
+				'any.required': 'La date de visite est obligatoire pour un lieu visité',
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
-		start_date: Joi.date().max('now').required().messages({
-			'any.required': 'La date de début de visite est obligatoire',
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		start_date: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').required().messages({
+				'any.required': 'La date de début de visite est obligatoire pour un lieu visité',
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de début de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).max('now').required().messages({
-			'any.required': 'La date de fin de visite est obligatoire',
-			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		end_date: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().min(Joi.ref('start_date')).max('now').required().messages({
+				'any.required': 'La date de fin de visite est obligatoire pour un lieu visité',
+				'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de fin de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		visitedAt: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').optional().messages({
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		
+		// === DATES POUR LIEUX PLANIFIÉS (status = 'planned') ===
+		plannedStart: Joi.when('status', {
+			is: 'planned',
+			then: Joi.date().required().messages({
+				'any.required': 'La date de début planifiée est obligatoire pour un lieu planifié',
+				'date.base': 'Format de date invalide'
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		plannedEnd: Joi.when('status', {
+			is: 'planned',
+			then: Joi.date().min(Joi.ref('plannedStart')).optional().messages({
+				'date.min': 'La date de fin planifiée doit être postérieure ou égale à la date de début',
+				'date.base': 'Format de date invalide'
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
 		rating: Joi.number().integer().min(1).max(5).allow(null).messages({
 			'number.min': 'La note doit être entre 1 et 5',
@@ -235,7 +279,7 @@ export const placeValidation = {
 		journal_id: objectIdSchema.required()
 	}),
 
-	// Mise à jour d'un lieu
+	// Mise à jour d'un lieu avec validation conditionnelle selon le statut
 	update: Joi.object({
 		name: Joi.string().trim().min(2).max(100).messages({
 			'string.min': 'Le nom du lieu doit contenir au moins 2 caractères',
@@ -243,6 +287,10 @@ export const placeValidation = {
 		}),
 		description: Joi.string().trim().max(1000).allow('').messages({
 			'string.max': 'La description ne peut pas dépasser 1000 caractères'
+		}),
+		// Statut du lieu : planned pour journaux futurs, visited pour lieux visités
+		status: Joi.string().valid('planned', 'visited').messages({
+			'any.only': 'Le statut doit être "planned" ou "visited"'
 		}),
 		location: Joi.object({
 			type: Joi.string().valid('Point').default('Point'),
@@ -261,18 +309,57 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}),
-		date_visited: Joi.date().max('now').messages({
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		
+		// === DATES POUR LIEUX VISITÉS (status = 'visited') ===
+		date_visited: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').messages({
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
-		start_date: Joi.date().max('now').messages({
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		start_date: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').messages({
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de début de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).max('now').messages({
-			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.base': 'Format de date invalide',
-			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
+		end_date: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().min(Joi.ref('start_date')).max('now').messages({
+				'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de fin de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		visitedAt: Joi.when('status', {
+			is: 'visited',
+			then: Joi.date().max('now').optional().messages({
+				'date.base': 'Format de date invalide',
+				'date.max': "La date de visite ne peut pas être dans le futur"
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		
+		// === DATES POUR LIEUX PLANIFIÉS (status = 'planned') ===
+		plannedStart: Joi.when('status', {
+			is: 'planned',
+			then: Joi.date().messages({
+				'date.base': 'Format de date invalide'
+			}),
+			otherwise: Joi.date().optional().allow(null)
+		}),
+		plannedEnd: Joi.when('status', {
+			is: 'planned',
+			then: Joi.date().min(Joi.ref('plannedStart')).optional().messages({
+				'date.min': 'La date de fin planifiée doit être postérieure ou égale à la date de début',
+				'date.base': 'Format de date invalide'
+			}),
+			otherwise: Joi.date().optional().allow(null)
 		}),
 		rating: Joi.number().integer().min(1).max(5).messages({
 			'number.min': 'La note doit être entre 1 et 5',

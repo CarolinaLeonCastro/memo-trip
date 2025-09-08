@@ -8,6 +8,8 @@ export interface Place {
   journal_id: string;
   name: string;
   description?: string;
+  // === NOUVEAU : Statut du lieu ===
+  status?: 'planned' | 'visited';
   location: {
     type: 'Point';
     coordinates: [number, number]; // [longitude, latitude]
@@ -15,9 +17,14 @@ export interface Place {
     city?: string;
     country?: string;
   };
-  start_date: string; // Date de début de la visite
-  end_date: string; // Date de fin de la visite
-  date_visited: string; // Date principale (pour compatibilité)
+  // === DATES POUR LIEUX VISITÉS ===
+  start_date?: string; // Date de début de la visite (optionnelle)
+  end_date?: string; // Date de fin de la visite (optionnelle)
+  date_visited?: string; // Date principale (pour compatibilité, optionnelle)
+  visitedAt?: string; // Date exacte de visite
+  // === DATES POUR LIEUX PLANIFIÉS ===
+  plannedStart?: string; // Date de début planifiée
+  plannedEnd?: string; // Date de fin planifiée
   photos: PlacePhoto[];
   rating?: number;
   weather?: string;

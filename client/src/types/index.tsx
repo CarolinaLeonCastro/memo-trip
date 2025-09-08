@@ -35,13 +35,24 @@ export interface Place {
   address?: string;
   latitude?: number;
   longitude?: number;
+
+  // === NOUVEAU : Statut du lieu ===
+  status?: 'planned' | 'visited';
+
+  // === DATES POUR LIEUX VISITÉS ===
   dateVisited: Date;
   startDate?: Date;
   endDate?: Date;
+  visitedAt?: Date; // Date exacte de visite
+
+  // === DATES POUR LIEUX PLANIFIÉS ===
+  plannedStart?: Date; // Date de début planifiée
+  plannedEnd?: Date; // Date de fin planifiée
+
   photos: string[];
   imageUrl?: string;
   tags: string[];
-  visited: boolean;
+  visited: boolean; // Pour compatibilité (mapping vers status)
   rating?: number;
   weather?: string;
   budget?: number;

@@ -6,6 +6,13 @@ const placeSchema = new mongoose.Schema(
 		journal_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Journal', required: true, index: true },
 		name: { type: String, required: true, trim: true },
 		description: { type: String, trim: true },
+		// Statut du lieu : planned pour les journaux futurs, visited pour les lieux visités
+		status: {
+			type: String,
+			enum: ['planned', 'visited'],
+			default: 'visited',
+			required: true
+		},
 		location: {
 			type: { type: String, enum: ['Point'], default: 'Point' },
 			coordinates: { type: [Number], required: true }, // [longitude, latitude]
@@ -13,9 +20,15 @@ const placeSchema = new mongoose.Schema(
 			city: { type: String, trim: true },
 			country: { type: String, trim: true }
 		},
-		date_visited: { type: Date, required: true }, // Date principale pour compatibilité
-		start_date: { type: Date, required: true }, // Date de début de la visite
-		end_date: { type: Date, required: true }, // Date de fin de la visite
+		// === DATES POUR LIEUX VISITÉS ===
+		date_visited: { type: Date }, // Date principale pour compatibilité (optionnelle)
+		start_date: { type: Date }, // Date de début de la visite (optionnelle)
+		end_date: { type: Date }, // Date de fin de la visite (optionnelle)
+		visitedAt: { type: Date }, // Date exacte de visite (pour status = 'visited')
+		
+		// === DATES POUR LIEUX PLANIFIÉS ===
+		plannedStart: { type: Date }, // Date de début planifiée (pour status = 'planned')
+		plannedEnd: { type: Date }, // Date de fin planifiée (pour status = 'planned')
 		photos: [
 			{
 				url: {

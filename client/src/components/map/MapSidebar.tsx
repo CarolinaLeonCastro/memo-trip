@@ -150,7 +150,8 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
+                        justifyContent: 'space-between',
+                        width: '100%',
                       }}
                     >
                       <Typography variant="subtitle1" fontWeight={600}>
@@ -164,6 +165,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                           color: place.isVisited ? '#2E7D32' : '#F57C00',
                           fontWeight: 600,
                           fontSize: '0.75rem',
+                          ml: 1, // Marge à gauche pour espacer du texte
                         }}
                       />
                     </Box>

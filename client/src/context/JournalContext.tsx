@@ -81,33 +81,79 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         personalNotes: journal.personal_notes,
         tags: journal.tags || [],
         places: journal.places
-          ? journal.places.map((place: any) => ({
-              id: place._id,
-              name: place.name,
-              city: place.location?.city || '',
-              country: place.location?.country || '',
-              description: place.description || '',
-              address: place.location?.address || '',
-              latitude: place.location?.coordinates?.[1],
-              longitude: place.location?.coordinates?.[0],
-              dateVisited: new Date(place.date_visited),
-              startDate: place.start_date
-                ? new Date(place.start_date)
-                : new Date(place.date_visited),
-              endDate: place.end_date
-                ? new Date(place.end_date)
-                : new Date(place.date_visited),
-              photos: place.photos?.map((photo: any) => photo.url) || [],
-              tags: place.tags || [],
-              visited: true, // Si c'est dans la base, c'est visité
-              rating: place.rating,
-              weather: place.weather || '',
-              budget: place.budget,
-              isFavorite: place.is_favorite || false,
-              visitDuration: place.visit_duration,
-              notes: place.notes || '',
-              journalId: journal._id,
-            }))
+          ? journal.places.map((place: any) => {
+              // 🚀 NOUVEAU : Gérer le statut et les dates selon le type de lieu
+              const isPlanned = place.status === 'planned';
+              const isVisited =
+                place.status === 'visited' ||
+                (!place.status && place.date_visited);
+
+              // Dates de base selon le statut
+              let primaryDate: Date;
+              let startDate: Date;
+              let endDate: Date;
+
+              if (isPlanned) {
+                // Pour les lieux planifiés, utiliser plannedStart/plannedEnd
+                primaryDate = place.plannedStart
+                  ? new Date(place.plannedStart)
+                  : new Date();
+                startDate = place.plannedStart
+                  ? new Date(place.plannedStart)
+                  : primaryDate;
+                endDate = place.plannedEnd
+                  ? new Date(place.plannedEnd)
+                  : startDate;
+              } else {
+                // Pour les lieux visités, utiliser date_visited/start_date/end_date
+                primaryDate = place.date_visited
+                  ? new Date(place.date_visited)
+                  : new Date();
+                startDate = place.start_date
+                  ? new Date(place.start_date)
+                  : primaryDate;
+                endDate = place.end_date
+                  ? new Date(place.end_date)
+                  : primaryDate;
+              }
+
+              return {
+                id: place._id,
+                name: place.name,
+                city: place.location?.city || '',
+                country: place.location?.country || '',
+                description: place.description || '',
+                address: place.location?.address || '',
+                latitude: place.location?.coordinates?.[1],
+                longitude: place.location?.coordinates?.[0],
+
+                // === NOUVEAU : Statut et dates ===
+                status: place.status || (isVisited ? 'visited' : 'planned'),
+                dateVisited: primaryDate,
+                startDate,
+                endDate,
+                visitedAt: place.visitedAt
+                  ? new Date(place.visitedAt)
+                  : undefined,
+                plannedStart: place.plannedStart
+                  ? new Date(place.plannedStart)
+                  : undefined,
+                plannedEnd: place.plannedEnd
+                  ? new Date(place.plannedEnd)
+                  : undefined,
+
+                photos: place.photos?.map((photo: any) => photo.url) || [],
+                tags: place.tags || [],
+                visited: isVisited, // Pour compatibilité
+                rating: place.rating,
+                weather: place.weather || '',
+                budget: place.budget,
+                isFavorite: place.is_favorite || false,
+                visitDuration: place.visit_duration,
+                notes: place.notes || '',
+                journalId: journal._id,
+              };
+            })
           : [],
         // ✅ Ajouter la photo de couverture récupérée
         mainPhoto: journal.cover_image || '',
@@ -259,8 +305,27 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      // Préparer les données pour l'API
-      const placeCreateData: PlaceCreateRequest = {
+      // 🚀 NOUVELLE LOGIQUE : Déterminer l'état temporel du journal
+      const journal = journals.find((j) => j.id === journalId);
+      if (!journal) {
+        throw new Error('Journal non trouvé');
+      }
+
+      const now = new Date();
+      const journalStart = new Date(journal.startDate);
+      const journalEnd = new Date(journal.endDate);
+      const isJournalFuture = journalStart > now;
+
+      console.log('🗓️ État temporel du journal:', {
+        journalId,
+        journalTitle: journal.title,
+        journalDates: { start: journalStart, end: journalEnd },
+        now,
+        isJournalFuture,
+      });
+
+      // Préparer les données selon l'état temporel
+      let placeCreateData: any = {
         name: placeData.name,
         description: placeData.description || '',
         journal_id: journalId,
@@ -273,31 +338,64 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           city: placeData.city || '',
           country: placeData.country || '',
         },
-        date_visited: new Date(placeData.dateVisited).toISOString(),
-        start_date: placeData.startDate
-          ? new Date(placeData.startDate).toISOString()
-          : new Date(placeData.dateVisited).toISOString(),
-        end_date: placeData.endDate
-          ? new Date(placeData.endDate).toISOString()
-          : new Date(placeData.dateVisited).toISOString(),
-        rating: placeData.rating || undefined,
-        weather: placeData.weather || '',
-        budget: placeData.budget || undefined,
         tags: placeData.tags || [],
         is_favorite: placeData.isFavorite || false,
-        visit_duration: placeData.visitDuration || undefined,
         notes: placeData.notes || '',
       };
 
-      // Nettoyer les valeurs undefined
+      if (isJournalFuture) {
+        // 📅 JOURNAL FUTUR → Statut 'planned' avec dates futures
+        placeCreateData = {
+          ...placeCreateData,
+          status: 'planned',
+          plannedStart: placeData.startDate
+            ? new Date(placeData.startDate).toISOString()
+            : new Date(placeData.dateVisited).toISOString(),
+          plannedEnd: placeData.endDate
+            ? new Date(placeData.endDate).toISOString()
+            : new Date(placeData.dateVisited).toISOString(),
+          // Pas de champs "visited" pour planned
+          date_visited: null,
+          start_date: null,
+          end_date: null,
+          visitedAt: null,
+          rating: null,
+          weather: null,
+          visit_duration: null,
+        };
+        console.log('📋 Données pour lieu planifié:', placeCreateData);
+      } else {
+        // 🎯 JOURNAL EN COURS/PASSÉ → Statut 'visited' avec dates passées
+        placeCreateData = {
+          ...placeCreateData,
+          status: 'visited',
+          date_visited: new Date(placeData.dateVisited).toISOString(),
+          start_date: placeData.startDate
+            ? new Date(placeData.startDate).toISOString()
+            : new Date(placeData.dateVisited).toISOString(),
+          end_date: placeData.endDate
+            ? new Date(placeData.endDate).toISOString()
+            : new Date(placeData.dateVisited).toISOString(),
+          rating: placeData.rating || undefined,
+          weather: placeData.weather || '',
+          budget: placeData.budget || undefined,
+          visit_duration: placeData.visitDuration || undefined,
+          // Pas de champs "planned" pour visited
+          plannedStart: null,
+          plannedEnd: null,
+        };
+        console.log('✅ Données pour lieu visité:', placeCreateData);
+      }
+
+      // Nettoyer les valeurs undefined et null
       const cleanData = Object.fromEntries(
         Object.entries(placeCreateData).filter(
-          ([_, value]) => value !== undefined
+          ([_, value]) => value !== undefined && value !== null
         )
-      ) as PlaceCreateRequest;
+      );
 
       // Debug: Afficher les données envoyées
-      console.log("📍 Données envoyées à l'API:", cleanData);
+      console.log("📍 Données finales envoyées à l'API:", cleanData);
 
       // Créer la place via l'API
       const createdPlace = await placeApi.createPlace(cleanData);
@@ -368,7 +466,7 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
   };
 
   const updatePlace = async (
-    _journalId: string,
+    journalId: string,
     placeId: string,
     updates: Partial<Place>
   ) => {
@@ -376,49 +474,27 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      // Préparer les données pour l'API en convertissant le format local vers le format API
-      interface UpdateData {
-        name?: string;
-        description?: string;
-        location?: {
-          type: string;
-          coordinates: [number, number];
-          address: string;
-          city: string;
-          country: string;
-        };
-        date_visited?: string;
-        start_date?: string;
-        end_date?: string;
-        rating?: number;
-        weather?: string;
-        budget?: number;
-        tags?: string[];
-        is_favorite?: boolean;
-        visit_duration?: number;
-        notes?: string;
-        photos?: Array<{
-          url: string;
-          public_id?: string;
-          width?: number;
-          height?: number;
-          format?: string;
-          variants?: {
-            thumbnail?: string;
-            small?: string;
-            medium?: string;
-            large?: string;
-            original?: string;
-          };
-          filename?: string;
-          caption?: string;
-          size?: number;
-          mimetype?: string;
-          uploadedAt?: Date;
-        }>;
+      // 🚀 NOUVELLE LOGIQUE : Déterminer l'état temporel du journal
+      const journal = journals.find((j) => j.id === journalId);
+      if (!journal) {
+        throw new Error('Journal non trouvé');
       }
 
-      const updateData: UpdateData = {};
+      const now = new Date();
+      const journalStart = new Date(journal.startDate);
+      const journalEnd = new Date(journal.endDate);
+      const isJournalFuture = journalStart > now;
+
+      console.log('🗓️ État temporel du journal pour mise à jour:', {
+        journalId,
+        journalTitle: journal.title,
+        journalDates: { start: journalStart, end: journalEnd },
+        now,
+        isJournalFuture,
+      });
+
+      // Préparer les données de base
+      let updateData: any = {};
 
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined)
@@ -432,22 +508,11 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
           country: updates.country || '',
         };
       }
-      if (updates.dateVisited)
-        updateData.date_visited = new Date(updates.dateVisited).toISOString();
-      if (updates.startDate)
-        updateData.start_date = new Date(updates.startDate).toISOString();
-      if (updates.endDate)
-        updateData.end_date = new Date(updates.endDate).toISOString();
-      if (updates.rating !== undefined) updateData.rating = updates.rating;
-      if (updates.weather !== undefined) updateData.weather = updates.weather;
-      if (updates.budget !== undefined) updateData.budget = updates.budget;
       if (updates.tags) updateData.tags = updates.tags;
       if (updates.isFavorite !== undefined)
         updateData.is_favorite = updates.isFavorite;
-      if (updates.visitDuration !== undefined)
-        updateData.visit_duration = updates.visitDuration;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
-      
+
       // Gérer les photos - Convertir les URLs simples en objets photo complets
       if (updates.photos !== undefined) {
         updateData.photos = updates.photos.map((photoUrl: string) => ({
@@ -456,10 +521,73 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         }));
       }
 
-      console.log('📝 Mise à jour de la place - données envoyées:', updateData);
+      // 📅 ADAPTER LES DONNÉES SELON L'ÉTAT TEMPOREL
+      if (isJournalFuture) {
+        // 📋 JOURNAL FUTUR → Forcer statut 'planned' avec dates futures
+        updateData = {
+          ...updateData,
+          status: 'planned',
+          // Mapper les dates vers les champs planifiés
+          plannedStart: updates.startDate
+            ? new Date(updates.startDate).toISOString()
+            : updates.dateVisited
+              ? new Date(updates.dateVisited).toISOString()
+              : undefined,
+          plannedEnd: updates.endDate
+            ? new Date(updates.endDate).toISOString()
+            : updates.dateVisited
+              ? new Date(updates.dateVisited).toISOString()
+              : undefined,
+          // Nettoyer les champs "visited" (interdits pour planned)
+          date_visited: null,
+          start_date: null,
+          end_date: null,
+          visitedAt: null,
+          rating: null, // Pas de note pour un lieu non visité
+          weather: null, // Pas de météo avant la visite
+          visit_duration: null, // Pas de durée avant la visite
+        };
+        console.log('📋 Données pour lieu planifié (mise à jour):', updateData);
+      } else {
+        // ✅ JOURNAL EN COURS/PASSÉ → Permettre statut 'visited'
+        updateData = {
+          ...updateData,
+          status: updates.visited ? 'visited' : updateData.status || 'visited',
+          // Mapper vers les champs "visited"
+          date_visited: updates.dateVisited
+            ? new Date(updates.dateVisited).toISOString()
+            : undefined,
+          start_date: updates.startDate
+            ? new Date(updates.startDate).toISOString()
+            : undefined,
+          end_date: updates.endDate
+            ? new Date(updates.endDate).toISOString()
+            : undefined,
+          rating: updates.rating !== undefined ? updates.rating : undefined,
+          weather: updates.weather !== undefined ? updates.weather : undefined,
+          budget: updates.budget !== undefined ? updates.budget : undefined,
+          visit_duration:
+            updates.visitDuration !== undefined
+              ? updates.visitDuration
+              : undefined,
+          // Nettoyer les champs "planned" (non utilisés pour visited)
+          plannedStart: null,
+          plannedEnd: null,
+        };
+        console.log('✅ Données pour lieu visité (mise à jour):', updateData);
+      }
+
+      // Nettoyer les valeurs undefined et null
+      const cleanData = Object.fromEntries(
+        Object.entries(updateData).filter(
+          ([_, value]) => value !== undefined && value !== null
+        )
+      );
+
+      console.log('📝 Données finales pour mise à jour:', cleanData);
 
       // Appeler l'API pour mettre à jour la place
-      await placeApi.updatePlace(placeId, updateData);
+      await placeApi.updatePlace(placeId, cleanData);
 
       // Recharger les journaux pour avoir les données à jour
       await loadJournals();

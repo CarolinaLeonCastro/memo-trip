@@ -428,7 +428,7 @@ const NewJournal: React.FC = () => {
                         {SUGGESTED_JOURNAL_TAGS.filter(
                           (tag) => !tags.includes(tag)
                         )
-                          .slice(0, 12)
+                          .slice(0, 13)
                           .map((tag) => (
                             <Chip
                               key={tag}

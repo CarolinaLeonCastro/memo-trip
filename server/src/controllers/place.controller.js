@@ -341,7 +341,7 @@ export const createPlace = async (req, res, next) => {
 		});
 
 		// Ajouter l'ID de l'utilisateur authentifié
-		const placeData = {
+		let placeData = {
 			...req.body,
 			user_id: req.user.id
 		};
@@ -358,22 +358,75 @@ export const createPlace = async (req, res, next) => {
 			});
 		}
 
-		// S'assurer que start_date et end_date sont définies
-		if (!placeData.start_date) {
-			placeData.start_date = placeData.date_visited;
-		}
-		if (!placeData.end_date) {
-			placeData.end_date = placeData.date_visited;
+		// === LOGIQUE MÉTIER : DÉTERMINER LE STATUT SELON L'ÉTAT TEMPOREL DU JOURNAL ===
+		const now = new Date();
+		const journalStart = new Date(journal.start_date);
+		const journalEnd = new Date(journal.end_date);
+
+		// Déterminer l'état temporel du journal
+		const isJournalFuture = journalStart > now;
+		const isJournalCurrent = journalStart <= now && now <= journalEnd;
+		const isJournalPast = journalEnd < now;
+
+		logger.info('Journal temporal state:', {
+			journalId: journal._id,
+			journalDates: { start: journalStart, end: journalEnd },
+			now,
+			isFuture: isJournalFuture,
+			isCurrent: isJournalCurrent,
+			isPast: isJournalPast
+		});
+
+		// === ADAPTER LES DONNÉES SELON L'ÉTAT TEMPOREL ===
+		if (isJournalFuture) {
+			// Journal futur → UNIQUEMENT statut 'planned'
+			placeData = {
+				...placeData,
+				status: 'planned',
+				// Utiliser les dates planifiées
+				plannedStart: placeData.start_date || placeData.date_visited || placeData.plannedStart,
+				plannedEnd: placeData.end_date || placeData.date_visited || placeData.plannedEnd,
+				// Nettoyer les champs "visited" (non autorisés pour planned)
+				date_visited: null,
+				start_date: null,
+				end_date: null,
+				visitedAt: null,
+				rating: null, // Pas de note pour un lieu non visité
+				weather: null, // Pas de météo avant la visite
+				visit_duration: null // Pas de durée avant la visite
+			};
+			logger.info('Future journal - forcing planned status', { placeData });
+		} else {
+			// Journal en cours ou passé → statut 'visited' autorisé (défaut)
+			if (!placeData.status) placeData.status = 'visited';
+			
+			if (placeData.status === 'visited') {
+				// S'assurer que les dates obligatoires sont présentes
+				if (!placeData.start_date) placeData.start_date = placeData.date_visited;
+				if (!placeData.end_date) placeData.end_date = placeData.date_visited;
+				if (!placeData.date_visited) placeData.date_visited = placeData.start_date;
+				
+				// Nettoyer les champs "planned" (non utilisés pour visited)
+				placeData.plannedStart = null;
+				placeData.plannedEnd = null;
+			}
+			logger.info('Current/past journal - allowing visited status', { placeData });
 		}
 
 		// Debug: Log des données finales avant création
 		logger.info('Final place data before creation:', {
 			placeData,
 			location: placeData.location,
+			status: placeData.status,
 			dates: {
+				// Visited fields
 				date_visited: placeData.date_visited,
 				start_date: placeData.start_date,
-				end_date: placeData.end_date
+				end_date: placeData.end_date,
+				visitedAt: placeData.visitedAt,
+				// Planned fields
+				plannedStart: placeData.plannedStart,
+				plannedEnd: placeData.plannedEnd
 			}
 		});
 
@@ -390,7 +443,8 @@ export const createPlace = async (req, res, next) => {
 		logger.info('Place created and added to journal', {
 			placeId: place._id,
 			journalId: journal._id,
-			userId: req.user.id
+			userId: req.user.id,
+			status: place.status
 		});
 
 		res.status(201).json(place);
@@ -406,7 +460,7 @@ export const updatePlace = async (req, res, next) => {
 		const existingPlace = await Place.findOne({
 			_id: req.params.id,
 			user_id: req.user.id
-		});
+		}).populate('journal_id');
 
 		if (!existingPlace) {
 			return res.status(404).json({
@@ -414,9 +468,11 @@ export const updatePlace = async (req, res, next) => {
 			});
 		}
 
-		// Vérifier que le journal appartient à l'utilisateur si journal_id est modifié
-		if (req.body.journal_id && req.body.journal_id !== existingPlace.journal_id.toString()) {
-			const journal = await Journal.findOne({
+		// Récupérer le journal (existant ou nouveau si modifié)
+		let journal = existingPlace.journal_id;
+		if (req.body.journal_id && req.body.journal_id !== existingPlace.journal_id._id.toString()) {
+			// Vérifier que le nouveau journal appartient à l'utilisateur
+			journal = await Journal.findOne({
 				_id: req.body.journal_id,
 				user_id: req.user.id
 			});
@@ -428,20 +484,106 @@ export const updatePlace = async (req, res, next) => {
 			}
 		}
 
-		// S'assurer que start_date et end_date sont cohérentes
-		const updateData = { ...req.body };
-		if (updateData.date_visited && !updateData.start_date) {
-			updateData.start_date = updateData.date_visited;
-		}
-		if (updateData.date_visited && !updateData.end_date) {
-			updateData.end_date = updateData.date_visited;
+		// === LOGIQUE MÉTIER : ADAPTER SELON L'ÉTAT TEMPOREL DU JOURNAL ===
+		const now = new Date();
+		const journalStart = new Date(journal.start_date);
+		const journalEnd = new Date(journal.end_date);
+
+		// Déterminer l'état temporel du journal
+		const isJournalFuture = journalStart > now;
+		const isJournalCurrent = journalStart <= now && now <= journalEnd;
+		const isJournalPast = journalEnd < now;
+
+		logger.info('Journal temporal state for update:', {
+			journalId: journal._id,
+			journalDates: { start: journalStart, end: journalEnd },
+			now,
+			isFuture: isJournalFuture,
+			isCurrent: isJournalCurrent,
+			isPast: isJournalPast
+		});
+
+		// Adapter les données selon les règles métier
+		let updateData = { ...req.body };
+
+		if (isJournalFuture) {
+			// Journal futur → FORCER statut 'planned' et bloquer les données "visited"
+			updateData = {
+				...updateData,
+				status: 'planned',
+				// Mapper les dates vers les champs planifiés
+				plannedStart: updateData.start_date || updateData.date_visited || updateData.plannedStart,
+				plannedEnd: updateData.end_date || updateData.date_visited || updateData.plannedEnd,
+				// Nettoyer les champs "visited" (interdits pour planned)
+				date_visited: null,
+				start_date: null,
+				end_date: null,
+				visitedAt: null,
+				rating: null, // Pas de note pour un lieu non visité
+				weather: null, // Pas de météo avant la visite
+				visit_duration: null // Pas de durée avant la visite
+			};
+			logger.info('Future journal - forcing planned status for update', { updateData });
+		} else {
+			// Journal en cours/passé → Autoriser 'visited' (défaut) et valider les transitions
+			if (!updateData.status) {
+				// Si pas de statut spécifié, garder l'existant ou défaut à 'visited'
+				updateData.status = existingPlace.status || 'visited';
+			}
+
+			// Valider la transition de statut
+			if (existingPlace.status === 'planned' && updateData.status === 'visited') {
+				// Transition planned → visited : mapper les dates
+				if (existingPlace.plannedStart && !updateData.start_date) {
+					updateData.start_date = existingPlace.plannedStart;
+				}
+				if (existingPlace.plannedEnd && !updateData.end_date) {
+					updateData.end_date = existingPlace.plannedEnd;
+				}
+				if (!updateData.date_visited) {
+					updateData.date_visited = updateData.start_date || existingPlace.plannedStart;
+				}
+				// Nettoyer les champs planned
+				updateData.plannedStart = null;
+				updateData.plannedEnd = null;
+			}
+
+			if (updateData.status === 'visited') {
+				// S'assurer que les dates obligatoires sont présentes pour visited
+				if (updateData.date_visited && !updateData.start_date) {
+					updateData.start_date = updateData.date_visited;
+				}
+				if (updateData.date_visited && !updateData.end_date) {
+					updateData.end_date = updateData.date_visited;
+				}
+				if (!updateData.date_visited && updateData.start_date) {
+					updateData.date_visited = updateData.start_date;
+				}
+			}
+
+			logger.info('Current/past journal - processing update', { 
+				existingStatus: existingPlace.status, 
+				newStatus: updateData.status,
+				updateData 
+			});
 		}
 
-		// Debug: Log des données de mise à jour
-		logger.info('Updating place', {
+		// Debug: Log des données finales avant mise à jour
+		logger.info('Final update data:', {
 			placeId: req.params.id,
 			userId: req.user.id,
 			updateData,
+			status: updateData.status,
+			dates: {
+				// Visited fields
+				date_visited: updateData.date_visited,
+				start_date: updateData.start_date,
+				end_date: updateData.end_date,
+				visitedAt: updateData.visitedAt,
+				// Planned fields
+				plannedStart: updateData.plannedStart,
+				plannedEnd: updateData.plannedEnd
+			},
 			timestamp: new Date().toISOString()
 		});
 
@@ -453,7 +595,8 @@ export const updatePlace = async (req, res, next) => {
 
 		logger.info('Place updated successfully', {
 			placeId: place._id,
-			userId: req.user.id
+			userId: req.user.id,
+			status: place.status
 		});
 
 		res.json(place);

@@ -27,20 +27,36 @@ const calculateDays = (startDate: string, endDate: string) => {
   return diffDays;
 };
 
-// Fonction pour déterminer le statut de visite
+// Fonction pour déterminer le statut de visite avec le nouveau système
 const getVisitStatus = (placeDetails: ApiPlace | undefined) => {
-  if (!placeDetails?.date_visited) return null;
+  if (!placeDetails) return null;
 
-  const visitDate = new Date(placeDetails.date_visited);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  visitDate.setHours(0, 0, 0, 0);
+  // 🚀 NOUVEAU : Utiliser le champ status s'il existe
+  if (placeDetails.status) {
+    return placeDetails.status === 'visited' ? 'visited' : 'to_visit';
+  }
 
-  if (visitDate <= today) {
-    return 'visited';
-  } else {
+  // 🔄 FALLBACK : Logique de compatibilité avec l'ancien système
+  // Pour les lieux planifiés (avec plannedStart)
+  if (placeDetails.plannedStart && !placeDetails.date_visited) {
     return 'to_visit';
   }
+
+  // Pour les lieux avec date_visited (ancien système ou lieux visités)
+  if (placeDetails.date_visited) {
+    const visitDate = new Date(placeDetails.date_visited);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    visitDate.setHours(0, 0, 0, 0);
+
+    if (visitDate <= today) {
+      return 'visited';
+    } else {
+      return 'to_visit';
+    }
+  }
+
+  return null;
 };
 
 interface JournalPlacesListProps {

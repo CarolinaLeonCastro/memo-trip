@@ -839,7 +839,7 @@ const AddPlacePage: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {SUGGESTED_TAGS.filter((tag) => !formData.tags.includes(tag))
-              .slice(0, 10)
+              .slice(0, 14)
               .map((tag) => (
                 <Chip
                   key={tag}
