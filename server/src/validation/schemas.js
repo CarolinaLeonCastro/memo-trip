@@ -81,6 +81,14 @@ export const userValidation = {
 	// Validation des paramètres
 	params: Joi.object({
 		id: objectIdSchema.required()
+	}),
+
+	// Validation des paramètres utilisateur (settings)
+	settings: Joi.object({
+		areJournalsPublic: Joi.boolean().required().messages({
+			'boolean.base': 'areJournalsPublic doit être un booléen',
+			'any.required': 'areJournalsPublic est obligatoire'
+		})
 	})
 };
 

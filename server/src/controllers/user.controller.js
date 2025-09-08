@@ -199,3 +199,45 @@ export async function removeUserAvatar(req, res, next) {
 		next(err);
 	}
 }
+
+// GET /api/users/settings - Récupérer les paramètres de l'utilisateur connecté
+export async function getUserSettings(req, res, next) {
+	try {
+		const user = await User.findById(req.user.id).select('areJournalsPublic');
+		if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		
+		res.json({
+			success: true,
+			data: {
+				areJournalsPublic: user.areJournalsPublic
+			}
+		});
+	} catch (err) {
+		next(err);
+	}
+}
+
+// PUT /api/users/settings - Mettre à jour les paramètres de l'utilisateur connecté
+export async function updateUserSettings(req, res, next) {
+	try {
+		const { areJournalsPublic } = req.body;
+		
+		const user = await User.findByIdAndUpdate(
+			req.user.id,
+			{ areJournalsPublic },
+			{ new: true, runValidators: true }
+		).select('areJournalsPublic');
+		
+		if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		
+		res.json({
+			success: true,
+			message: 'Paramètres mis à jour avec succès',
+			data: {
+				areJournalsPublic: user.areJournalsPublic
+			}
+		});
+	} catch (err) {
+		next(err);
+	}
+}

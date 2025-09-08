@@ -418,8 +418,8 @@ const MapView: React.FC = () => {
             sx={{
               flex: isTablet ? '1' : '1',
               height: '100%',
-              maxWidth: { md: 300, lg: 350 },
-              minWidth: { md: 280, lg: 320 },
+              maxWidth: { md: 300, lg: 380 },
+              minWidth: { md: 280, lg: 350 },
             }}
           >
             <SidebarContent />

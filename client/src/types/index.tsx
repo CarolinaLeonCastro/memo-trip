@@ -9,6 +9,7 @@ export interface User {
     filename?: string;
     uploadedAt?: string;
   };
+  areJournalsPublic?: boolean;
   created_at?: string;
   last_login?: string;
 }

@@ -381,7 +381,7 @@ const EditPlace: React.FC = () => {
     const files = event.target.files;
     if (files && originalPlace) {
       const fileArray = Array.from(files);
-      
+
       // Limiter à 4 photos maximum
       const filesToProcess = fileArray.slice(0, 4 - formData.photos.length);
 
@@ -406,10 +406,10 @@ const EditPlace: React.FC = () => {
         );
 
         const updatedPlace = response.data as { photos: { url: string }[] };
-        
+
         // Mettre à jour les photos avec les URLs Cloudinary retournées
         const newPhotoUrls = updatedPlace.photos.map((photo) => photo.url);
-        
+
         setFormData((prev) => ({
           ...prev,
           photos: newPhotoUrls.slice(0, 4),
@@ -430,7 +430,7 @@ const EditPlace: React.FC = () => {
     try {
       // Obtenir l'URL de la photo à supprimer
       const photoToRemove = formData.photos[indexToRemove];
-      
+
       // Si c'est une URL Cloudinary (déjà sauvée), on doit la supprimer du serveur
       if (photoToRemove && !photoToRemove.startsWith('data:')) {
         // Récupérer les informations actuelles de la place pour obtenir les IDs des photos
@@ -438,14 +438,14 @@ const EditPlace: React.FC = () => {
           `${API_CONFIG.BASE_URL}/api/places/${originalPlace.id}`,
           { withCredentials: true }
         );
-        
+
         const currentPlace = response.data as {
           photos: { _id: string; url: string }[];
         };
         const photoInfo = currentPlace.photos.find(
           (photo) => photo.url === photoToRemove
         );
-        
+
         if (photoInfo && photoInfo._id) {
           // Supprimer la photo via l'API
           await axios.delete(
@@ -454,7 +454,7 @@ const EditPlace: React.FC = () => {
           );
         }
       }
-      
+
       // Mettre à jour l'état local
       setFormData((prev) => ({
         ...prev,

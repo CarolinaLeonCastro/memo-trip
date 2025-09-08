@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -14,12 +14,14 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  CircularProgress,
 } from '@mui/material';
 import {
   Security as SecurityIcon,
   Palette as PaletteIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { userService } from '../../services/user.service';
 
 const SettingsTab: React.FC = () => {
   const [settings, setSettings] = useState({
@@ -31,16 +33,67 @@ const SettingsTab: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  const handleSettingChange = (setting: string, value: boolean) => {
-    setSettings((prev) => ({
-      ...prev,
-      [setting]: value,
-    }));
+  // Charger les paramètres utilisateur au montage du composant
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        const userSettings = await userService.getSettings();
+        setSettings((prev) => ({
+          ...prev,
+          journalPublic: userSettings.areJournalsPublic,
+        }));
+      } catch (err) {
+        console.error('Erreur lors du chargement des paramètres:', err);
+        setError('Erreur lors du chargement des paramètres');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Ici vous ajouteriez l'appel API pour sauvegarder
-    setSuccess('Paramètres mis à jour avec succès');
-    setTimeout(() => setSuccess(''), 3000);
+    loadSettings();
+  }, []);
+
+  const handleSettingChange = async (setting: string, value: boolean) => {
+    if (setting === 'journalPublic') {
+      try {
+        setUpdating(true);
+        setError('');
+
+        // Mettre à jour les paramètres côté serveur
+        await userService.updateSettings({
+          areJournalsPublic: value,
+        });
+
+        // Mettre à jour l'état local
+        setSettings((prev) => ({
+          ...prev,
+          [setting]: value,
+        }));
+
+        setSuccess('Paramètres mis à jour avec succès');
+        setTimeout(() => setSuccess(''), 3000);
+      } catch (err) {
+        console.error('Erreur lors de la mise à jour des paramètres:', err);
+        setError('Erreur lors de la mise à jour des paramètres');
+        setTimeout(() => setError(''), 5000);
+      } finally {
+        setUpdating(false);
+      }
+    } else {
+      // Pour les autres paramètres (darkMode, language), garder la logique locale pour l'instant
+      setSettings((prev) => ({
+        ...prev,
+        [setting]: value,
+      }));
+
+      setSuccess('Paramètres mis à jour avec succès');
+      setTimeout(() => setSuccess(''), 3000);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -81,11 +134,25 @@ const SettingsTab: React.FC = () => {
     },
   ];
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {success && (
         <Alert severity="success" sx={{ mb: 3 }}>
           {success}
+        </Alert>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
         </Alert>
       )}
 
@@ -120,19 +187,26 @@ const SettingsTab: React.FC = () => {
                         {setting.description}
                       </Typography>
                     </Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={setting.value}
-                          onChange={(e) =>
-                            handleSettingChange(setting.key, e.target.checked)
-                          }
-                          color="primary"
-                        />
-                      }
-                      label=""
-                      sx={{ ml: 2 }}
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                      {updating && setting.key === 'journalPublic' && (
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                      )}
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={setting.value}
+                            onChange={(e) =>
+                              handleSettingChange(setting.key, e.target.checked)
+                            }
+                            color="primary"
+                            disabled={
+                              updating && setting.key === 'journalPublic'
+                            }
+                          />
+                        }
+                        label=""
+                      />
+                    </Box>
                   </Box>
                   {settingIndex < section.settings.length - 1 && (
                     <Divider sx={{ mt: 2 }} />

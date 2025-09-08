@@ -20,23 +20,23 @@ export const validate = (schema, source = 'body') => {
 				dataToValidate = req.body;
 		}
 
-		const { error, value } = schema.validate(dataToValidate, {
-			abortEarly: false, // Retourner toutes les erreurs
-			stripUnknown: true, // Supprimer les champs non définis dans le schéma
-			convert: true // Convertir automatiquement les types (string vers number, etc.)
-		});
+	const { error, value } = schema.validate(dataToValidate, {
+		abortEarly: false, // Retourner toutes les erreurs
+		stripUnknown: true, // Supprimer les champs non définis dans le schéma
+		convert: true // Convertir automatiquement les types (string vers number, etc.)
+	});
 
-		if (error) {
-			// Logger l'erreur de validation
-			logger.warn('Validation error', {
-				source,
-				errors: error.details.map((detail) => ({
-					field: detail.path.join('.'),
-					message: detail.message,
-					value: detail.context?.value
-				})),
-				originalData: dataToValidate
-			});
+	if (error) {
+		// Logger l'erreur de validation
+		logger.warn('Validation error', {
+			source,
+			errors: error.details.map((detail) => ({
+				field: detail.path.join('.'),
+				message: detail.message,
+				value: detail.context?.value
+			})),
+			originalData: dataToValidate
+		});
 
 			return res.status(400).json({
 				message: 'Erreur de validation',
@@ -76,6 +76,7 @@ export const validateLogin = validate(authValidation.login);
 export const validateUserCreate = validate(userValidation.create);
 export const validateUserUpdate = validate(userValidation.update);
 export const validateUserParams = validate(userValidation.params, 'params');
+export const validateUserSettings = validate(userValidation.settings);
 
 // Journal validation
 export const validateJournalCreate = validate(journalValidation.create);
