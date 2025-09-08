@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 import {
   Container,
   TextField,
@@ -35,6 +36,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import { placeApi } from '../services/place-api';
+import { API_CONFIG } from '../config/api.config';
 import PlaceSearchInput from '../components/PlaceSearchInput';
 import type { GeocodingResult } from '../services/geocoding.service';
 import type { Place } from '../types/index';
@@ -373,42 +375,95 @@ const EditPlace: React.FC = () => {
     }));
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
-    if (files) {
-      const newPhotos: string[] = [];
+    if (files && originalPlace) {
       const fileArray = Array.from(files);
-
+      
       // Limiter à 4 photos maximum
       const filesToProcess = fileArray.slice(0, 4 - formData.photos.length);
 
-      let processedCount = 0;
-      filesToProcess.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (reader.result) {
-            newPhotos.push(reader.result as string);
-            processedCount++;
+      try {
+        // Créer un FormData pour l'upload
+        const formDataUpload = new FormData();
+        filesToProcess.forEach((file, index) => {
+          formDataUpload.append('photos', file);
+          formDataUpload.append(`captions[${index}]`, ''); // Caption vide par défaut
+        });
 
-            // Quand toutes les images sont traitées, mettre à jour l'état
-            if (processedCount === filesToProcess.length) {
-              setFormData((prev) => ({
-                ...prev,
-                photos: [...prev.photos, ...newPhotos].slice(0, 4),
-              }));
-            }
+        // Utiliser l'API existante d'upload de photos avec axios
+        const response = await axios.post(
+          `${API_CONFIG.BASE_URL}/api/places/${originalPlace.id}/photos`,
+          formDataUpload,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+            withCredentials: true,
           }
-        };
-        reader.readAsDataURL(file);
-      });
+        );
+
+        const updatedPlace = response.data as { photos: { url: string }[] };
+        
+        // Mettre à jour les photos avec les URLs Cloudinary retournées
+        const newPhotoUrls = updatedPlace.photos.map((photo) => photo.url);
+        
+        setFormData((prev) => ({
+          ...prev,
+          photos: newPhotoUrls.slice(0, 4),
+        }));
+
+        // Réinitialiser l'input file
+        event.target.value = '';
+      } catch (error) {
+        console.error("Erreur lors de l'upload des photos:", error);
+        alert("Erreur lors de l'upload des photos");
+      }
     }
   };
 
-  const handleRemovePhoto = (indexToRemove: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      photos: prev.photos.filter((_, index) => index !== indexToRemove),
-    }));
+  const handleRemovePhoto = async (indexToRemove: number) => {
+    if (!originalPlace) return;
+
+    try {
+      // Obtenir l'URL de la photo à supprimer
+      const photoToRemove = formData.photos[indexToRemove];
+      
+      // Si c'est une URL Cloudinary (déjà sauvée), on doit la supprimer du serveur
+      if (photoToRemove && !photoToRemove.startsWith('data:')) {
+        // Récupérer les informations actuelles de la place pour obtenir les IDs des photos
+        const response = await axios.get(
+          `${API_CONFIG.BASE_URL}/api/places/${originalPlace.id}`,
+          { withCredentials: true }
+        );
+        
+        const currentPlace = response.data as {
+          photos: { _id: string; url: string }[];
+        };
+        const photoInfo = currentPlace.photos.find(
+          (photo) => photo.url === photoToRemove
+        );
+        
+        if (photoInfo && photoInfo._id) {
+          // Supprimer la photo via l'API
+          await axios.delete(
+            `${API_CONFIG.BASE_URL}/api/places/${originalPlace.id}/photos/${photoInfo._id}`,
+            { withCredentials: true }
+          );
+        }
+      }
+      
+      // Mettre à jour l'état local
+      setFormData((prev) => ({
+        ...prev,
+        photos: prev.photos.filter((_, index) => index !== indexToRemove),
+      }));
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la photo:', error);
+      alert('Erreur lors de la suppression de la photo');
+    }
   };
 
   const handleTagAdd = (tag: string) => {

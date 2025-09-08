@@ -397,6 +397,25 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
         is_favorite?: boolean;
         visit_duration?: number;
         notes?: string;
+        photos?: Array<{
+          url: string;
+          public_id?: string;
+          width?: number;
+          height?: number;
+          format?: string;
+          variants?: {
+            thumbnail?: string;
+            small?: string;
+            medium?: string;
+            large?: string;
+            original?: string;
+          };
+          filename?: string;
+          caption?: string;
+          size?: number;
+          mimetype?: string;
+          uploadedAt?: Date;
+        }>;
       }
 
       const updateData: UpdateData = {};
@@ -428,6 +447,14 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       if (updates.visitDuration !== undefined)
         updateData.visit_duration = updates.visitDuration;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
+      
+      // Gérer les photos - Convertir les URLs simples en objets photo complets
+      if (updates.photos !== undefined) {
+        updateData.photos = updates.photos.map((photoUrl: string) => ({
+          url: photoUrl,
+          uploadedAt: new Date(),
+        }));
+      }
 
       console.log('📝 Mise à jour de la place - données envoyées:', updateData);
 

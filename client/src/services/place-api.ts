@@ -37,6 +37,17 @@ export interface Place {
 export interface PlacePhoto {
   _id?: string;
   url: string;
+  public_id?: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  variants?: {
+    thumbnail?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    original?: string;
+  };
   filename?: string;
   caption?: string;
   size?: number;
@@ -57,6 +68,7 @@ export interface PlaceCreateRequest {
   date_visited: string; // Date principale (pour compatibilité)
   start_date: string; // Date de début de visite
   end_date: string; // Date de fin de visite
+  photos?: PlacePhoto[];
   rating?: number;
   weather?: string;
   budget?: number;

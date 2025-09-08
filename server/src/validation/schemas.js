@@ -191,18 +191,21 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}).required(),
-		date_visited: Joi.date().required().messages({
+		date_visited: Joi.date().max('now').required().messages({
 			'any.required': 'La date de visite est obligatoire',
-			'date.base': 'Format de date invalide'
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
-		start_date: Joi.date().required().messages({
+		start_date: Joi.date().max('now').required().messages({
 			'any.required': 'La date de début de visite est obligatoire',
-			'date.base': 'Format de date invalide'
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).required().messages({
+		end_date: Joi.date().min(Joi.ref('start_date')).max('now').required().messages({
 			'any.required': 'La date de fin de visite est obligatoire',
 			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.base': 'Format de date invalide'
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
 		rating: Joi.number().integer().min(1).max(5).allow(null).messages({
 			'number.min': 'La note doit être entre 1 et 5',
@@ -258,15 +261,18 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}),
-		date_visited: Joi.date().messages({
-			'date.base': 'Format de date invalide'
+		date_visited: Joi.date().max('now').messages({
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
-		start_date: Joi.date().messages({
-			'date.base': 'Format de date invalide'
+		start_date: Joi.date().max('now').messages({
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
-		end_date: Joi.date().min(Joi.ref('start_date')).messages({
+		end_date: Joi.date().min(Joi.ref('start_date')).max('now').messages({
 			'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
-			'date.base': 'Format de date invalide'
+			'date.base': 'Format de date invalide',
+			'date.max': "Vous ne pouvez pas enregistrer un lieu qui n'a pas encore eu lieu"
 		}),
 		rating: Joi.number().integer().min(1).max(5).messages({
 			'number.min': 'La note doit être entre 1 et 5',
@@ -291,7 +297,47 @@ export const placeValidation = {
 		}),
 		notes: Joi.string().trim().max(2000).allow('').messages({
 			'string.max': 'Les notes ne peuvent pas dépasser 2000 caractères'
-		})
+		}),
+		photos: Joi.array()
+			.items(
+				Joi.object({
+					url: Joi.string().uri().allow('').messages({
+						'string.uri': "L'URL de la photo doit être valide"
+					}),
+					public_id: Joi.string().allow('').messages({
+						'string.empty': 'Le public_id peut être vide'
+					}),
+					width: Joi.number().integer().min(1).messages({
+						'number.min': 'La largeur doit être positive',
+						'number.integer': 'La largeur doit être un nombre entier'
+					}),
+					height: Joi.number().integer().min(1).messages({
+						'number.min': 'La hauteur doit être positive',
+						'number.integer': 'La hauteur doit être un nombre entier'
+					}),
+					format: Joi.string().valid('jpg', 'jpeg', 'png', 'webp', 'gif').messages({
+						'any.only': 'Format de photo non supporté'
+					}),
+					variants: Joi.object({
+						thumbnail: Joi.string().uri().allow(''),
+						small: Joi.string().uri().allow(''),
+						medium: Joi.string().uri().allow(''),
+						large: Joi.string().uri().allow(''),
+						original: Joi.string().uri().allow('')
+					}),
+					filename: Joi.string().allow(''),
+					caption: Joi.string().trim().max(200).allow('').messages({
+						'string.max': 'Une caption ne peut pas dépasser 200 caractères'
+					}),
+					size: Joi.number().integer().min(0),
+					mimetype: Joi.string().allow(''),
+					uploadedAt: Joi.date()
+				})
+			)
+			.max(10)
+			.messages({
+				'array.max': 'Maximum 10 photos autorisées'
+			})
 	})
 		.min(1)
 		.message('Au moins un champ doit être fourni pour la mise à jour'),
