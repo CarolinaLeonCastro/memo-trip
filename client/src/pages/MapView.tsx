@@ -1,8 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Container,
+  useMediaQuery,
+  useTheme,
+  Drawer,
+  IconButton,
+} from '@mui/material';
+import {
+  LocationOn as LocationIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { LocationOn as LocationIcon } from '@mui/icons-material';
 import { useJournals } from '../context/JournalContext';
 import MapHeader from '../components/map/MapHeader';
 import MapSidebar from '../components/map/MapSidebar';
@@ -60,6 +72,11 @@ interface PlaceWithJournal {
 const MapView: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { journals, getJournal } = useJournals();
+  const theme = useTheme();
+
+  // 📱 Responsive breakpoints
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
   // States
   const [selectedJournal, setSelectedJournal] = useState<string>('all');
@@ -72,6 +89,9 @@ const MapView: React.FC = () => {
     null
   );
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  // 📱 Mobile drawer state
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const journalId = searchParams.get('journal');
 
@@ -188,6 +208,23 @@ const MapView: React.FC = () => {
     setDetailModalOpen(true);
   };
 
+  // 📱 Handlers for mobile drawer
+  const handleDrawerToggle = () => {
+    setMobileDrawerOpen(!mobileDrawerOpen);
+  };
+
+  const handlePlaceClickWithDrawer = (place: PlaceWithJournal) => {
+    handlePlaceClick(place);
+    if (isMobile) {
+      setMobileDrawerOpen(false); // Close drawer on mobile when selecting place
+    }
+  };
+
+  // 🎨 Responsive sidebar component
+  const SidebarContent = () => (
+    <MapSidebar places={places} onPlaceClick={handlePlaceClickWithDrawer} />
+  );
+
   const getTileLayerUrl = () => {
     return mapType === 'satellite'
       ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -201,32 +238,68 @@ const MapView: React.FC = () => {
   };
 
   return (
-    <Box
+    <Container
+      maxWidth={false}
       sx={{
-        height: { xs: 300, sm: 400, md: 600 },
+        height: '85vh',
         display: 'flex',
+
         flexDirection: 'column',
+        p: { xs: 1, sm: 2, md: 1 },
       }}
     >
-      {/* Header */}
-      <MapHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filterStatus={filterStatus}
-        onFilterStatusChange={setFilterStatus}
-        mapType={mapType}
-        onMapTypeChange={setMapType}
-      />
-
-      {/* Main content */}
-      <Box sx={{ flex: 1, display: 'flex', position: 'relative' }}>
-        {/* Map Container */}
+      {/* 🎨 Responsive Header with Mobile Menu */}
+      <Box sx={{ mb: { xs: 1, sm: 2 } }}>
         <Box
           sx={{
-            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 1, sm: 2 },
+          }}
+        >
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <IconButton
+              color="primary"
+              aria-label="open drawer"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 1 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+
+          {/* Header - now responsive */}
+          <Box sx={{ flex: 1 }}>
+            <MapHeader
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filterStatus={filterStatus}
+              onFilterStatusChange={setFilterStatus}
+              mapType={mapType}
+              onMapTypeChange={setMapType}
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* 🗺️ Main Content with Responsive Flexbox */}
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 1, md: 2 },
+        }}
+      >
+        {/* Map Container - Responsive width */}
+        <Box
+          sx={{
+            flex: isMobile ? 1 : isTablet ? '2' : '3',
+            height: '100%',
             position: 'relative',
-            borderRadius: 1,
-            overflow: 'hidden',
+            borderRadius: { xs: 1, sm: 1 },
           }}
         >
           {places.length === 0 ? (
@@ -239,22 +312,30 @@ const MapView: React.FC = () => {
                 justifyContent: 'center',
                 bgcolor: 'background.default',
                 gap: 2,
+                p: { xs: 2, sm: 4 },
               }}
             >
-              <LocationIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
+              <LocationIcon
+                sx={{
+                  fontSize: { xs: 48, sm: 64 },
+                  color: 'text.secondary',
+                }}
+              />
               <Typography
-                variant="h5"
+                variant={isMobile ? 'h6' : 'h5'}
                 color="text.secondary"
                 textAlign="center"
               >
-                Aucun lieu à afficher
+                Aucun lieu trouvé
               </Typography>
               <Typography
-                variant="body1"
+                variant="body2"
                 color="text.secondary"
                 textAlign="center"
+                sx={{ px: 2, maxWidth: 400 }}
               >
-                Ajustez vos filtres ou ajoutez de nouveaux lieux
+                Modifiez vos filtres ou ajoutez de nouveaux lieux pour les voir
+                sur la carte
               </Typography>
             </Box>
           ) : (
@@ -263,46 +344,66 @@ const MapView: React.FC = () => {
               zoom={mapZoom}
               style={{ height: '100%', width: '100%' }}
               scrollWheelZoom={true}
+              maxZoom={18}
+              zoomControl={!isMobile} // Hide zoom control on mobile to save space
             >
               <TileLayer
-                attribution={getTileLayerAttribution()}
                 url={getTileLayerUrl()}
+                attribution={getTileLayerAttribution()}
               />
               {places.map((place) => (
                 <Marker
                   key={place.id}
                   position={[place.latitude, place.longitude]}
                   icon={place.isVisited ? visitedIcon : toVisitIcon}
-                  eventHandlers={{
-                    click: () => handlePlaceClick(place),
-                  }}
                 >
-                  <Popup>
-                    <Box sx={{ p: 1, minWidth: 200 }}>
+                  <Popup maxWidth={isMobile ? 250 : 300}>
+                    <Box sx={{ minWidth: isMobile ? 180 : 200 }}>
                       <Typography
-                        variant="subtitle1"
-                        fontWeight={600}
+                        variant={isMobile ? 'subtitle1' : 'h6'}
                         sx={{ mb: 1 }}
                       >
                         {place.name}
                       </Typography>
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        {place.description}
-                      </Typography>
-                      {place.photos.length > 0 && (
-                        <Box
-                          component="img"
-                          src={place.photos[0]}
-                          alt={place.name}
-                          sx={{
-                            width: '100%',
-                            height: 100,
-                            objectFit: 'cover',
-                            borderRadius: 1,
-                            mt: 1,
-                          }}
-                        />
+                      {place.description && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 2 }}
+                        >
+                          {place.description.substring(0, isMobile ? 80 : 100)}
+                          ...
+                        </Typography>
                       )}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            bgcolor: place.isVisited ? '#E8F5E8' : '#FFF3E0',
+                            color: place.isVisited ? '#2E7D32' : '#F57C00',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {place.isVisited ? 'Visité' : 'À visiter'}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontStyle: 'italic' }}
+                      >
+                        {place.journalTitle}
+                      </Typography>
                     </Box>
                   </Popup>
                 </Marker>
@@ -311,17 +412,68 @@ const MapView: React.FC = () => {
           )}
         </Box>
 
-        {/* Right Sidebar */}
-        <MapSidebar places={places} onPlaceClick={handlePlaceClick} />
+        {/* Desktop/Tablet Sidebar */}
+        {!isMobile && (
+          <Box
+            sx={{
+              flex: isTablet ? '1' : '1',
+              height: '100%',
+              maxWidth: { md: 300, lg: 350 },
+              minWidth: { md: 280, lg: 320 },
+            }}
+          >
+            <SidebarContent />
+          </Box>
+        )}
       </Box>
 
-      {/* Place detail modal */}
+      {/* 📱 Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileDrawerOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better performance on mobile
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: { xs: 280, sm: 350 },
+            bgcolor: 'background.paper',
+          },
+        }}
+      >
+        {/* Drawer Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <IconButton onClick={handleDrawerToggle}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Drawer Content */}
+        <SidebarContent />
+      </Drawer>
+
+      {/* 🎯 Place Detail Modal - Now responsive */}
       <PlaceDetailModal
-        open={detailModalOpen}
         place={selectedPlace}
-        onClose={() => setDetailModalOpen(false)}
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedPlace(null);
+        }}
       />
-    </Box>
+    </Container>
   );
 };
 

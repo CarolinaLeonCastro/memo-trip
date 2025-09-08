@@ -71,12 +71,15 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
   return (
     <Box
       sx={{
-        width: 350,
+        width: { xs: '100%', md: 300, lg: 350 },
+        height: '100%',
         bgcolor: 'background.paper',
-        borderColor: 'divider',
+
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+
+        overflow: 'hidden',
       }}
     >
       {/* Sidebar Header */}
@@ -103,7 +106,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
               alignItems: 'center',
               justifyContent: 'center',
               height: '100%',
-              p: 3,
+              p: 1,
               textAlign: 'center',
             }}
           >
@@ -119,7 +122,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {places.slice(0, 4).map((place) => (
+            {places.slice(0, 3).map((place) => (
               <ListItem
                 key={place.id}
                 sx={{
