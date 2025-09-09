@@ -90,7 +90,11 @@ const AdminDashboard: React.FC = () => {
     <Container maxWidth="xl" sx={{ py: 2 }}>
       {/* En-tête */}
       <Box mb={2}>
-        <Typography variant="decorative" component="h3" gutterBottom>
+        <Typography
+          sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+          variant="h3"
+          gutterBottom
+        >
           Administration MemoTrip
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
