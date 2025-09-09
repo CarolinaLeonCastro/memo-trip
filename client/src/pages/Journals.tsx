@@ -21,7 +21,6 @@ import {
   LocationOn as LocationIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  CalendarToday as CalendarIcon,
   Favorite as FavoriteIcon,
   Photo as PhotoIcon,
   ArrowBack as ArrowBackIcon,
@@ -242,46 +241,87 @@ const Journals: React.FC = () => {
             )}
           </Box>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             {filteredJournals.map((journal) => (
               <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={journal.id}>
                 <Card
                   sx={{
                     borderRadius: 1,
                     overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     backgroundColor:
                       theme.palette.mode === 'dark'
                         ? 'background.paper'
                         : 'white',
-                    border: `1px solid ${theme.palette.mode === 'dark' ? 'grey.800' : '#f0f0f0'}`,
+                    border: 'none',
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    position: 'relative',
                     '&:hover': {
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                      transform: 'translateY(-2px)',
+                      boxShadow: '0 12px 40px rgba(79, 134, 247, 0.15)',
+                      transform: 'translateY(-8px) scale(1.02)',
+                    },
+                    '&:hover .journal-image': {
+                      transform: 'scale(1.1)',
+                    },
+                    '&:hover .journal-overlay': {
+                      opacity: 0.3,
                     },
                   }}
                 >
-                  <Box sx={{ position: 'relative' }}>
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      overflow: 'hidden',
+                      height: 280,
+                    }}
+                  >
                     <CardMedia
                       component="img"
-                      height="200"
+                      className="journal-image"
+                      sx={{
+                        height: '100%',
+                        width: '100%',
+                        objectFit: 'cover',
+                        transition:
+                          'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
                       image={
                         journal.mainPhoto ||
                         'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=800'
                       }
                       alt={journal.title}
                     />
+                    {/* Gradient Overlay */}
+                    <Box
+                      className="journal-overlay"
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background:
+                          'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%)',
+                        opacity: 0.7,
+                        transition: 'opacity 0.4s ease',
+                      }}
+                    />
+                    {/* Action Buttons */}
                     <Box
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
+                        top: 16,
+                        right: 16,
                         display: 'flex',
                         gap: 1,
+                        opacity: 0,
+                        transition: 'opacity 0.3s ease',
+                        '.MuiCard-root:hover &': {
+                          opacity: 1,
+                        },
                       }}
                     >
                       <IconButton
@@ -289,29 +329,83 @@ const Journals: React.FC = () => {
                         to={`/journals/${journal.id}/edit`}
                         size="small"
                         sx={{
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          backdropFilter: 'blur(8px)',
-                          '&:hover': { backgroundColor: 'white' },
-                          width: 32,
-                          height: 32,
+                          backgroundColor: 'rgba(255,255,255,0.9)',
+                          backdropFilter: 'blur(12px)',
+                          color: '#4F86F7',
+                          '&:hover': {
+                            backgroundColor: '#4F86F7',
+                            color: 'white',
+                            transform: 'scale(1.1)',
+                          },
+                          width: 36,
+                          height: 36,
+                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <EditIcon sx={{ fontSize: 16 }} />
+                        <EditIcon sx={{ fontSize: 18 }} />
                       </IconButton>
                       <IconButton
                         onClick={() => handleDelete(journal.id, journal.title)}
                         size="small"
                         sx={{
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          backdropFilter: 'blur(8px)',
+                          backgroundColor: 'rgba(255,255,255,0.9)',
+                          backdropFilter: 'blur(12px)',
                           color: 'error.main',
-                          '&:hover': { backgroundColor: 'white' },
-                          width: 32,
-                          height: 32,
+                          '&:hover': {
+                            backgroundColor: 'error.main',
+                            color: 'white',
+                            transform: 'scale(1.1)',
+                          },
+                          width: 36,
+                          height: 36,
+                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <DeleteIcon sx={{ fontSize: 16 }} />
+                        <DeleteIcon sx={{ fontSize: 18 }} />
                       </IconButton>
+                    </Box>
+                    {/* Title Overlay */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        p: 3,
+                      }}
+                    >
+                      <Typography
+                        variant="h5"
+                        fontWeight="700"
+                        sx={{
+                          color: 'white',
+                          mb: 1,
+                          textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                        onClick={() => navigate(`/journals/${journal.id}`)}
+                      >
+                        {journal.title}
+                      </Typography>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        <LocationIcon
+                          sx={{ fontSize: '1.1rem', color: '#FF6B6B' }}
+                        />
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: 'rgba(255,255,255,0.9)',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {journal.places.length} lieux
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
 
@@ -323,158 +417,234 @@ const Journals: React.FC = () => {
                       flexDirection: 'column',
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      fontWeight="700"
-                      sx={{
-                        fontSize: '1.1rem',
-                        color:
-                          theme.palette.mode === 'dark' ? '#fff' : '#2E3A59',
-                        mb: 1,
-                        lineHeight: 1.3,
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => navigate(`/journals/${journal.id}`)}
-                    >
-                      {journal.title}
-                    </Typography>
-
-                    <Typography variant="caption" sx={{ mb: 1 }}>
-                      {journal.places
-                        .slice(0, 4)
-                        .map((place) => place.country)
-                        .join(', ')}
-                    </Typography>
-
+                    {/* Description */}
                     <Typography
                       variant="body2"
                       color="text.secondary"
                       title={journal.description}
                       sx={{
+                        mb: 2,
+                        lineHeight: 1.6,
+                        fontSize: '0.875rem',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        mb: 2,
-                        flexGrow: 1,
+                        minHeight: '4rem',
                       }}
                     >
                       {journal.description.substring(0, 100)}
                       {journal.description.length > 100 && '...'}
                     </Typography>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        mb: 2,
-                      }}
-                    >
-                      <Chip
-                        icon={<CalendarIcon />}
-                        label={`${formatWithOptions({ locale: fr }, 'dd MMM')(journal.startDate)} - ${formatWithOptions({ locale: fr }, 'dd MMM yyyy')(journal.endDate)}`}
-                        size="small"
-                        variant="outlined"
+                    {/* Date Range */}
+                    <Box sx={{ mb: 2.5 }}>
+                      <Typography
+                        variant="body2"
                         sx={{
-                          border: 'none',
+                          fontWeight: 600,
+                          color:
+                            theme.palette.mode === 'dark' ? '#fff' : '#2E3A59',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
                         }}
-                      />
-                    </Box>
-
-                    {/* Tags */}
-                    <Box
-                      sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}
-                    >
-                      {journal.tags && journal.tags.length > 0 ? (
-                        journal.tags.slice(0, 3).map((tag, index) => (
-                          <Chip
-                            key={index}
-                            label={tag}
-                            size="small"
-                            sx={{
-                              backgroundColor: 'tertiary.main',
-                              color: 'primary.main',
-                              fontWeight: 500,
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <Chip
-                          label="Aucun tag"
-                          size="small"
+                      >
+                        <Box
                           sx={{
-                            backgroundColor: 'grey.100',
-                            color: 'grey.600',
-                            fontWeight: 500,
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: '#4F86F7',
                           }}
                         />
-                      )}
+                        {formatWithOptions(
+                          { locale: fr },
+                          'dd MMM'
+                        )(journal.startDate)}{' '}
+                        -{' '}
+                        {formatWithOptions(
+                          { locale: fr },
+                          'dd MMM yyyy'
+                        )(journal.endDate)}
+                      </Typography>
                     </Box>
-
+                    {/* Tags */}
+                    <Box sx={{ mb: 3 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          gap: 1,
+                          flexWrap: 'wrap',
+                          minHeight: '32px',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        {journal.tags && journal.tags.length > 0 ? (
+                          journal.tags.slice(0, 3).map((tag, index) => (
+                            <Chip
+                              key={index}
+                              label={tag}
+                              size="small"
+                              sx={{
+                                backgroundColor: [
+                                  '#E3F2FD', // Bleu clair
+                                  '#F3E5F5', // Violet clair
+                                  '#E8F5E8', // Vert clair
+                                  '#FFF3E0', // Orange clair
+                                  '#FCE4EC', // Rose clair
+                                ][index % 5],
+                                color: [
+                                  '#1976D2', // Bleu foncé
+                                  '#7B1FA2', // Violet foncé
+                                  '#2E7D32', // Vert foncé
+                                  '#E65100', // Orange foncé
+                                  '#C2185B', // Rose foncé
+                                ][index % 5],
+                                fontWeight: 600,
+                                fontSize: '0.75rem',
+                                height: 28,
+                                border: 'none',
+                                '&:hover': {
+                                  backgroundColor: [
+                                    '#BBDEFB',
+                                    '#E1BEE7',
+                                    '#C8E6C9',
+                                    '#FFE0B2',
+                                    '#F8BBD9',
+                                  ][index % 5],
+                                },
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <Chip
+                            label="Sans catégorie"
+                            size="small"
+                            sx={{
+                              backgroundColor: '#F5F5F5',
+                              color: '#757575',
+                              fontWeight: 500,
+                              fontSize: '0.75rem',
+                              height: 28,
+                            }}
+                          />
+                        )}
+                        {journal.tags && journal.tags.length > 3 && (
+                          <Chip
+                            label={`+${journal.tags.length - 3}`}
+                            size="small"
+                            sx={{
+                              backgroundColor: '#F5F5F5',
+                              color: '#757575',
+                              fontWeight: 600,
+                              fontSize: '0.75rem',
+                              height: 28,
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
                     {/* Statistiques d'engagement */}
                     <Box
                       sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
                         mt: 'auto',
-                        pt: 2,
+                        pt: 3,
                         borderTop: '1px solid',
-                        borderColor: 'divider',
+                        borderColor:
+                          theme.palette.mode === 'dark'
+                            ? 'grey.800'
+                            : '#f0f0f0',
                       }}
                     >
-                      <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                          }}
-                        >
-                          <FavoriteIcon
-                            sx={{ fontSize: '1rem', color: 'error.main' }}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            24
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                          }}
-                        >
-                          <PhotoIcon
-                            sx={{ fontSize: '1rem', color: '#4F86F7' }}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            {journal.places.reduce(
-                              (acc, place) => acc + place.photos.length,
-                              0
-                            )}{' '}
-                            photos
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Button
-                        component={Link}
-                        to={`/journals/${journal.id}`}
-                        variant="outlined"
-                        size="small"
+                      <Box
                         sx={{
-                          fontWeight: '600',
-                          borderColor: '#4F86F7',
-                          color: '#4F86F7',
-                          '&:hover': {
-                            bgcolor: '#4F86F7',
-                            color: 'white',
-                            borderColor: '#4F86F7',
-                          },
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
                         }}
                       >
-                        Voir le journal
-                      </Button>
+                        <Box sx={{ display: 'flex', gap: 3 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: '12px',
+                              backgroundColor: '#FFE8E8',
+                            }}
+                          >
+                            <FavoriteIcon
+                              sx={{ fontSize: '1rem', color: '#FF6B6B' }}
+                            />
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontWeight: 600,
+                                color: '#FF6B6B',
+                              }}
+                            >
+                              24
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: '12px',
+                              backgroundColor: '#E3F2FD',
+                            }}
+                          >
+                            <PhotoIcon
+                              sx={{ fontSize: '1rem', color: '#4F86F7' }}
+                            />
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontWeight: 600,
+                                color: '#4F86F7',
+                              }}
+                            >
+                              {journal.places.reduce(
+                                (acc, place) => acc + place.photos.length,
+                                0
+                              )}{' '}
+                              photos
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Button
+                          component={Link}
+                          to={`/journals/${journal.id}`}
+                          variant="contained"
+                          size="small"
+                          sx={{
+                            fontWeight: '600',
+                            backgroundColor: '#4F86F7',
+                            color: 'white',
+                            px: 2.5,
+                            py: 1,
+
+                            textTransform: 'none',
+                            fontSize: '0.875rem',
+                            boxShadow: '0 4px 12px rgba(79, 134, 247, 0.3)',
+                            '&:hover': {
+                              backgroundColor: '#3A73E0',
+                              boxShadow: '0 6px 20px rgba(79, 134, 247, 0.4)',
+                              transform: 'translateY(-1px)',
+                            },
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          Voir le journal
+                        </Button>
+                      </Box>
                     </Box>
                   </CardContent>
                 </Card>

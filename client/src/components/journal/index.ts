@@ -1,7 +1,6 @@
+// Composants pour journaux privés uniquement
 export { JournalHeader } from './JournalHeader';
-export { JournalAuthorInfo } from './JournalAuthorInfo';
-export { JournalTravelInfo } from './JournalTravelInfo';
-export { JournalStats } from './JournalStats';
-export { VisitedPlaceCard } from './VisitedPlaceCard';
-export { PhotoGalleryGrid } from './PhotoGalleryGrid';
+export { JournalPlacesList } from './JournalPlacesList';
 export { JournalContent } from './JournalContent';
+export { JournalTags } from './JournalTags';
+export { JournalTravelInfo } from './JournalTravelInfo';

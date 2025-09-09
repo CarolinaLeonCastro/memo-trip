@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
 			default: null
 		}
 	},
+	// Paramètres de confidentialité
+	areJournalsPublic: {
+		type: Boolean,
+		default: false
+	},
 	last_login: { type: Date },
 	created_at: { type: Date, default: Date.now }
 });

@@ -224,7 +224,7 @@ export const JournalCard: React.FC<JournalCardProps> = ({
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
-              <FavoriteIcon sx={{ fontSize: 14, color: '#FF6B35' }} />
+              <FavoriteIcon sx={{ fontSize: 14, color: '#FF6B3C' }} />
               <Typography
                 variant="caption"
                 sx={{

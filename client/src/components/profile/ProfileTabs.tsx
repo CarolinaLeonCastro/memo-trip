@@ -96,7 +96,15 @@ const ProfileTabs: React.FC = () => {
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="decorative" color="primary.main">
+          <Typography
+            variant="h3"
+            fontWeight="bold"
+            sx={{
+              color: 'primary.main',
+              mb: 0.5,
+              fontFamily: '"Chau Philomene One", cursive',
+            }}
+          >
             Mon Profil
           </Typography>
           <Typography variant="body2" color="text.secondary">

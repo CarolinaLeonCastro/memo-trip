@@ -29,53 +29,39 @@ export const JournalAuthorInfo: React.FC<JournalAuthorInfoProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Avatar
               src={user.avatar?.url}
-              sx={{
-                width: 80,
-                height: 80,
-                bgcolor: '#4F86F7',
-                fontSize: '2rem',
-                fontWeight: '600',
-              }}
-            >
-              {user.name.charAt(0)}
-            </Avatar>
+              sx={{ width: 64, height: 64 }}
+              alt={user.name}
+            />
             <Box>
-              <Typography
-                variant="h4"
-                fontWeight="700"
-                sx={{ color: '#1F2937', mb: 1 }}
-              >
+              <Typography variant="h6" fontWeight="700" sx={{ mb: 0.5 }}>
                 {user.name}
               </Typography>
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
-              >
-                <LocationOnIcon sx={{ fontSize: 16, color: '#6B7280' }} />
-                <Typography variant="body1" sx={{ color: '#6B7280' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <LocationOnIcon
+                  sx={{ fontSize: 16, color: 'text.secondary' }}
+                />
+                <Typography variant="body2" color="text.secondary">
                   {user.location}
                 </Typography>
               </Box>
               <Typography
-                variant="body1"
-                sx={{ color: '#6B7280', maxWidth: 500, lineHeight: 1.6 }}
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 1, maxWidth: '400px' }}
               >
                 {user.bio}
               </Typography>
             </Box>
           </Box>
-
           <Box sx={{ textAlign: 'right' }}>
-            <Typography
-              variant="body2"
-              sx={{ color: '#9CA3AF', fontSize: '0.9rem' }}
-            >
+            <Typography variant="body2" color="text.secondary">
               Publié le
             </Typography>
-            <Typography variant="h6" fontWeight="600" sx={{ color: '#1F2937' }}>
+            <Typography variant="body2" fontWeight="600">
               {new Date(publishedDate).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
                 year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
             </Typography>
           </Box>

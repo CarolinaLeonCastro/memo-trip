@@ -1,5 +1,8 @@
 import Journal from '../models/Journal.js';
 import Place from '../models/Place.js';
+import { uploadImage, deleteImage, generateImageVariants } from '../config/cloudinary.config.js';
+import fs from 'fs';
+import logger from '../config/logger.config.js';
 
 // POST /api/journals
 export async function createJournal(req, res, next) {
@@ -160,3 +163,184 @@ export async function togglePublic(req, res, next) {
 		next(err);
 	}
 }
+
+// POST /api/journals/:id/cover-image - Upload d'image de couverture vers Cloudinary
+export const uploadCoverImage = async (req, res, next) => {
+	try {
+		const { id } = req.params;
+
+		if (!req.file) {
+			return res.status(400).json({ message: 'Aucune image de couverture uploadée' });
+		}
+
+		// Vérifier que le journal appartient à l'utilisateur
+		const journal = await Journal.findOne({
+			_id: id,
+			user_id: req.user.id
+		});
+
+		if (!journal) {
+			return res.status(404).json({ message: 'Journal not found or not authorized' });
+		}
+
+		try {
+			// Supprimer l'ancienne image de couverture de Cloudinary si elle existe
+			if (journal.cover_image_public_id) {
+				try {
+					await deleteImage(journal.cover_image_public_id);
+					logger.info('Previous cover image deleted from Cloudinary', {
+						journalId: id,
+						old_public_id: journal.cover_image_public_id
+					});
+				} catch (deleteError) {
+					logger.warn('Error deleting previous cover image from Cloudinary', {
+						journalId: id,
+						old_public_id: journal.cover_image_public_id,
+						error: deleteError.message
+					});
+				}
+			}
+
+			// Upload vers Cloudinary
+			const cloudinaryResult = await uploadImage(
+				req.file.path,
+				`memo-trip/journals/${id}`,
+				`cover_${id}_${Date.now()}`
+			);
+
+			// Générer les variantes d'images
+			const variants = generateImageVariants(cloudinaryResult.public_id);
+
+			// Mettre à jour le journal avec la nouvelle image
+			const updatedJournal = await Journal.findByIdAndUpdate(
+				id,
+				{
+					cover_image: cloudinaryResult.url,
+					cover_image_public_id: cloudinaryResult.public_id,
+					cover_image_variants: variants
+				},
+				{ new: true }
+			).populate('user_id', 'name email');
+
+			// Supprimer le fichier temporaire local
+			fs.unlink(req.file.path, (unlinkErr) => {
+				if (unlinkErr) {
+					logger.warn('Error deleting temporary cover image file', {
+						path: req.file.path,
+						error: unlinkErr.message
+					});
+				}
+			});
+
+			logger.info('Cover image uploaded to Cloudinary', {
+				journalId: id,
+				public_id: cloudinaryResult.public_id,
+				url: cloudinaryResult.url
+			});
+
+			res.status(200).json({
+				message: 'Image de couverture mise à jour avec succès',
+				journal: {
+					id: updatedJournal._id,
+					title: updatedJournal.title,
+					cover_image: updatedJournal.cover_image,
+					cover_image_variants: updatedJournal.cover_image_variants
+				},
+				cloudinary: {
+					public_id: cloudinaryResult.public_id,
+					url: cloudinaryResult.url,
+					width: cloudinaryResult.width,
+					height: cloudinaryResult.height,
+					format: cloudinaryResult.format,
+					variants
+				}
+			});
+		} catch (cloudinaryError) {
+			// Supprimer le fichier temporaire en cas d'erreur
+			if (req.file) {
+				fs.unlink(req.file.path, (unlinkErr) => {
+					if (unlinkErr) {
+						logger.warn('Error deleting temporary file during cleanup', {
+							path: req.file.path,
+							error: unlinkErr.message
+						});
+					}
+				});
+			}
+			throw cloudinaryError;
+		}
+	} catch (err) {
+		next(err);
+	}
+};
+
+// DELETE /api/journals/:id/cover-image - Supprimer l'image de couverture
+export const removeCoverImage = async (req, res, next) => {
+	try {
+		const { id } = req.params;
+
+		// Vérifier que le journal appartient à l'utilisateur
+		const journal = await Journal.findOne({
+			_id: id,
+			user_id: req.user.id
+		});
+
+		if (!journal) {
+			return res.status(404).json({ message: 'Journal not found or not authorized' });
+		}
+
+		if (!journal.cover_image_public_id && !journal.cover_image) {
+			return res.status(404).json({ message: 'Aucune image de couverture à supprimer' });
+		}
+
+		try {
+			// Supprimer l'image de Cloudinary si elle existe
+			if (journal.cover_image_public_id) {
+				await deleteImage(journal.cover_image_public_id);
+				logger.info('Cover image deleted from Cloudinary', {
+					journalId: id,
+					public_id: journal.cover_image_public_id
+				});
+			}
+
+			// Mettre à jour le journal pour supprimer les références à l'image
+			await Journal.findByIdAndUpdate(id, {
+				$unset: {
+					cover_image: 1,
+					cover_image_public_id: 1,
+					cover_image_variants: 1
+				}
+			});
+
+			logger.info('Cover image removed from journal', {
+				journalId: id
+			});
+
+			res.json({
+				message: 'Image de couverture supprimée avec succès'
+			});
+		} catch (cloudinaryError) {
+			logger.error('Error deleting cover image from Cloudinary', {
+				public_id: journal.cover_image_public_id,
+				error: cloudinaryError.message,
+				journalId: id
+			});
+
+			// Continuer avec la suppression de la base de données même si Cloudinary échoue
+			await Journal.findByIdAndUpdate(id, {
+				$unset: {
+					cover_image: 1,
+					cover_image_public_id: 1,
+					cover_image_variants: 1
+				}
+			});
+
+			res.status(207).json({
+				message: 'Image supprimée de la base de données, mais erreur avec Cloudinary',
+				warning: cloudinaryError.message
+			});
+		}
+	} catch (err) {
+		next(err);
+	}
+};

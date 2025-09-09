@@ -50,10 +50,10 @@ const helmetOptions = {
 	crossOriginEmbedderPolicy: false // Pour éviter les problèmes avec les uploads
 };
 
-// Configuration Rate Limiter général
+// Configuration Rate Limiter général - Plus permissif en développement
 const generalLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // 100 requêtes par IP
+	max: env.NODE_ENV === 'development' ? 500 : 100, // 500 en dev, 100 en prod
 	message: {
 		error: 'Trop de requêtes depuis cette IP, réessayez dans 15 minutes.'
 	},
@@ -63,7 +63,8 @@ const generalLimiter = rateLimit({
 		logger.warn(`Rate limit exceeded for IP: ${req.ip}`, {
 			ip: req.ip,
 			userAgent: req.get('User-Agent'),
-			url: req.originalUrl
+			url: req.originalUrl,
+			environment: env.NODE_ENV
 		});
 		res.status(429).json({
 			error: 'Trop de requêtes depuis cette IP, réessayez dans 15 minutes.'
@@ -74,7 +75,7 @@ const generalLimiter = rateLimit({
 // Rate limiter strict pour les routes sensibles (auth, uploads)
 const strictLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 20, // 20 requêtes par IP
+	max: env.NODE_ENV === 'development' ? 100 : 20, // 100 en dev, 20 en prod
 	message: {
 		error: 'Trop de tentatives, réessayez dans 15 minutes.'
 	},
@@ -84,7 +85,8 @@ const strictLimiter = rateLimit({
 		logger.warn(`Strict rate limit exceeded for IP: ${req.ip}`, {
 			ip: req.ip,
 			userAgent: req.get('User-Agent'),
-			url: req.originalUrl
+			url: req.originalUrl,
+			environment: env.NODE_ENV
 		});
 		res.status(429).json({
 			error: 'Trop de tentatives, réessayez dans 15 minutes.'
@@ -92,10 +94,10 @@ const strictLimiter = rateLimit({
 	}
 });
 
-// Rate limiter pour les uploads
+// Rate limiter pour les uploads - Très permissif en développement
 const uploadLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 10, // 10 uploads par IP
+	max: env.NODE_ENV === 'development' ? 200 : 10, // 200 en dev, 10 en prod
 	message: {
 		error: "Trop d'uploads depuis cette IP, réessayez dans 15 minutes."
 	},
@@ -105,7 +107,8 @@ const uploadLimiter = rateLimit({
 		logger.warn(`Upload rate limit exceeded for IP: ${req.ip}`, {
 			ip: req.ip,
 			userAgent: req.get('User-Agent'),
-			url: req.originalUrl
+			url: req.originalUrl,
+			environment: env.NODE_ENV
 		});
 		res.status(429).json({
 			error: "Trop d'uploads depuis cette IP, réessayez dans 15 minutes."

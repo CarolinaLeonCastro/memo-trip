@@ -5,10 +5,13 @@ import {
 	getJournalById,
 	updateJournal,
 	deleteJournal,
-	togglePublic
+	togglePublic,
+	uploadCoverImage,
+	removeCoverImage
 } from '../controllers/journal.controller.js';
 import { validateJournalCreate, validateJournalUpdate, validateJournalParams } from '../validation/middleware.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { uploadImages } from '../config/multer.config.js';
 
 const router = express.Router();
 
@@ -19,5 +22,15 @@ router.get('/:id', authenticateToken, validateJournalParams, getJournalById);
 router.put('/:id', authenticateToken, validateJournalParams, validateJournalUpdate, updateJournal);
 router.delete('/:id', authenticateToken, validateJournalParams, deleteJournal);
 router.patch('/:id/toggle-public', authenticateToken, validateJournalParams, togglePublic);
+
+// Routes pour l'image de couverture
+router.post(
+	'/:id/cover-image',
+	authenticateToken,
+	validateJournalParams,
+	uploadImages.single('cover_image'),
+	uploadCoverImage
+);
+router.delete('/:id/cover-image', authenticateToken, validateJournalParams, removeCoverImage);
 
 export default router;

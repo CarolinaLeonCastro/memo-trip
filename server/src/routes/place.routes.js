@@ -25,10 +25,10 @@ router.post(
 	'/:id/photos',
 	authenticateToken,
 	validatePlaceParams,
-	validatePlacePhotos,
 	uploadLimiter,
 	uploadImages.array('photos', 5),
 	handleUploadError,
+	validatePlacePhotos, // ✅ Validation APRÈS Multer
 	placeCtrl.addPhotoToPlace
 );
 router.get('/:id/photos', authenticateToken, validatePlaceParams, placeCtrl.getPlacePhotos);

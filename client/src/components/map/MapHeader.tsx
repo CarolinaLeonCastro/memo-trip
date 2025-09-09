@@ -41,31 +41,44 @@ const MapHeader: React.FC<MapHeaderProps> = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        p: 0.5,
+        p: { xs: 0.5, sm: 1 },
         justifyContent: 'space-between',
-
         flexWrap: { xs: 'wrap', lg: 'nowrap' },
+        gap: { xs: 1, sm: 2 },
       }}
     >
-      {/* Left side - Back button and title */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* Left side - Title responsive */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          minWidth: { xs: '100%', sm: 'auto' },
+          order: { xs: 1, sm: 1 },
+        }}
+      >
         <Typography
           variant="h3"
           color="primary.main"
-          sx={{ fontFamily: '"Chau Philomene One", cursive' }}
+          sx={{
+            fontFamily: '"Chau Philomene One", cursive',
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+          }}
         >
           Carte des lieux
         </Typography>
       </Box>
 
-      {/* Center - Search bar */}
+      {/* Center - Search bar responsive */}
       <Box
         sx={{
-          flex: 1,
+          flex: { xs: 0, sm: 1 },
           display: 'flex',
-          justifyContent: 'center',
-          maxWidth: 400,
-          mx: 2,
+          justifyContent: { xs: 'stretch', sm: 'center' },
+          maxWidth: { xs: '100%', sm: 400 },
+          mx: { xs: 0, sm: 2 },
+          width: { xs: '100%', sm: 'auto' },
+          order: { xs: 3, sm: 2 },
         }}
       >
         <TextField
@@ -79,6 +92,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
               borderRadius: '25px',
               backgroundColor: '#f5f5f5',
               border: 'none',
+              fontSize: { xs: '14px', sm: '16px' },
               '& fieldset': {
                 border: 'none',
               },
@@ -93,27 +107,42 @@ const MapHeader: React.FC<MapHeaderProps> = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#666', fontSize: '20px' }} />
+                <SearchIcon
+                  sx={{
+                    color: '#666',
+                    fontSize: { xs: '18px', sm: '20px' },
+                  }}
+                />
               </InputAdornment>
             ),
           }}
         />
       </Box>
 
-      {/* Right side - Filter buttons */}
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      {/* Right side - Filter buttons responsive */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: { xs: 0.5, sm: 1 },
+          alignItems: 'center',
+          order: { xs: 2, sm: 3 },
+          flexWrap: { xs: 'wrap', sm: 'nowrap' },
+        }}
+      >
         {/* Status filter buttons */}
         <ToggleButtonGroup
           exclusive
           value={filterStatus}
           onChange={(_, newValue) => newValue && onFilterStatusChange(newValue)}
+          size="small"
           sx={{
             '& .MuiToggleButton-root': {
-              px: 2,
-              py: 0.5,
+              px: { xs: 1, sm: 2 },
+              py: { xs: 0.25, sm: 0.5 },
               textTransform: 'none',
-              fontSize: '12px',
+              fontSize: { xs: '10px', sm: '12px' },
               fontWeight: 500,
+              minWidth: { xs: 'auto', sm: 'auto' },
 
               '&.Mui-selected': {
                 color: 'white',
@@ -146,7 +175,7 @@ const MapHeader: React.FC<MapHeaderProps> = ({
           onChange={(_, newValue) => newValue && onMapTypeChange(newValue)}
           size="small"
           sx={{
-            ml: 1,
+            ml: { xs: 0.5, sm: 1 },
             '& .MuiToggleButton-root': {
               px: 1,
               py: 0.5,

@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
   Typography,
   Grid,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import {
   LocationOn as LocationOnIcon,
   People as PeopleIcon,
   MenuBook as MenuBookIcon,
 } from '@mui/icons-material';
-// import { useNavigate } from 'react-router-dom';
 
 // Import des nouveaux composants
 import {
@@ -23,356 +23,135 @@ import {
   JournalCard,
 } from '../components';
 
-// Types
-interface DiscoverStats {
-  shared_places: number;
-  public_journals: number;
-  active_travelers: number;
-}
+// Import du service
+import {
+  publicService,
+  type DiscoverStats,
+  type DiscoverPost,
+  type DiscoverPlace,
+  type DiscoverJournal,
+} from '../services/public.service';
 
-interface DiscoverUser {
-  _id: string;
-  name: string;
-  avatar?: { url: string };
-}
-
-interface DiscoverPlace {
-  _id: string;
-  name: string;
-  description: string;
-  city: string;
-  country: string;
-  photos: Array<{ url: string }>;
-  tags: string[];
-  rating: number;
-  date_visited: string;
-}
-
-interface DiscoverJournal {
-  _id: string;
-  title: string;
-  description: string;
-  cover_image: string;
-  tags: string[];
-  places_count: number;
-  start_date: string;
-  end_date: string;
-}
-
-interface DiscoverPost {
-  _id: string;
-  type: 'place' | 'journal';
-  user: DiscoverUser;
-  content: DiscoverPlace | DiscoverJournal;
-  likes: number;
-  comments: number;
-  views: number;
-  is_liked: boolean;
-  created_at: string;
-}
-
+// Types locaux pour les tags tendance
 const TRENDING_TAGS = [
-  'Histoire',
-  'Architecture',
-  'UNESCO',
-  'Monuments',
-  'Vue panoramique',
-  'Romantique',
-  'Plages',
-  'Coucher de soleil',
-  'Château',
-  'Alpes',
-  'Conte de fées',
-  'Randonnée',
-  'Merveilles du monde',
-  'Gastronomie',
-  'Culture',
-  'Art',
-  'Nature',
-  'Aventure',
+  'Restaurant',
   'Musée',
-  'Cathédrale',
-  'Jardin',
-  'Lac',
+  'Monument',
+  'Nature',
+  'Plage',
   'Montagne',
   'Ville',
-  'Village',
-  'Marché',
+  'Shopping',
+  'Parc',
+  'Architecture',
+  'Culture',
+  'Aventure',
+  'Détente',
 ];
 
 const Discover: React.FC = () => {
-  // const navigate = useNavigate();
+  const theme = useTheme();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
+  const [stats, setStats] = useState<DiscoverStats>({
+    shared_places: 0,
+    public_journals: 0,
+    active_travelers: 0,
+  });
+  const [trendingTags, setTrendingTags] = useState<string[]>(TRENDING_TAGS);
 
-  // Données mockées pour les statistiques
-  const stats: DiscoverStats = {
-    shared_places: 2453,
-    public_journals: 1087,
-    active_travelers: 3241,
-  };
-
-  // Données mockées pour les posts
-  const mockPosts: DiscoverPost[] = useMemo(
-    () => [
-      // Lieux variés
-      {
-        _id: '1',
-        type: 'place',
-        user: {
-          _id: 'user1',
-          name: 'Marco Rossi',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'place1',
-          name: 'Coliseum',
-          description:
-            'Ancient amphitheatre in the centre of Rome, a must-see for history lovers!',
-          city: 'Rome',
-          country: 'Italy',
-          photos: [
-            {
-              url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=400',
-            },
-          ],
-          tags: ['Historic', 'Architecture', 'UNESCO'],
-          rating: 5,
-          date_visited: '2024-01-15',
-        } as DiscoverPlace,
-        likes: 124,
-        comments: 18,
-        views: 892,
-        is_liked: false,
-        created_at: '2024-01-15T10:30:00Z',
-      },
-      {
-        _id: '2',
-        type: 'place',
-        user: {
-          _id: 'user2',
-          name: 'Sophie Laurent',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'place2',
-          name: 'Eiffel Tower',
-          description:
-            "The perfect spot for sunset photos! Don't miss the light show at night ✨",
-          city: 'Paris',
-          country: 'France',
-          photos: [
-            {
-              url: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&q=80&w=400',
-            },
-          ],
-          tags: ['Iconic', 'Photography', 'Romantic'],
-          rating: 4,
-          date_visited: '2024-01-10',
-        } as DiscoverPlace,
-        likes: 89,
-        comments: 12,
-        views: 456,
-        is_liked: true,
-        created_at: '2024-01-10T15:20:00Z',
-      },
-      {
-        _id: '4',
-        type: 'place',
-        user: {
-          _id: 'user4',
-          name: 'Yuki Tanaka',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'place4',
-          name: 'Rothenburg ob der Tauber',
-          description:
-            'Medieval town that looks like a fairytale! Perfect for history enthusiasts and photographers.',
-          city: 'Rothenburg',
-          country: 'Germany',
-          photos: [
-            {
-              url: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=400',
-            },
-          ],
-          tags: ['Medieval', 'Architecture', 'Photography'],
-          rating: 5,
-          date_visited: '2024-01-20',
-        } as DiscoverPlace,
-        likes: 67,
-        comments: 8,
-        views: 234,
-        is_liked: false,
-        created_at: '2024-01-20T14:15:00Z',
-      },
-      {
-        _id: '5',
-        type: 'place',
-        user: {
-          _id: 'user5',
-          name: 'Anna Schmidt',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'place5',
-          name: 'Santorini Sunset',
-          description:
-            'Most breathtaking sunset view in the world! The blue domes and white houses create pure magic.',
-          city: 'Oia',
-          country: 'Greece',
-          photos: [
-            {
-              url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400',
-            },
-          ],
-          tags: ['Sunset', 'Romantic', 'Architecture'],
-          rating: 5,
-          date_visited: '2024-01-25',
-        } as DiscoverPlace,
-        likes: 198,
-        comments: 32,
-        views: 1456,
-        is_liked: true,
-        created_at: '2024-01-25T18:30:00Z',
-      },
-      {
-        _id: '6',
-        type: 'place',
-        user: {
-          _id: 'user6',
-          name: 'James Wilson',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'place6',
-          name: 'Machu Picchu',
-          description:
-            'Ancient Incan city in the clouds. The hike is challenging but absolutely worth every step!',
-          city: 'Cusco',
-          country: 'Peru',
-          photos: [
-            {
-              url: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&q=80&w=400',
-            },
-          ],
-          tags: ['Adventure', 'Historic', 'Hiking'],
-          rating: 5,
-          date_visited: '2024-02-01',
-        } as DiscoverPlace,
-        likes: 245,
-        comments: 41,
-        views: 2103,
-        is_liked: false,
-        created_at: '2024-02-01T08:45:00Z',
-      },
-
-      // Journaux variés
-      {
-        _id: '3',
-        type: 'journal',
-        user: {
-          _id: 'user3',
-          name: 'Carlos Mendez',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'journal1',
-          title: 'European Adventure 2024',
-          description:
-            'Découverte de 5 pays européens en 3 semaines - un voyage inoubliable !',
-          cover_image:
-            'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=400',
-          tags: ['Adventure', 'Cultural', 'Photography'],
-          places_count: 15,
-          start_date: '2024-01-01',
-          end_date: '2024-01-21',
-        } as DiscoverJournal,
-        likes: 156,
-        comments: 24,
-        views: 1203,
-        is_liked: false,
-        created_at: '2024-01-05T09:15:00Z',
-      },
-      {
-        _id: '7',
-        type: 'journal',
-        user: {
-          _id: 'user7',
-          name: 'Elena Rossi',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'journal2',
-          title: 'Two Weeks in Mediterranean Paradise',
-          description:
-            'From the historic streets of Rome to the beautiful beaches of Santorini...',
-          cover_image:
-            'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=400',
-          tags: ['Rome', 'Florence', 'Santorini'],
-          places_count: 8,
-          start_date: '2024-01-15',
-          end_date: '2024-01-29',
-        } as DiscoverJournal,
-        likes: 234,
-        comments: 45,
-        views: 1876,
-        is_liked: true,
-        created_at: '2024-01-15T11:20:00Z',
-      },
-      {
-        _id: '8',
-        type: 'journal',
-        user: {
-          _id: 'user8',
-          name: 'Alex Thompson',
-          avatar: { url: '/api/placeholder/40/40' },
-        },
-        content: {
-          _id: 'journal3',
-          title: 'Solo Backpacking Through Southeast Asia',
-          description:
-            'An incredible journey of self-discovery through Thailand, Vietnam, and Cambodia.',
-          cover_image:
-            'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&q=80&w=400',
-          tags: ['Bangkok', 'Ho Chi Minh', 'Siem Reap'],
-          places_count: 12,
-          start_date: '2024-02-01',
-          end_date: '2024-02-30',
-        } as DiscoverJournal,
-        likes: 189,
-        comments: 32,
-        views: 1234,
-        is_liked: false,
-        created_at: '2024-02-01T16:30:00Z',
-      },
-    ],
-    []
-  );
-
+  // Charger les données initiales
   useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      setPosts(mockPosts);
-      setLoading(false);
-    }, 1000);
-  }, [mockPosts]);
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
 
-  const handleLike = async (postId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post._id === postId
-          ? {
-              ...post,
-              is_liked: !post.is_liked,
-              likes: post.is_liked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
-    );
+        // Charger les statistiques et les posts en parallèle
+        console.log('🔄 Discover: Chargement des données initiales...');
+        const [statsData, postsData, tagsData] = await Promise.all([
+          publicService.getDiscoverStats(),
+          publicService.getDiscoverPosts({
+            type:
+              activeTab === 0 ? 'place' : activeTab === 1 ? 'journal' : 'all',
+            limit: 12,
+          }),
+          publicService.getTrendingTags(),
+        ]);
+
+        console.log('📊 Discover: Stats reçues:', statsData);
+        console.log('📚 Discover: Posts reçus:', postsData);
+        console.log(
+          '📚 Discover: Nombre de posts:',
+          postsData?.posts?.length || 0
+        );
+
+        setStats(
+          statsData || {
+            shared_places: 0,
+            public_journals: 0,
+            active_travelers: 0,
+          }
+        );
+        setPosts(postsData?.posts || []);
+
+        // Utiliser les tags du serveur s'il y en a, sinon garder les tags par défaut
+        if (tagsData && Array.isArray(tagsData) && tagsData.length > 0) {
+          setTrendingTags(
+            tagsData.map((tag) => tag?.tag || 'Tag').filter(Boolean)
+          );
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données Discover:', error);
+        // En cas d'erreur, garder les données par défaut
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [activeTab]);
+
+  // Recharger les posts quand les filtres changent
+  useEffect(() => {
+    if (!loading) {
+      const loadFilteredPosts = async () => {
+        try {
+          console.log('🔄 Discover: Chargement des posts filtrés...', {
+            activeTab,
+            searchTerm,
+            selectedTags,
+          });
+
+          const postsData = await publicService.getDiscoverPosts({
+            type:
+              activeTab === 0 ? 'place' : activeTab === 1 ? 'journal' : 'all',
+            search: searchTerm || undefined,
+            tags: selectedTags.length > 0 ? selectedTags : undefined,
+            limit: 12,
+          });
+
+          console.log('📚 Discover: Posts filtrés reçus:', postsData);
+          console.log(
+            '📚 Discover: Nombre de posts filtrés:',
+            postsData?.posts?.length || 0
+          );
+
+          setPosts(postsData?.posts || []);
+        } catch (error) {
+          console.error('Erreur lors du chargement des posts filtrés:', error);
+        }
+      };
+
+      loadFilteredPosts();
+    }
+  }, [searchTerm, selectedTags, activeTab, loading]);
+
+  // Gestionnaires d'événements
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
   };
 
   const handleTagClick = (tag: string) => {
@@ -381,20 +160,28 @@ const Discover: React.FC = () => {
     );
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
+  const handleTabChange = (newTab: number) => {
+    setActiveTab(newTab);
   };
 
-  const handleTabChange = (tab: number) => {
-    setActiveTab(tab);
+  const handleLike = async (postId: string) => {
+    // TODO: Implémenter la fonctionnalité de like
+    console.log('Like post:', postId);
   };
 
   const renderPost = (post: DiscoverPost) => {
     if (post.type === 'place') {
+      const place = post.content as DiscoverPlace;
+      const user = {
+        ...post.user,
+        avatar: post.user.avatar?.url
+          ? { url: post.user.avatar.url }
+          : undefined,
+      };
       return (
         <PlaceCard
-          place={post.content as DiscoverPlace}
-          user={post.user}
+          place={place}
+          user={user}
           likes={post.likes}
           comments={post.comments}
           views={post.views}
@@ -403,10 +190,20 @@ const Discover: React.FC = () => {
         />
       );
     } else {
+      const journal = {
+        ...(post.content as DiscoverJournal),
+        cover_image: (post.content as DiscoverJournal).cover_image || '',
+      };
+      const user = {
+        ...post.user,
+        avatar: post.user.avatar?.url
+          ? { url: post.user.avatar.url }
+          : undefined,
+      };
       return (
         <JournalCard
-          journal={post.content as DiscoverJournal}
-          user={post.user}
+          journal={journal}
+          user={user}
           likes={post.likes}
           comments={post.comments}
           views={post.views}
@@ -418,14 +215,24 @@ const Discover: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor:
+          theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC',
+      }}
+    >
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* En-tête */}
         <Box sx={{ mb: 4 }}>
           <Typography
             variant="h3"
             fontWeight="bold"
-            sx={{ color: '#1976d2', mb: 0.5 }}
+            sx={{
+              color: 'primary.main',
+              mb: 0.5,
+              fontFamily: '"Chau Philomene One", cursive',
+            }}
           >
             Découverte
           </Typography>
@@ -441,7 +248,7 @@ const Discover: React.FC = () => {
                   <LocationOnIcon sx={{ fontSize: 24, color: '#4F86F7' }} />
                 }
                 label="Lieux partagés"
-                value={stats.shared_places}
+                value={stats?.shared_places || 0}
                 color="79, 134, 247"
               />
             </Grid>
@@ -449,7 +256,7 @@ const Discover: React.FC = () => {
               <DiscoverStatsCard
                 icon={<MenuBookIcon sx={{ fontSize: 24, color: '#4F86F7' }} />}
                 label="Journaux publics"
-                value={stats.public_journals}
+                value={stats?.public_journals || 0}
                 color="79, 134, 247"
               />
             </Grid>
@@ -457,7 +264,7 @@ const Discover: React.FC = () => {
               <DiscoverStatsCard
                 icon={<PeopleIcon sx={{ fontSize: 24, color: '#FF8A00' }} />}
                 label="Voyageurs actifs"
-                value={stats.active_travelers}
+                value={stats?.active_travelers || 0}
                 color="255, 138, 0"
               />
             </Grid>
@@ -471,7 +278,7 @@ const Discover: React.FC = () => {
 
           {/* Tags tendance */}
           <DiscoverTrendingTags
-            tags={TRENDING_TAGS}
+            tags={trendingTags}
             selectedTags={selectedTags}
             onTagClick={handleTagClick}
           />

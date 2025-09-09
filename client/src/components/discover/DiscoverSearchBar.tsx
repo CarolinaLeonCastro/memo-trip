@@ -22,8 +22,8 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
       sx={{
         p: 4,
         mb: 3,
-        bgcolor: 'white',
-        borderRadius: 3,
+        bgcolor: 'background.paper',
+        borderRadius: 2,
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid #f0f0f0',
       }}
@@ -38,23 +38,23 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#9CA3AF', fontSize: 20 }} />
+                  <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
                 </InputAdornment>
               ),
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                bgcolor: '#F8FAFC',
-                border: '1px solid #E5E7EB',
+                borderRadius: 1,
+                bgcolor: 'surface.variant',
+                border: '1px solid outline.main',
                 fontSize: '0.95rem',
                 '& fieldset': { border: 'none' },
                 '&:hover': {
-                  bgcolor: '#F1F5F9',
+                  bgcolor: 'background.paper',
                   border: '1px solid #D1D5DB',
                 },
                 '&.Mui-focused': {
-                  bgcolor: 'white',
+                  bgcolor: 'background.paper',
                   border: '1px solid #4F86F7',
                   boxShadow: '0 0 0 3px rgba(79, 134, 247, 0.1)',
                 },
@@ -76,7 +76,7 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.5,
-                color: '#6B7280',
+                color: 'text.secondary',
                 fontSize: '0.875rem',
               }}
             >
@@ -85,7 +85,7 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
-                  bgcolor: '#E5E7EB',
+                  bgcolor: 'tertiary.main',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -93,7 +93,7 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
               >
                 ⚙️
               </Box>
-              <Typography variant="body2" sx={{ color: '#6B7280' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Tout
               </Typography>
             </Box>

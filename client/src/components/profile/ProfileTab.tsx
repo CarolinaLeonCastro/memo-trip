@@ -38,36 +38,36 @@ const ProfileTab: React.FC = () => {
     bio: "Passionnée de voyage et de découvertes culturelles. J'aime explorer de nouveaux horizons et partager mes expériences à travers mes journaux de voyage.",
     location: 'Paris, France',
     instagram: '@carolina_travels',
-    memberSince: 'Mars 2023',
+    memberSince: user?.created_at || 'Mars 2025',
   });
 
   // Activité récente
   const recentActivities = [
     {
       type: 'new_journal',
-      title: 'Nouveau journal : Rome antique',
-      date: 'Il y a 2 jours',
+      title: `${formData.name} a créé un nouveau journal`,
+      date: `Il y a ${new Date().getDate() - 2} jours`,
       icon: ArticleIcon,
       color: 'primary.main',
     },
     {
       type: 'new_place',
-      title: 'Lieu ajouté : Coliseum, Rome',
-      date: 'Il y a 3 jours',
+      title: `${formData.name} a ajouté un nouveau lieu`,
+      date: `Il y a ${new Date().getDate() - 3} jours`,
       icon: LocationIcon,
       color: 'success.main',
     },
     {
       type: 'photos_added',
-      title: '12 photos ajoutées',
-      date: 'Il y a 5 jours',
+      title: `${formData.name} a ajouté ${new Date().getDate() - 5} photos`,
+      date: `Il y a ${new Date().getDate() - 5} jours`,
       icon: CameraIcon,
       color: 'secondary.main',
     },
     {
       type: 'journal_liked',
-      title: 'Journal aimé par 5 personnes',
-      date: 'Il y a 1 semaine',
+      title: `${formData.name} a été aimé par ${new Date().getDate() - 1} personnes`,
+      date: `Il y a ${new Date().getDate() - 1} jours`,
       icon: FavoriteIcon,
       color: 'error.main',
     },
@@ -87,7 +87,7 @@ const ProfileTab: React.FC = () => {
       bio: "Passionnée de voyage et de découvertes culturelles. J'aime explorer de nouveaux horizons et partager mes expériences à travers mes journaux de voyage.",
       location: 'Paris, France',
       instagram: '@carolina_travels',
-      memberSince: 'Mars 2023',
+      memberSince: user?.created_at || 'Mars 2025',
     });
   };
 
@@ -225,8 +225,6 @@ const ProfileTab: React.FC = () => {
                     onClick={handleSave}
                     disabled={isLoading}
                     sx={{
-                      bgcolor: 'white',
-                      color: 'primary.main',
                       '&:hover': {
                         bgcolor: 'grey.100',
                       },
@@ -256,8 +254,6 @@ const ProfileTab: React.FC = () => {
                   startIcon={<EditIcon />}
                   onClick={handleEdit}
                   sx={{
-                    bgcolor: 'white',
-                    color: 'primary.main',
                     '&:hover': {
                       bgcolor: 'grey.100',
                     },
@@ -366,10 +362,10 @@ const ProfileTab: React.FC = () => {
                   alignItems: 'flex-start',
                   gap: 2,
                   p: 2,
-                  bgcolor: 'grey.100',
+                  bgcolor: 'background.paper',
                   borderRadius: '12px',
                   border: 'none',
-                  borderColor: 'grey.200',
+                  borderColor: 'divider',
                 }}
               >
                 <Avatar

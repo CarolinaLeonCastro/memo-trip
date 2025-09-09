@@ -47,11 +47,17 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
     setAnchorEl(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (
       window.confirm(`Êtes-vous sûr de vouloir supprimer "${place.name}" ?`)
     ) {
-      deletePlace(journalId, place.id);
+      try {
+        await deletePlace(journalId, place.id);
+        console.log(`✅ Lieu "${place.name}" supprimé avec succès`);
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression du lieu. Veuillez réessayer.');
+      }
     }
     handleMenuClose();
   };

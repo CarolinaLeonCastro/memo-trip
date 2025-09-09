@@ -2,10 +2,15 @@ import express from 'express';
 import * as userCtrl from '../controllers/user.controller.js';
 import { uploadImages, handleUploadError } from '../config/multer.config.js';
 import { uploadLimiter } from '../config/security.config.js';
-import { validateUserCreate, validateUserUpdate, validateUserParams } from '../validation/middleware.js';
+import { validateUserCreate, validateUserUpdate, validateUserParams, validateUserSettings } from '../validation/middleware.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Routes spécifiques AVANT les routes paramétrées
+// Routes pour les paramètres utilisateur
+router.get('/settings', authenticateToken, userCtrl.getUserSettings);
+router.put('/settings', authenticateToken, validateUserSettings, userCtrl.updateUserSettings);
 
 // CRUD pour les utilisateurs (routes protégées)
 router.post('/', authenticateToken, validateUserCreate, userCtrl.createUser);
