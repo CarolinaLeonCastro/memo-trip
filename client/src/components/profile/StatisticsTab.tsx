@@ -231,19 +231,21 @@ const StatisticsTab: React.FC = () => {
                   Destinations préférées
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {['France', 'Italie', 'Espagne', 'Portugal'].map(
-                    (country) => (
-                      <Chip
-                        key={country}
-                        label={country}
-                        variant="filled"
-                        icon={
-                          <FlightIcon sx={{ fontSize: 16, color: '#fff' }} />
-                        }
-                        sx={{ mb: 1, bgcolor: 'tertiary.main' }}
-                      />
-                    )
-                  )}
+                  {[
+                    ...new Set(
+                      journals.flatMap((journal) =>
+                        journal.places.map((place) => place.country)
+                      )
+                    ),
+                  ].map((country) => (
+                    <Chip
+                      key={country}
+                      label={country}
+                      variant="filled"
+                      icon={<FlightIcon sx={{ fontSize: 16, color: '#fff' }} />}
+                      sx={{ mb: 1, bgcolor: 'tertiary.main' }}
+                    />
+                  ))}
                 </Box>
               </Box>
             </Grid>

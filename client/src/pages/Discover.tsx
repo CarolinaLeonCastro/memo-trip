@@ -5,6 +5,7 @@ import {
   Typography,
   Grid,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import {
   LocationOn as LocationOnIcon,
@@ -49,6 +50,7 @@ const TRENDING_TAGS = [
 ];
 
 const Discover: React.FC = () => {
+  const theme = useTheme();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -68,6 +70,7 @@ const Discover: React.FC = () => {
         setLoading(true);
 
         // Charger les statistiques et les posts en parallèle
+        console.log('🔄 Discover: Chargement des données initiales...');
         const [statsData, postsData, tagsData] = await Promise.all([
           publicService.getDiscoverStats(),
           publicService.getDiscoverPosts({
@@ -78,12 +81,27 @@ const Discover: React.FC = () => {
           publicService.getTrendingTags(),
         ]);
 
-        setStats(statsData);
-        setPosts(postsData.posts);
+        console.log('📊 Discover: Stats reçues:', statsData);
+        console.log('📚 Discover: Posts reçus:', postsData);
+        console.log(
+          '📚 Discover: Nombre de posts:',
+          postsData?.posts?.length || 0
+        );
+
+        setStats(
+          statsData || {
+            shared_places: 0,
+            public_journals: 0,
+            active_travelers: 0,
+          }
+        );
+        setPosts(postsData?.posts || []);
 
         // Utiliser les tags du serveur s'il y en a, sinon garder les tags par défaut
-        if (tagsData && tagsData.length > 0) {
-          setTrendingTags(tagsData.map((tag) => tag.tag));
+        if (tagsData && Array.isArray(tagsData) && tagsData.length > 0) {
+          setTrendingTags(
+            tagsData.map((tag) => tag?.tag || 'Tag').filter(Boolean)
+          );
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données Discover:', error);
@@ -101,6 +119,12 @@ const Discover: React.FC = () => {
     if (!loading) {
       const loadFilteredPosts = async () => {
         try {
+          console.log('🔄 Discover: Chargement des posts filtrés...', {
+            activeTab,
+            searchTerm,
+            selectedTags,
+          });
+
           const postsData = await publicService.getDiscoverPosts({
             type:
               activeTab === 0 ? 'place' : activeTab === 1 ? 'journal' : 'all',
@@ -108,7 +132,14 @@ const Discover: React.FC = () => {
             tags: selectedTags.length > 0 ? selectedTags : undefined,
             limit: 12,
           });
-          setPosts(postsData.posts);
+
+          console.log('📚 Discover: Posts filtrés reçus:', postsData);
+          console.log(
+            '📚 Discover: Nombre de posts filtrés:',
+            postsData?.posts?.length || 0
+          );
+
+          setPosts(postsData?.posts || []);
         } catch (error) {
           console.error('Erreur lors du chargement des posts filtrés:', error);
         }
@@ -184,14 +215,24 @@ const Discover: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor:
+          theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC',
+      }}
+    >
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* En-tête */}
         <Box sx={{ mb: 4 }}>
           <Typography
             variant="h3"
             fontWeight="bold"
-            sx={{ color: '#1976d2', mb: 0.5 }}
+            sx={{
+              color: 'primary.main',
+              mb: 0.5,
+              fontFamily: '"Chau Philomene One", cursive',
+            }}
           >
             Découverte
           </Typography>
@@ -207,7 +248,7 @@ const Discover: React.FC = () => {
                   <LocationOnIcon sx={{ fontSize: 24, color: '#4F86F7' }} />
                 }
                 label="Lieux partagés"
-                value={stats.shared_places}
+                value={stats?.shared_places || 0}
                 color="79, 134, 247"
               />
             </Grid>
@@ -215,7 +256,7 @@ const Discover: React.FC = () => {
               <DiscoverStatsCard
                 icon={<MenuBookIcon sx={{ fontSize: 24, color: '#4F86F7' }} />}
                 label="Journaux publics"
-                value={stats.public_journals}
+                value={stats?.public_journals || 0}
                 color="79, 134, 247"
               />
             </Grid>
@@ -223,7 +264,7 @@ const Discover: React.FC = () => {
               <DiscoverStatsCard
                 icon={<PeopleIcon sx={{ fontSize: 24, color: '#FF8A00' }} />}
                 label="Voyageurs actifs"
-                value={stats.active_travelers}
+                value={stats?.active_travelers || 0}
                 color="255, 138, 0"
               />
             </Grid>

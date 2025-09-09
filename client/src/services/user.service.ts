@@ -13,14 +13,56 @@ export interface UserSettingsResponse {
 class UserService {
   // Récupérer les paramètres de l'utilisateur connecté
   async getSettings(): Promise<UserSettings> {
-    const response = await api.get('/api/users/settings');
-    return response.data.data;
+    try {
+      // Ajouter un cache buster pour éviter les réponses en cache
+      const cacheBuster = Date.now();
+      const response = await api.get(`/api/users/settings?_cb=${cacheBuster}`);
+      const data = response.data.data;
+      
+      console.log('🔍 Service: Réponse brute de l\'API:', response.data);
+      console.log('🔍 Service: Data extraite:', data);
+      console.log('🔍 Service: Structure complète:', JSON.stringify(response.data, null, 2));
+      
+      // Gérer les différents formats de réponse possibles
+      let areJournalsPublic = false;
+      
+      if (data?.areJournalsPublic !== undefined) {
+        // Format attendu: {success: true, data: {areJournalsPublic: true}}
+        areJournalsPublic = data.areJournalsPublic;
+        console.log('🔍 Service: Format standard détecté');
+      } else if (response.data?.areJournalsPublic !== undefined) {
+        // Format alternatif: {areJournalsPublic: true}
+        areJournalsPublic = response.data.areJournalsPublic;
+        console.log('🔍 Service: Format alternatif détecté');
+      }
+      
+      // S'assurer que les propriétés existent avec des valeurs par défaut
+      const result = {
+        areJournalsPublic: Boolean(areJournalsPublic),
+      };
+      
+      console.log('🔍 Service: Résultat final:', result);
+      return result;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des paramètres:', error);
+      // Retourner des valeurs par défaut en cas d'erreur
+      return {
+        areJournalsPublic: false,
+      };
+    }
   }
 
   // Mettre à jour les paramètres de l'utilisateur connecté
   async updateSettings(settings: Partial<UserSettings>): Promise<UserSettings> {
-    const response = await api.put('/api/users/settings', settings);
-    return response.data.data;
+    try {
+      console.log('📤 Envoi des paramètres:', settings);
+      const response = await api.put('/api/users/settings', settings);
+      console.log('✅ Réponse de l\'API:', response.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour des paramètres:', error);
+      throw error;
+    }
   }
 }
 

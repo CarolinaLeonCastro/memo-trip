@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Card } from '@mui/material';
 
 interface DiscoverStatsCardProps {
   icon: React.ReactNode;
@@ -15,18 +15,15 @@ export const DiscoverStatsCard: React.FC<DiscoverStatsCardProps> = ({
   color,
 }) => {
   return (
-    <Box
+    <Card
       sx={{
         p: 3,
-        bgcolor: 'white',
+        bgcolor: 'background.paper',
         borderRadius: 1,
+
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        border: '1px solid #f0f0f0',
+
         transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          transform: 'translateY(-2px)',
-        },
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -55,6 +52,6 @@ export const DiscoverStatsCard: React.FC<DiscoverStatsCardProps> = ({
       <Typography variant="h4" fontWeight="bold" sx={{ color: '#2E3A59' }}>
         {value.toLocaleString()}
       </Typography>
-    </Box>
+    </Card>
   );
 };

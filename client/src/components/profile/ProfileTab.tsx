@@ -38,7 +38,7 @@ const ProfileTab: React.FC = () => {
     bio: "Passionnée de voyage et de découvertes culturelles. J'aime explorer de nouveaux horizons et partager mes expériences à travers mes journaux de voyage.",
     location: 'Paris, France',
     instagram: '@carolina_travels',
-    memberSince: 'Mars 2023',
+    memberSince: user?.created_at || 'Mars 2025',
   });
 
   // Activité récente
@@ -87,7 +87,7 @@ const ProfileTab: React.FC = () => {
       bio: "Passionnée de voyage et de découvertes culturelles. J'aime explorer de nouveaux horizons et partager mes expériences à travers mes journaux de voyage.",
       location: 'Paris, France',
       instagram: '@carolina_travels',
-      memberSince: 'Mars 2023',
+      memberSince: user?.created_at || 'Mars 2025',
     });
   };
 
@@ -225,8 +225,6 @@ const ProfileTab: React.FC = () => {
                     onClick={handleSave}
                     disabled={isLoading}
                     sx={{
-                      bgcolor: 'white',
-                      color: 'primary.main',
                       '&:hover': {
                         bgcolor: 'grey.100',
                       },
@@ -256,8 +254,6 @@ const ProfileTab: React.FC = () => {
                   startIcon={<EditIcon />}
                   onClick={handleEdit}
                   sx={{
-                    bgcolor: 'white',
-                    color: 'primary.main',
                     '&:hover': {
                       bgcolor: 'grey.100',
                     },
@@ -366,10 +362,10 @@ const ProfileTab: React.FC = () => {
                   alignItems: 'flex-start',
                   gap: 2,
                   p: 2,
-                  bgcolor: 'grey.100',
+                  bgcolor: 'background.paper',
                   borderRadius: '12px',
                   border: 'none',
-                  borderColor: 'grey.200',
+                  borderColor: 'divider',
                 }}
               >
                 <Avatar

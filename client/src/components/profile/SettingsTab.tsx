@@ -41,12 +41,29 @@ const SettingsTab: React.FC = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
+        console.log(
+          '🔄 useEffect: Rechargement des paramètres depuis le serveur - STACK:',
+          new Error().stack?.split('\n').slice(0, 5)
+        );
+
+        // Ne pas recharger si on est en train de mettre à jour
+        if (updating) {
+          console.log('⏸️ useEffect bloqué : mise à jour en cours');
+          return;
+        }
+
         setLoading(true);
         const userSettings = await userService.getSettings();
-        setSettings((prev) => ({
-          ...prev,
-          journalPublic: userSettings.areJournalsPublic,
-        }));
+        console.log('📥 useEffect: Paramètres reçus:', userSettings);
+        setSettings((prev) => {
+          console.log('📝 useEffect: Anciens paramètres:', prev);
+          const newSettings = {
+            ...prev,
+            journalPublic: userSettings?.areJournalsPublic ?? false,
+          };
+          console.log('📝 useEffect: Nouveaux paramètres:', newSettings);
+          return newSettings;
+        });
       } catch (err) {
         console.error('Erreur lors du chargement des paramètres:', err);
         setError('Erreur lors du chargement des paramètres');
@@ -56,24 +73,38 @@ const SettingsTab: React.FC = () => {
     };
 
     loadSettings();
-  }, []);
+  }, []); // Garder [] pour qu'il ne se déclenche qu'au montage
 
   const handleSettingChange = async (setting: string, value: boolean) => {
     if (setting === 'journalPublic') {
+      // Éviter les appels multiples
+      if (updating) {
+        console.log('⏸️ Mise à jour déjà en cours, ignorer');
+        return;
+      }
+
       try {
         setUpdating(true);
         setError('');
 
+        console.log('🚀 Début de la mise à jour des paramètres');
+
         // Mettre à jour les paramètres côté serveur
-        await userService.updateSettings({
+        const updatedSettings = await userService.updateSettings({
           areJournalsPublic: value,
         });
 
-        // Mettre à jour l'état local
+        // Mettre à jour l'état local avec la réponse du serveur
         setSettings((prev) => ({
           ...prev,
           [setting]: value,
         }));
+
+        console.log('🔄 Paramètres mis à jour localement:', {
+          [setting]: value,
+        });
+
+        console.log('✅ Sauvegarde terminée avec succès!');
 
         setSuccess('Paramètres mis à jour avec succès');
         setTimeout(() => setSuccess(''), 3000);
@@ -195,9 +226,16 @@ const SettingsTab: React.FC = () => {
                         control={
                           <Switch
                             checked={setting.value}
-                            onChange={(e) =>
-                              handleSettingChange(setting.key, e.target.checked)
-                            }
+                            onChange={(e) => {
+                              console.log(
+                                '🎛️ Switch clicked:',
+                                e.target.checked
+                              );
+                              handleSettingChange(
+                                setting.key,
+                                e.target.checked
+                              );
+                            }}
                             color="primary"
                             disabled={
                               updating && setting.key === 'journalPublic'

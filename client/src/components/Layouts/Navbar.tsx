@@ -124,15 +124,6 @@ const Navbar: React.FC = () => {
             {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
           </ListItemIcon>
           <ListItemText primary="Mode sombre" />
-          <IconButton
-            onClick={toggleDarkMode}
-            sx={{
-              ml: 'auto',
-              color: 'text.primary',
-            }}
-          >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeOutlinedIcon />}
-          </IconButton>
         </ListItem>
 
         <Divider sx={{ my: 1 }} />

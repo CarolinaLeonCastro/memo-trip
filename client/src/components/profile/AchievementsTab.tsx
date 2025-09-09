@@ -131,7 +131,7 @@ const AchievementsTab: React.FC = () => {
             </Typography>
             <Chip
               label={`${unlockedBadges.length}/${badges.length}`}
-              color="primary"
+              color="warning"
               sx={{ ml: 2 }}
             />
           </Box>
@@ -253,9 +253,8 @@ const AchievementsTab: React.FC = () => {
                       border: '2px dashed',
                       borderColor: 'divider',
                       borderRadius: 1,
-                      bgcolor: 'grey.50',
+                      bgcolor: 'background.paper',
                       textAlign: 'center',
-                      opacity: 0.7,
                     }}
                   >
                     <Avatar

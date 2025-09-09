@@ -101,8 +101,7 @@ export const getPublicJournalById = async (req, res) => {
 			})
 			.populate({
 				path: 'places',
-				match: { moderation_status: 'approved' },
-				select: '-moderation_status -moderated_by -rejection_reason'
+				select: 'name description location photos tags rating date_visited visitedAt'
 			});
 
 		if (!journal || !journal.user_id) {
@@ -156,9 +155,27 @@ export const getPublicStats = async (req, res) => {
 
 		const totalPublicJournals = totalPublicJournalsResult.length > 0 ? totalPublicJournalsResult[0].total : 0;
 
-		const totalPublicPlaces = await Place.countDocuments({
-			moderation_status: 'approved'
-		});
+		// Compter tous les lieux des utilisateurs publics
+		const totalPublicPlacesResult = await Place.aggregate([
+			{
+				$lookup: {
+					from: 'users',
+					localField: 'user_id',
+					foreignField: '_id',
+					as: 'user'
+				}
+			},
+			{
+				$match: {
+					'user.areJournalsPublic': true
+				}
+			},
+			{
+				$count: 'total'
+			}
+		]);
+
+		const totalPublicPlaces = totalPublicPlacesResult.length > 0 ? totalPublicPlacesResult[0].total : 0;
 
 		// Journaux les plus récents
 		const recentJournals = await Journal.find({
@@ -201,10 +218,12 @@ export const getPublicStats = async (req, res) => {
 // Route pour récupérer les posts pour la page découverte
 export const getDiscoverPosts = async (req, res) => {
 	try {
+		console.log('🔎 API getDiscoverPosts appelée avec:', req.query);
 		const { page = 1, limit = 12, search, tags, type = 'all', sort = 'recent' } = req.query;
 		const skip = (page - 1) * limit;
 
 		let posts = [];
+		console.log('🔎 Type de contenu demandé:', type);
 
 		if (type === 'all' || type === 'journal') {
 			// Récupérer les journaux publics
@@ -225,6 +244,8 @@ export const getDiscoverPosts = async (req, res) => {
 				journalFilter.tags = { $in: tagArray };
 			}
 
+			console.log('🔎 Filtre journal appliqué:', journalFilter);
+			
 			const journals = await Journal.find(journalFilter)
 				.populate({
 					path: 'user_id',
@@ -235,7 +256,17 @@ export const getDiscoverPosts = async (req, res) => {
 				.sort({ createdAt: sort === 'recent' ? -1 : 1 })
 				.limit(parseInt(limit));
 
+			console.log('🔎 Journaux trouvés avant filtrage:', journals.length);
+			console.log('🔎 Détails des journaux:', journals.map(j => ({
+				title: j.title,
+				is_public: j.is_public,
+				status: j.status,
+				user_populated: !!j.user_id,
+				user_areJournalsPublic: j.user_id?.areJournalsPublic
+			})));
+
 			const validJournals = journals.filter((journal) => journal.user_id !== null);
+			console.log('🔎 Journaux valides après filtrage user:', validJournals.length);
 
 			posts = posts.concat(
 				validJournals.map((journal) => ({
@@ -265,6 +296,80 @@ export const getDiscoverPosts = async (req, res) => {
 			);
 		}
 
+		// AJOUTER LES LIEUX PUBLICS
+		if (type === 'all' || type === 'place') {
+			console.log('🔎 Récupération des lieux publics...');
+			
+			const placeFilter = {};
+			// Pas de modération : tous les lieux des utilisateurs publics sont visibles
+
+			if (search) {
+				placeFilter.$or = [
+					{ name: { $regex: search, $options: 'i' } },
+					{ description: { $regex: search, $options: 'i' } }
+				];
+			}
+
+			if (tags && tags.length > 0) {
+				const tagArray = Array.isArray(tags) ? tags : tags.split(',');
+				placeFilter.tags = { $in: tagArray };
+			}
+
+			console.log('🔎 Filtre lieu appliqué:', placeFilter);
+
+			const places = await Place.find(placeFilter)
+				.populate({
+					path: 'user_id',
+					select: 'name avatar areJournalsPublic',
+					match: { areJournalsPublic: true }
+				})
+				.select('name description photos location tags rating date_visited visitedAt budget notes createdAt user_id')
+				.sort({ createdAt: sort === 'recent' ? -1 : 1 })
+				.limit(parseInt(limit));
+
+			console.log('🔎 Lieux trouvés avant filtrage:', places.length);
+			console.log('🔎 Détails des lieux:', places.map(p => ({
+				name: p.name,
+				user_populated: !!p.user_id,
+				user_areJournalsPublic: p.user_id?.areJournalsPublic
+			})));
+
+			const validPlaces = places.filter((place) => place.user_id !== null);
+			console.log('🔎 Lieux valides après filtrage user:', validPlaces.length);
+
+			posts = posts.concat(
+				validPlaces.map((place) => ({
+					_id: place._id,
+					type: 'place',
+					user: {
+						_id: place.user_id._id,
+						name: place.user_id.name,
+						avatar: place.user_id.avatar
+					},
+					content: {
+						_id: place._id,
+						name: place.name,
+						description: place.description,
+						city: place.location?.city,
+						country: place.location?.country,
+						photos: place.photos || [],
+						tags: place.tags,
+						rating: place.rating,
+						location: {
+							latitude: place.location?.coordinates[1],
+							longitude: place.location?.coordinates[0]
+						},
+						date_visited: place.date_visited || place.visitedAt
+					},
+					likes: 0,
+					comments: 0,
+					views: 0,
+					is_liked: false,
+					created_at: place.createdAt
+				}))
+			);
+		}
+
 		// Trier et paginer les résultats
 		posts.sort((a, b) => {
 			if (sort === 'recent') {
@@ -276,7 +381,7 @@ export const getDiscoverPosts = async (req, res) => {
 		const paginatedPosts = posts.slice(skip, skip + parseInt(limit));
 		const total = posts.length;
 
-		res.json({
+		const responseData = {
 			success: true,
 			data: {
 				posts: paginatedPosts,
@@ -284,7 +389,16 @@ export const getDiscoverPosts = async (req, res) => {
 				page: parseInt(page),
 				totalPages: Math.ceil(total / limit)
 			}
+		};
+
+		console.log('🔎 Réponse finale API:', {
+			success: responseData.success,
+			postsCount: responseData.data.posts.length,
+			total: responseData.data.total,
+			page: responseData.data.page
 		});
+
+		res.json(responseData);
 	} catch (error) {
 		logger.error('Error fetching discover posts:', error);
 		res.status(500).json({
@@ -325,10 +439,27 @@ export const getDiscoverStats = async (req, res) => {
 
 		const publicJournals = publicJournalsResult.length > 0 ? publicJournalsResult[0].total : 0;
 
-		// Compter les lieux partagés (approximation)
-		const sharedPlaces = await Place.countDocuments({
-			moderation_status: 'approved'
-		});
+		// Compter les lieux partagés des utilisateurs publics
+		const sharedPlacesResult = await Place.aggregate([
+			{
+				$lookup: {
+					from: 'users',
+					localField: 'user_id',
+					foreignField: '_id',
+					as: 'user'
+				}
+			},
+			{
+				$match: {
+					'user.areJournalsPublic': true
+				}
+			},
+			{
+				$count: 'total'
+			}
+		]);
+
+		const sharedPlaces = sharedPlacesResult.length > 0 ? sharedPlacesResult[0].total : 0;
 
 		// Compter les voyageurs actifs (utilisateurs avec journals publics)
 		const activeTravelers = await User.countDocuments({
