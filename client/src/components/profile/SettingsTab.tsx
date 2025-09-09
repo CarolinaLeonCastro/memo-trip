@@ -90,7 +90,7 @@ const SettingsTab: React.FC = () => {
         console.log('🚀 Début de la mise à jour des paramètres');
 
         // Mettre à jour les paramètres côté serveur
-        const updatedSettings = await userService.updateSettings({
+        await userService.updateSettings({
           areJournalsPublic: value,
         });
 

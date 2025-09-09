@@ -485,9 +485,13 @@ const EditJournal: React.FC = () => {
                 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400';
 
               // Calculer le nombre de jours si on a les dates
-              const days = placeDetails
-                ? calculateDays(placeDetails.start_date, placeDetails.end_date)
-                : 1;
+              const days =
+                placeDetails && placeDetails.start_date && placeDetails.end_date
+                  ? calculateDays(
+                      placeDetails.start_date,
+                      placeDetails.end_date
+                    )
+                  : 1;
 
               const visited = getVisitStatus(placeDetails);
 
