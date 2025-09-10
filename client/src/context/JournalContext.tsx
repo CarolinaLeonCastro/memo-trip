@@ -9,7 +9,7 @@ import React, {
 import type { Journal } from '../types';
 import type { Place } from '../types';
 import { journalApi } from '../services/journal-api';
-import { placeApi, type PlaceCreateRequest } from '../services/place-api';
+import { placeApi } from '../services/place-api';
 import { useAuth } from '../hooks/useAuth';
 
 interface JournalContextType {
@@ -410,7 +410,7 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       console.log("📍 Données finales envoyées à l'API:", cleanData);
 
       // Créer la place via l'API
-      const createdPlace = await placeApi.createPlace(cleanData);
+      const createdPlace = await placeApi.createPlace(cleanData as any);
 
       console.log('Place créée avec succès:', createdPlace);
 

@@ -151,9 +151,10 @@ export const JournalPlacesList: React.FC<JournalPlacesListProps> = ({
               place.photos[0] ||
               'https://images.unsplash.com/photo-1486299267070-83823f5448dd?auto=format&fit=crop&q=80&w=400';
 
-            const days = placeDetails
-              ? calculateDays(placeDetails.start_date, placeDetails.end_date)
-              : 1;
+            const days =
+              placeDetails && placeDetails.start_date && placeDetails.end_date
+                ? calculateDays(placeDetails.start_date, placeDetails.end_date)
+                : 1;
 
             const visited = getVisitStatus(placeDetails);
 
