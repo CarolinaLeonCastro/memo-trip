@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Typography, IconButton, Paper } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Tabs,
+  Typography,
+  Paper,
+  Button,
+  Container,
+} from '@mui/material';
 import {
   Person as PersonIcon,
   Analytics as AnalyticsIcon,
@@ -52,10 +60,6 @@ const ProfileTabs: React.FC = () => {
     setValue(newValue);
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   const tabs = [
     {
       label: 'Profil',
@@ -80,21 +84,14 @@ const ProfileTabs: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: 2 }}>
+    <Container maxWidth="xl" sx={{ py: 2 }}>
       {/* Header avec bouton retour */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton
-          onClick={handleBack}
-          sx={{
-            mr: 2,
-            color: 'text.secondary',
-            '&:hover': {
-              bgcolor: 'action.hover',
-            },
-          }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate(-1)}
+          sx={{ mt: 0.5 }} // Ajustement vertical pour aligner avec le titre
+        ></Button>
         <Box>
           <Typography
             variant="h3"
@@ -105,10 +102,10 @@ const ProfileTabs: React.FC = () => {
               fontFamily: '"Chau Philomene One", cursive',
             }}
           >
-            Mon Profil
+            Profil
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Gérez vos informations personnelles et préférences
+          <Typography variant="subtitle1" color="text.secondary">
+            Gérez votre profil et vos paramètres
           </Typography>
         </Box>
       </Box>
@@ -127,12 +124,17 @@ const ProfileTabs: React.FC = () => {
           value={value}
           onChange={handleChange}
           aria-label="profile tabs"
-          variant="fullWidth"
+          variant="scrollable" // Changé de fullWidth à scrollable
+          scrollButtons="auto"
+          allowScrollButtonsMobile // Permet les boutons de scroll sur mobile
           sx={{
             '& .MuiTab-root': {
               textTransform: 'none',
               py: 2.5,
+              px: { xs: 1, sm: 2 }, // Padding adaptatif
               minHeight: 'auto',
+              minWidth: { xs: 80, sm: 120 }, // Largeur minimale adaptative
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }, // Taille de police adaptative
               '&.Mui-selected': {
                 color: 'primary.main',
               },
@@ -141,19 +143,25 @@ const ProfileTabs: React.FC = () => {
               height: 3,
               color: 'error.main',
             },
+            '& .MuiTabs-scrollButtons': {
+              '&.Mui-disabled': {
+                opacity: 0.3,
+              },
+            },
           }}
         >
           {tabs.map((tab, index) => (
             <Tab
               key={index}
               label={tab.label}
-              icon={<tab.icon sx={{ fontSize: 24 }} />}
+              icon={<tab.icon sx={{ fontSize: { xs: 20, sm: 24 } }} />} // Taille d'icône adaptative
               iconPosition="start"
               {...a11yProps(index)}
               sx={{
-                gap: 1,
+                gap: { xs: 0.5, sm: 1 }, // Espacement adaptatif
+                flexDirection: { xs: 'column', sm: 'row' }, // Direction adaptative
                 '& .MuiSvgIcon-root': {
-                  mb: 0,
+                  mb: { xs: 0.5, sm: 0 }, // Marge bottom adaptative
                   color: 'error.main',
                 },
               }}
@@ -168,7 +176,7 @@ const ProfileTabs: React.FC = () => {
           <tab.component />
         </TabPanel>
       ))}
-    </Box>
+    </Container>
   );
 };
 

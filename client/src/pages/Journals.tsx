@@ -84,7 +84,7 @@ const Journals: React.FC = () => {
           theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC',
       }}
     >
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 2 }}>
         {/* Header */}
         <Box
           sx={{
@@ -97,17 +97,14 @@ const Journals: React.FC = () => {
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/')}
-            sx={{ color: 'text.secondary' }}
-          >
-            Retour
-          </Button>
+          ></Button>
 
-          <Box sx={{ textAlign: 'center', flex: 1 }}>
+          <Box sx={{ textAlign: 'center', flex: 1, ml: 8 }}>
             <Typography
               variant="h3"
               fontWeight="bold"
               sx={{
-                color: theme.palette.mode === 'dark' ? '#fff' : 'primary.main',
+                color: 'primary.main',
                 mb: 0.5,
                 fontFamily: '"Chau Philomene One", cursive',
               }}

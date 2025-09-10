@@ -6,12 +6,15 @@ import {
   Grid,
   CircularProgress,
   useTheme,
+  Button,
 } from '@mui/material';
 import {
   LocationOn as LocationOnIcon,
   People as PeopleIcon,
   MenuBook as MenuBookIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 // Import des nouveaux composants
 import {
@@ -51,6 +54,7 @@ const TRENDING_TAGS = [
 
 const Discover: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -222,23 +226,32 @@ const Discover: React.FC = () => {
           theme.palette.mode === 'dark' ? 'background.default' : '#F8FAFC',
       }}
     >
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 2 }}>
         {/* En-tête */}
         <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h3"
-            fontWeight="bold"
-            sx={{
-              color: 'primary.main',
-              mb: 0.5,
-              fontFamily: '"Chau Philomene One", cursive',
-            }}
-          >
-            Découverte
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Explorez les voyages et lieux de la communauté MemoTrip
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate(-1)}
+              sx={{ mt: 0.5 }} // Ajustement vertical pour aligner avec le titre
+            ></Button>
+            <Box>
+              <Typography
+                variant="h3"
+                fontWeight="bold"
+                sx={{
+                  color: 'primary.main',
+                  mb: 0.5,
+                  fontFamily: '"Chau Philomene One", cursive',
+                }}
+              >
+                Découverte
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                Explorez les voyages et lieux de la communauté MemoTrip
+              </Typography>
+            </Box>
+          </Box>
 
           {/* Statistiques */}
           <Grid container spacing={3} sx={{ mb: 4, mt: 2 }}>

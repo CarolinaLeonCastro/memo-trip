@@ -78,25 +78,25 @@ const StatisticsTab: React.FC = () => {
     },
   ];
 
-  // Objectifs de voyage (simulation)
+  // Objectifs de voyage (avec les bonnes couleurs correspondant aux stats)
   const travelGoals = [
     {
       title: 'Visiter 10 pays',
       current: visitedCountries,
       target: 10,
-      color: 'primary',
+      color: 'info',
     },
     {
       title: 'Créer 20 journaux',
       current: journals.length,
       target: 20,
-      color: 'secondary',
+      color: 'primary',
     },
     {
       title: 'Partager 500 photos',
       current: totalPhotos,
       target: 500,
-      color: 'success',
+      color: 'secondary',
     },
   ];
 
