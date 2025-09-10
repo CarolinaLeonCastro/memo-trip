@@ -9,9 +9,9 @@ import {
   ListItemText,
   Avatar,
   Chip,
-  Card,
-  ListItemButton,
-  ListItemIcon,
+  Button,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   PhotoCamera as PhotoIcon,
@@ -45,6 +45,8 @@ interface MapSidebarProps {
 const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
 
   // Actions rapides avec conditions d'affichage
   const quickActions = [
@@ -71,33 +73,16 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
   return (
     <Box
       sx={{
-        width: { xs: '100%', md: 300, lg: 350 },
+        width: '100%',
         height: '100%',
         bgcolor: 'background.paper',
-
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative',
-
         overflow: 'hidden',
       }}
     >
-      {/* Sidebar Header */}
-      <Box
-        sx={{
-          p: 2,
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{ mb: 1, fontFamily: '"Chau Philomene One", cursive' }}
-        >
-          Lieux ({places.length})
-        </Typography>
-      </Box>
-
-      {/* Places List */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      {/* Liste des lieux */}
+      <Box sx={{ flex: 1, overflow: 'auto', px: isMobile ? 0 : 1 }}>
         {places.length === 0 ? (
           <Box
             sx={{
@@ -105,8 +90,8 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              height: '100%',
-              p: 1,
+              height: '200px',
+              p: 2,
               textAlign: 'center',
             }}
           >
@@ -122,14 +107,20 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {places.slice(0, 3).map((place) => (
+            {places.slice(0, 3).map((place, index) => (
               <ListItem
                 key={place.id}
                 sx={{
                   cursor: 'pointer',
+                  py: isMobile ? 1 : 0.4,
+                  px: isMobile ? 1 : 2,
+                  borderBottom:
+                    index < places.length - 1
+                      ? '1px solid rgba(0,0,0,0.08)'
+                      : 'none',
                   '&:hover': {
-                    bgcolor: theme.palette.primary.main,
-                    borderRadius: '8px',
+                    bgcolor: 'rgba(91, 155, 213, 0.08)',
+                    borderRadius: 1,
                   },
                 }}
                 onClick={() => onPlaceClick(place)}
@@ -138,8 +129,8 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                   <Avatar
                     src={place.photos[0]}
                     sx={{
-                      width: 60,
-                      height: 60,
+                      width: isMobile ? 50 : 60,
+                      height: isMobile ? 50 : 60,
                       borderRadius: '8px',
                     }}
                   >
@@ -147,17 +138,19 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  sx={{ ml: 2 }}
+                  sx={{ ml: 1.5 }}
                   primary={
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                      }}
-                    >
-                      <Typography variant="subtitle1" fontWeight={600}>
+                    <Box>
+                      <Typography
+                        variant={isMobile ? 'body1' : 'subtitle1'}
+                        fontWeight={600}
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '180px',
+                        }}
+                      >
                         {place.name.split(',')[0]}
                       </Typography>
                       <Chip
@@ -167,32 +160,28 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
                           bgcolor: place.isVisited ? '#E8F5E8' : '#FFF3E0',
                           color: place.isVisited ? '#2E7D32' : '#F57C00',
                           fontWeight: 600,
-                          fontSize: '0.75rem',
-                          ml: 1, // Marge à gauche pour espacer du texte
+                          fontSize: '0.7rem',
+                          mt: 0.5,
+                          height: 20,
                         }}
                       />
                     </Box>
                   }
                   secondary={
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        sx={{ mb: 0.5 }}
-                      >
-                        {place.name.includes(',')
-                          ? place.name.split(',').slice(1).join(',').trim()
-                          : place.journalTitle}
-                      </Typography>
-                      {place.category && (
-                        <Chip
-                          label={place.category}
-                          size="small"
-                          variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      )}
-                    </Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        mt: 0.5,
+                        display: 'block',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '180px',
+                      }}
+                    >
+                      {place.journalTitle}
+                    </Typography>
                   }
                 />
               </ListItem>
@@ -201,75 +190,69 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
         )}
       </Box>
 
-      {/* Actions rapides */}
-      <Box>
+      {/* Actions rapides optimisées pour mobile */}
+      <Box
+        sx={{
+          p: isMobile ? 1 : 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <Typography
-          variant="h6"
+          variant="subtitle1"
           sx={{
-            mb: 2,
-            ml: 2,
+            mb: 1.5,
             fontFamily: '"Chau Philomene One", cursive',
             color: 'primary.main',
+            fontSize: isMobile ? '1rem' : '1.1rem',
           }}
         >
           Actions rapides
         </Typography>
-        <Card
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              variant="outlined"
+              startIcon={action.icon}
+              onClick={action.onClick}
+              fullWidth
+              sx={{
+                justifyContent: 'flex-start',
+                textTransform: 'none',
+                py: 1,
+                fontSize: isMobile ? '0.85rem' : '0.9rem',
+                borderColor: 'rgba(91, 155, 213, 0.3)',
+                '&:hover': {
+                  bgcolor: 'rgba(91, 155, 213, 0.08)',
+                  borderColor: 'primary.main',
+                },
+              }}
+            >
+              {action.text}
+            </Button>
+          ))}
+        </Box>
+
+        {/* Bouton ajouter un journal en bas */}
+        <Button
+          variant="contained"
+          startIcon={<LocationIcon />}
+          onClick={() => navigate('/journals/new')}
+          fullWidth
           sx={{
-            bgcolor: '#E3F2FD',
-            border: 'none',
-            ml: 2,
-            boxShadow: 'none',
+            mt: 1.5,
+            background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+            '&:hover': {
+              background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
+            },
+            py: 1.2,
+            textTransform: 'none',
+            fontWeight: 600,
           }}
         >
-          <List sx={{ py: 0 }}>
-            {quickActions.map((action, index) => (
-              <ListItem
-                key={index}
-                disablePadding
-                sx={{
-                  borderBottom:
-                    index < quickActions.length - 1
-                      ? '1px solid rgba(0,0,0,0.08)'
-                      : 'none',
-                }}
-              >
-                <ListItemButton
-                  onClick={action.onClick}
-                  sx={{
-                    py: 1.5,
-                    px: 2,
-                    '&:hover': {
-                      bgcolor: 'rgba(33, 150, 243, 0.08)',
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 30,
-                      color: 'primary.main',
-                      '& svg': {
-                        fontSize: '1.2rem',
-                      },
-                    }}
-                  >
-                    {action.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={action.text}
-                    sx={{
-                      '& .MuiListItemText-primary': {
-                        fontSize: '0.9rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Card>
+          Ajouter un journal
+        </Button>
       </Box>
     </Box>
   );

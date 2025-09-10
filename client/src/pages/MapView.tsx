@@ -8,11 +8,18 @@ import {
   useTheme,
   Drawer,
   IconButton,
+  TextField,
+  InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
+  Search as SearchIcon,
+  Satellite as SatelliteIcon,
+  Map as MapIcon,
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useJournals } from '../context/JournalContext';
@@ -119,7 +126,6 @@ const MapView: React.FC = () => {
             photos: place.photos || [],
             journalTitle: journal.title,
             journalId: journal.id,
-            // 🚀 NOUVEAU : Utiliser le statut correct avec le nouveau système
             isVisited:
               place.status === 'visited' ||
               (place.visited && place.status !== 'planned'),
@@ -142,7 +148,6 @@ const MapView: React.FC = () => {
               photos: place.photos || [],
               journalTitle: journal.title,
               journalId: journal.id,
-              // 🚀 NOUVEAU : Utiliser le statut correct avec le nouveau système
               isVisited:
                 place.status === 'visited' ||
                 (place.visited && place.status !== 'planned'),
@@ -216,7 +221,7 @@ const MapView: React.FC = () => {
   const handlePlaceClickWithDrawer = (place: PlaceWithJournal) => {
     handlePlaceClick(place);
     if (isMobile) {
-      setMobileDrawerOpen(false); // Close drawer on mobile when selecting place
+      setMobileDrawerOpen(false);
     }
   };
 
@@ -243,18 +248,33 @@ const MapView: React.FC = () => {
       sx={{
         height: '85vh',
         display: 'flex',
-
         flexDirection: 'column',
-        p: { xs: 1, sm: 2, md: 1 },
+        borderRadiusBottomleft: '10px',
+        borderRadiusBottomright: '10px',
+        p: 0,
+        overflow: 'hidden',
       }}
     >
-      {/* 🎨 Responsive Header with Mobile Menu */}
-      <Box sx={{ mb: { xs: 1, sm: 2 } }}>
+      {/* 🎨 Header mobile optimisé */}
+      <Box
+        sx={{
+          mb: 0,
+          position: 'sticky',
+          top: 0,
+          borderTopLeftRadius: '10px',
+          borderTopRightRadius: '10px',
+          zIndex: 1000,
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: { xs: 1, sm: 2 },
+            p: { xs: 1, sm: 2 },
+            gap: 1,
           }}
         >
           {/* Mobile Menu Button */}
@@ -263,43 +283,61 @@ const MapView: React.FC = () => {
               color="primary"
               aria-label="open drawer"
               onClick={handleDrawerToggle}
-              sx={{ mr: 1 }}
+              sx={{
+                mr: 1,
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+              }}
             >
               <MenuIcon />
             </IconButton>
           )}
 
-          {/* Header - now responsive */}
+          {/* Header - responsive */}
           <Box sx={{ flex: 1 }}>
-            <MapHeader
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              filterStatus={filterStatus}
-              onFilterStatusChange={setFilterStatus}
-              mapType={mapType}
-              onMapTypeChange={setMapType}
-            />
+            {isMobile ? (
+              <Typography
+                variant="h6"
+                color="primary.main"
+                sx={{
+                  fontFamily: '"Chau Philomene One", cursive',
+                  fontSize: '1.2rem',
+                }}
+              >
+                Carte des lieux
+              </Typography>
+            ) : (
+              <MapHeader
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                filterStatus={filterStatus}
+                onFilterStatusChange={setFilterStatus}
+                mapType={mapType}
+                onMapTypeChange={setMapType}
+              />
+            )}
           </Box>
         </Box>
       </Box>
 
-      {/* 🗺️ Main Content with Responsive Flexbox */}
+      {/* 🗺️ Main Content */}
       <Box
         sx={{
           flex: 1,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 1, md: 2 },
         }}
       >
-        {/* Map Container - Responsive width */}
+        {/* Map Container */}
         <Box
           sx={{
-            flex: isMobile ? 1 : isTablet ? '2' : '3',
+            flex: 1,
             height: '100%',
             position: 'relative',
-            borderRadius: { xs: 1, sm: 1 },
           }}
         >
           {places.length === 0 ? (
@@ -342,15 +380,19 @@ const MapView: React.FC = () => {
             <MapContainer
               center={mapCenter as [number, number]}
               zoom={mapZoom}
-              style={{ height: '100%', width: '100%' }}
+              style={{
+                height: '100%',
+                width: '100%',
+              }}
               scrollWheelZoom={true}
               maxZoom={18}
-              zoomControl={!isMobile} // Hide zoom control on mobile to save space
+              zoomControl={!isMobile}
             >
               <TileLayer
                 url={getTileLayerUrl()}
                 attribution={getTileLayerAttribution()}
               />
+              {/* Markers */}
               {places.map((place) => (
                 <Marker
                   key={place.id}
@@ -427,44 +469,146 @@ const MapView: React.FC = () => {
         )}
       </Box>
 
-      {/* 📱 Mobile Drawer */}
+      {/* 📱 Mobile Drawer amélioré */}
       <Drawer
         variant="temporary"
         open={mobileDrawerOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better performance on mobile
+          keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
-            width: { xs: 280, sm: 350 },
+            width: '85vw',
+            maxWidth: 350,
             bgcolor: 'background.paper',
           },
         }}
       >
-        {/* Drawer Header */}
+        {/* En-tête du drawer avec recherche */}
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             p: 2,
             borderBottom: '1px solid',
             borderColor: 'divider',
+            bgcolor: 'primary.main',
           }}
         >
-          <IconButton onClick={handleDrawerToggle}>
-            <CloseIcon />
-          </IconButton>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'white',
+                fontFamily: '"Chau Philomene One", cursive',
+              }}
+            >
+              Lieux ({places.length})
+            </Typography>
+            <IconButton onClick={handleDrawerToggle} sx={{ color: 'white' }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          {/* Barre de recherche mobile */}
+          <TextField
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="small"
+            fullWidth
+            sx={{
+              mb: 2,
+              bgcolor: 'background.default',
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'background.default',
+                borderRadius: '5px',
+                '& fieldset': { border: 'none' },
+                '&:hover': {
+                  backgroundColor: 'background.default',
+                },
+                '&.Mui-focused': {
+                  backgroundColor: 'background.default',
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: '#666' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Filtres mobile */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <ToggleButtonGroup
+              exclusive
+              value={filterStatus}
+              onChange={(_, newValue) => newValue && setFilterStatus(newValue)}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="all">Tous</ToggleButton>
+              <ToggleButton value="visited">Visités</ToggleButton>
+              <ToggleButton value="toVisit">À visiter</ToggleButton>
+            </ToggleButtonGroup>
+
+            <ToggleButtonGroup
+              value={mapType}
+              exclusive
+              onChange={(_, newValue) => newValue && setMapType(newValue)}
+              size="small"
+              sx={{
+                ml: 1,
+                '& .MuiToggleButton-root': {
+                  px: 1,
+                  py: 0.5,
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="street">
+                <MapIcon fontSize="small" sx={{ color: 'white' }} />
+              </ToggleButton>
+              <ToggleButton value="satellite">
+                <SatelliteIcon fontSize="small" sx={{ color: 'white' }} />
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
         </Box>
 
-        {/* Drawer Content */}
+        {/* Contenu du drawer */}
         <SidebarContent />
       </Drawer>
 
-      {/* 🎯 Place Detail Modal - Now responsive */}
+      {/* 🎯 Place Detail Modal */}
       <PlaceDetailModal
         place={selectedPlace}
         open={detailModalOpen}

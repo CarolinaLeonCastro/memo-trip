@@ -203,14 +203,14 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}).required(),
-		
+
 		// === DATES POUR LIEUX VISITÉS (status = 'visited') ===
 		date_visited: Joi.when('status', {
 			is: 'visited',
 			then: Joi.date().max('now').required().messages({
 				'any.required': 'La date de visite est obligatoire pour un lieu visité',
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de visite ne peut pas être dans le futur"
+				'date.max': 'La date de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -219,7 +219,7 @@ export const placeValidation = {
 			then: Joi.date().max('now').required().messages({
 				'any.required': 'La date de début de visite est obligatoire pour un lieu visité',
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de début de visite ne peut pas être dans le futur"
+				'date.max': 'La date de début de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -229,7 +229,7 @@ export const placeValidation = {
 				'any.required': 'La date de fin de visite est obligatoire pour un lieu visité',
 				'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de fin de visite ne peut pas être dans le futur"
+				'date.max': 'La date de fin de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -237,11 +237,11 @@ export const placeValidation = {
 			is: 'visited',
 			then: Joi.date().max('now').optional().messages({
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de visite ne peut pas être dans le futur"
+				'date.max': 'La date de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
-		
+
 		// === DATES POUR LIEUX PLANIFIÉS (status = 'planned') ===
 		plannedStart: Joi.when('status', {
 			is: 'planned',
@@ -317,13 +317,13 @@ export const placeValidation = {
 				'string.max': 'Le pays ne peut pas dépasser 100 caractères'
 			})
 		}),
-		
+
 		// === DATES POUR LIEUX VISITÉS (status = 'visited') ===
 		date_visited: Joi.when('status', {
 			is: 'visited',
 			then: Joi.date().max('now').messages({
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de visite ne peut pas être dans le futur"
+				'date.max': 'La date de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -331,7 +331,7 @@ export const placeValidation = {
 			is: 'visited',
 			then: Joi.date().max('now').messages({
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de début de visite ne peut pas être dans le futur"
+				'date.max': 'La date de début de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -340,7 +340,7 @@ export const placeValidation = {
 			then: Joi.date().min(Joi.ref('start_date')).max('now').messages({
 				'date.min': 'La date de fin doit être postérieure ou égale à la date de début',
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de fin de visite ne peut pas être dans le futur"
+				'date.max': 'La date de fin de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
@@ -348,11 +348,11 @@ export const placeValidation = {
 			is: 'visited',
 			then: Joi.date().max('now').optional().messages({
 				'date.base': 'Format de date invalide',
-				'date.max': "La date de visite ne peut pas être dans le futur"
+				'date.max': 'La date de visite ne peut pas être dans le futur'
 			}),
 			otherwise: Joi.date().optional().allow(null)
 		}),
-		
+
 		// === DATES POUR LIEUX PLANIFIÉS (status = 'planned') ===
 		plannedStart: Joi.when('status', {
 			is: 'planned',

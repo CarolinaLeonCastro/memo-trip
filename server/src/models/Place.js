@@ -25,7 +25,7 @@ const placeSchema = new mongoose.Schema(
 		start_date: { type: Date }, // Date de début de la visite (optionnelle)
 		end_date: { type: Date }, // Date de fin de la visite (optionnelle)
 		visitedAt: { type: Date }, // Date exacte de visite (pour status = 'visited')
-		
+
 		// === DATES POUR LIEUX PLANIFIÉS ===
 		plannedStart: { type: Date }, // Date de début planifiée (pour status = 'planned')
 		plannedEnd: { type: Date }, // Date de fin planifiée (pour status = 'planned')

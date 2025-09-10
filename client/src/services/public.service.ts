@@ -143,19 +143,22 @@ class PublicService {
     totalPages: number;
   }> {
     try {
-      console.log('🔗 Service: Appel API getDiscoverPosts avec filtres:', filters);
+      console.log(
+        '🔗 Service: Appel API getDiscoverPosts avec filtres:',
+        filters
+      );
       const response = await api.get('/api/public/discover/posts', {
         params: filters,
       });
-      
+
       console.log('🔗 Service: Réponse brute API:', response.data);
       console.log('🔗 Service: Structure de response.data:', {
         hasSuccess: 'success' in response.data,
         hasData: 'data' in response.data,
         dataType: typeof response.data.data,
-        keys: Object.keys(response.data)
+        keys: Object.keys(response.data),
       });
-      
+
       // Gérer différents formats de réponse
       let result;
       if (response.data.data) {
@@ -165,13 +168,13 @@ class PublicService {
       } else {
         result = { posts: [], total: 0, page: 1, totalPages: 0 };
       }
-      
+
       console.log('🔗 Service: Résultat final:', {
         postsCount: result.posts?.length || 0,
         total: result.total,
-        page: result.page
+        page: result.page,
       });
-      
+
       return result;
     } catch (error) {
       console.error('❌ Service: Erreur getDiscoverPosts:', error);
@@ -184,9 +187,9 @@ class PublicService {
     try {
       console.log('🔗 Service: Appel API getDiscoverStats');
       const response = await api.get('/api/public/discover/stats');
-      
+
       console.log('🔗 Service: Réponse stats brute:', response.data);
-      
+
       // Gérer différents formats de réponse
       let result;
       if (response.data.data) {
@@ -196,7 +199,7 @@ class PublicService {
       } else {
         result = { shared_places: 0, public_journals: 0, active_travelers: 0 };
       }
-      
+
       console.log('🔗 Service: Stats résultat final:', result);
       return result;
     } catch (error) {

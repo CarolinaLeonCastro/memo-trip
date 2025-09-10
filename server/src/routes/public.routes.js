@@ -192,9 +192,7 @@ export const getPublicStats = async (req, res) => {
 			.limit(10); // Récupérer plus pour compenser le filtrage
 
 		// Filtrer et limiter à 5
-		const validRecentJournals = recentJournals
-			.filter((journal) => journal.user_id !== null)
-			.slice(0, 5);
+		const validRecentJournals = recentJournals.filter((journal) => journal.user_id !== null).slice(0, 5);
 
 		res.json({
 			success: true,
@@ -245,7 +243,7 @@ export const getDiscoverPosts = async (req, res) => {
 			}
 
 			console.log('🔎 Filtre journal appliqué:', journalFilter);
-			
+
 			const journals = await Journal.find(journalFilter)
 				.populate({
 					path: 'user_id',
@@ -257,13 +255,16 @@ export const getDiscoverPosts = async (req, res) => {
 				.limit(parseInt(limit));
 
 			console.log('🔎 Journaux trouvés avant filtrage:', journals.length);
-			console.log('🔎 Détails des journaux:', journals.map(j => ({
-				title: j.title,
-				is_public: j.is_public,
-				status: j.status,
-				user_populated: !!j.user_id,
-				user_areJournalsPublic: j.user_id?.areJournalsPublic
-			})));
+			console.log(
+				'🔎 Détails des journaux:',
+				journals.map((j) => ({
+					title: j.title,
+					is_public: j.is_public,
+					status: j.status,
+					user_populated: !!j.user_id,
+					user_areJournalsPublic: j.user_id?.areJournalsPublic
+				}))
+			);
 
 			const validJournals = journals.filter((journal) => journal.user_id !== null);
 			console.log('🔎 Journaux valides après filtrage user:', validJournals.length);
@@ -299,7 +300,7 @@ export const getDiscoverPosts = async (req, res) => {
 		// AJOUTER LES LIEUX PUBLICS
 		if (type === 'all' || type === 'place') {
 			console.log('🔎 Récupération des lieux publics...');
-			
+
 			const placeFilter = {};
 			// Pas de modération : tous les lieux des utilisateurs publics sont visibles
 
@@ -328,11 +329,14 @@ export const getDiscoverPosts = async (req, res) => {
 				.limit(parseInt(limit));
 
 			console.log('🔎 Lieux trouvés avant filtrage:', places.length);
-			console.log('🔎 Détails des lieux:', places.map(p => ({
-				name: p.name,
-				user_populated: !!p.user_id,
-				user_areJournalsPublic: p.user_id?.areJournalsPublic
-			})));
+			console.log(
+				'🔎 Détails des lieux:',
+				places.map((p) => ({
+					name: p.name,
+					user_populated: !!p.user_id,
+					user_areJournalsPublic: p.user_id?.areJournalsPublic
+				}))
+			);
 
 			const validPlaces = places.filter((place) => place.user_id !== null);
 			console.log('🔎 Lieux valides après filtrage user:', validPlaces.length);
@@ -578,10 +582,7 @@ export const getActiveTravelers = async (req, res) => {
 							$filter: {
 								input: '$journals',
 								cond: {
-									$and: [
-										{ $eq: ['$$this.is_public', true] },
-										{ $eq: ['$$this.status', 'published'] }
-									]
+									$and: [{ $eq: ['$$this.is_public', true] }, { $eq: ['$$this.status', 'published'] }]
 								}
 							}
 						}
@@ -590,10 +591,7 @@ export const getActiveTravelers = async (req, res) => {
 			},
 			{
 				$match: {
-					$or: [
-						{ places_count: { $gt: 0 } },
-						{ journals_count: { $gt: 0 } }
-					]
+					$or: [{ places_count: { $gt: 0 } }, { journals_count: { $gt: 0 } }]
 				}
 			},
 			{

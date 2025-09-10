@@ -89,18 +89,19 @@ const MapHeader: React.FC<MapHeaderProps> = ({
           fullWidth
           sx={{
             '& .MuiOutlinedInput-root': {
-              borderRadius: '25px',
-              backgroundColor: '#f5f5f5',
-              border: 'none',
-              fontSize: { xs: '14px', sm: '16px' },
-              '& fieldset': {
-                border: 'none',
+              borderRadius: 1,
+              bgcolor: 'surface.variant',
+              border: '1px solid outline.main',
+              fontSize: '0.95rem',
+              '& fieldset': { border: 'none' },
+              '&:hover': {
+                bgcolor: 'background.paper',
+                border: '1px solid #D1D5DB',
               },
-              '&:hover fieldset': {
-                border: 'none',
-              },
-              '&.Mui-focused fieldset': {
-                border: '1px solid #5B9BD5',
+              '&.Mui-focused': {
+                bgcolor: 'background.paper',
+                border: '1px solid #4F86F7',
+                boxShadow: '0 0 0 3px rgba(79, 134, 247, 0.1)',
               },
             },
           }}
@@ -179,13 +180,10 @@ const MapHeader: React.FC<MapHeaderProps> = ({
             '& .MuiToggleButton-root': {
               px: 1,
               py: 0.5,
-
               borderRadius: '6px !important',
-
               minWidth: '40px',
               '&.Mui-selected': {
                 backgroundColor: theme.palette.primary.main,
-
                 '&:hover': {
                   backgroundColor: '#4A8BC2',
                 },
@@ -215,7 +213,6 @@ const MapHeader: React.FC<MapHeaderProps> = ({
             '&:hover': {
               background: `linear-gradient(45deg, ${theme.palette.error.dark} 30%, ${theme.palette.error.main} 90%)`,
             },
-
             px: 2,
             py: 0.8,
           }}
