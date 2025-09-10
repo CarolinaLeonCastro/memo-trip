@@ -181,13 +181,19 @@ const EditPlace: React.FC = () => {
           address: apiPlace.location?.address || '',
           latitude: apiPlace.location?.coordinates?.[1],
           longitude: apiPlace.location?.coordinates?.[0],
-          dateVisited: new Date(apiPlace.date_visited),
+          dateVisited: apiPlace.date_visited
+            ? new Date(apiPlace.date_visited)
+            : new Date(),
           startDate: apiPlace.start_date
             ? new Date(apiPlace.start_date)
-            : new Date(apiPlace.date_visited),
+            : apiPlace.date_visited
+              ? new Date(apiPlace.date_visited)
+              : new Date(),
           endDate: apiPlace.end_date
             ? new Date(apiPlace.end_date)
-            : new Date(apiPlace.date_visited),
+            : apiPlace.date_visited
+              ? new Date(apiPlace.date_visited)
+              : new Date(),
           photos:
             apiPlace.photos?.map((photo: { url: string }) => photo.url) || [],
           tags: apiPlace.tags || [],

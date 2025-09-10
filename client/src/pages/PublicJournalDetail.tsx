@@ -39,12 +39,22 @@ interface TravelInfo {
   budget: string;
 }
 
-interface VisitedPlace {
+interface VisitedPlaceLocal {
   _id: string;
   name: string;
+  location?: {
+    city?: string;
+    country?: string;
+  };
+  description?: string;
+  photos?: Array<{ url: string }>;
+  rating?: number;
+  budget?: number;
+  start_date?: string;
+  end_date?: string;
+  date_visited?: string;
   country: string;
   days: number;
-  photos: Array<{ url: string }>;
 }
 
 interface Photo {
@@ -66,7 +76,7 @@ interface PublicJournal {
   shares: number;
   is_liked: boolean;
   travel_info: TravelInfo;
-  places: VisitedPlace[];
+  places: VisitedPlaceLocal[];
   gallery: Photo[];
   journal_content: string;
   created_at: string;
@@ -388,13 +398,20 @@ This 21-day journey through Europe showed us the incredible diversity of culture
             budget: '',
           },
           places:
-            journalData.places?.map((place) => ({
-              _id: place._id,
-              name: place.name,
-              country: place.location?.country || '',
-              days: 1,
-              photos: place.photos || [],
-            })) || [],
+            journalData.places?.map(
+              (place: {
+                _id: string;
+                name: string;
+                location?: { country?: string };
+                photos?: Array<{ url: string }>;
+              }) => ({
+                _id: place._id,
+                name: place.name,
+                country: place.location?.country || '',
+                days: 1,
+                photos: place.photos || [],
+              })
+            ) || [],
           gallery: [], // À implémenter si nécessaire
           journal_content:
             journalData.personal_notes || journalData.description || '',
@@ -422,7 +439,7 @@ This 21-day journey through Europe showed us the incredible diversity of culture
   }, [id]);
 
   // Gérer le clic sur un lieu pour naviguer vers ses détails
-  const handlePlaceClick = (place: VisitedPlace) => {
+  const handlePlaceClick = (place: VisitedPlaceLocal) => {
     console.log('🔄 Navigation vers lieu:', place._id);
     navigate(`/public/place/${place._id}`);
   };
@@ -583,7 +600,21 @@ This 21-day journey through Europe showed us the incredible diversity of culture
           <Grid container spacing={3}>
             {journal.places.map((place) => (
               <Grid key={place._id} size={{ xs: 12, md: 6, lg: 4 }}>
-                <VisitedPlaceCard place={place} onClick={handlePlaceClick} />
+                <VisitedPlaceCard
+                  place={{
+                    _id: place._id,
+                    name: place.name,
+                    location: place.location,
+                    description: place.description,
+                    photos: place.photos,
+                    rating: place.rating,
+                    budget: place.budget,
+                    start_date: place.start_date,
+                    end_date: place.end_date,
+                    date_visited: place.date_visited,
+                  }}
+                  onClick={(p) => handlePlaceClick({ ...place, ...p })}
+                />
               </Grid>
             ))}
           </Grid>

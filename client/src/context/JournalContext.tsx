@@ -388,11 +388,23 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
       }
 
       // Nettoyer les valeurs undefined et null
-      const cleanData = Object.fromEntries(
-        Object.entries(placeCreateData).filter(
-          ([_, value]) => value !== undefined && value !== null
-        )
-      );
+      const cleanData: PlaceCreateRequest = {
+        name: placeCreateData.name,
+        description: placeCreateData.description,
+        journal_id: placeCreateData.journal_id,
+        location: placeCreateData.location,
+        date_visited: placeCreateData.date_visited || new Date().toISOString(),
+        start_date: placeCreateData.start_date || new Date().toISOString(),
+        end_date: placeCreateData.end_date || new Date().toISOString(),
+        photos: placeCreateData.photos,
+        rating: placeCreateData.rating,
+        weather: placeCreateData.weather,
+        budget: placeCreateData.budget,
+        tags: placeCreateData.tags,
+        is_favorite: placeCreateData.is_favorite,
+        visit_duration: placeCreateData.visit_duration,
+        notes: placeCreateData.notes,
+      };
 
       // Debug: Afficher les données envoyées
       console.log("📍 Données finales envoyées à l'API:", cleanData);

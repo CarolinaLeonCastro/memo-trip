@@ -204,7 +204,11 @@ const EditJournal: React.FC = () => {
   };
 
   // Calculer le nombre de jours pour un lieu
-  const calculateDays = (startDate: string, endDate: string) => {
+  const calculateDays = (
+    startDate: string | undefined,
+    endDate: string | undefined
+  ) => {
+    if (!startDate || !endDate) return 1;
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
