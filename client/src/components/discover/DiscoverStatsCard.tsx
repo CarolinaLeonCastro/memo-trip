@@ -49,7 +49,7 @@ export const DiscoverStatsCard: React.FC<DiscoverStatsCardProps> = ({
           {label}
         </Typography>
       </Box>
-      <Typography variant="h4" fontWeight="bold" sx={{ color: '#2E3A59' }}>
+      <Typography variant="h4" fontWeight="bold">
         {value.toLocaleString()}
       </Typography>
     </Card>

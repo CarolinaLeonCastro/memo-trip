@@ -22,11 +22,14 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { userService } from '../../services/user.service';
+import { useThemeMode } from '../../context/ThemeContext';
 
 const SettingsTab: React.FC = () => {
+  const { isDarkMode, toggleDarkMode } = useThemeMode();
+
   const [settings, setSettings] = useState({
     journalPublic: false,
-    darkMode: false,
+    darkMode: isDarkMode, // Utiliser la valeur du contexte
     language: 'fr',
   });
 
@@ -60,6 +63,7 @@ const SettingsTab: React.FC = () => {
           const newSettings = {
             ...prev,
             journalPublic: userSettings?.areJournalsPublic ?? false,
+            darkMode: isDarkMode, // Synchroniser avec le contexte de thème
           };
           console.log('📝 useEffect: Nouveaux paramètres:', newSettings);
           return newSettings;
@@ -73,7 +77,15 @@ const SettingsTab: React.FC = () => {
     };
 
     loadSettings();
-  }, []); // Garder [] pour qu'il ne se déclenche qu'au montage
+  }, [isDarkMode]); // Ajouter isDarkMode comme dépendance
+
+  // Synchroniser le state local quand le contexte de thème change
+  useEffect(() => {
+    setSettings((prev) => ({
+      ...prev,
+      darkMode: isDarkMode,
+    }));
+  }, [isDarkMode]);
 
   const handleSettingChange = async (setting: string, value: boolean) => {
     if (setting === 'journalPublic') {
@@ -115,8 +127,13 @@ const SettingsTab: React.FC = () => {
       } finally {
         setUpdating(false);
       }
+    } else if (setting === 'darkMode') {
+      // Gérer le changement de mode sombre via le contexte
+      toggleDarkMode();
+      setSuccess("Mode d'affichage mis à jour");
+      setTimeout(() => setSuccess(''), 3000);
     } else {
-      // Pour les autres paramètres (darkMode, language), garder la logique locale pour l'instant
+      // Pour les autres paramètres (language), garder la logique locale pour l'instant
       setSettings((prev) => ({
         ...prev,
         [setting]: value,

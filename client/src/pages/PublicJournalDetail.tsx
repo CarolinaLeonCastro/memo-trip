@@ -6,7 +6,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 // Import des composants publics
@@ -19,6 +19,9 @@ import {
 
 // Import du composant content (partagé)
 import { JournalContent } from '../components/journal';
+
+// Import du service public
+import { publicService } from '../services/public.service';
 
 // Types
 interface User {
@@ -36,12 +39,22 @@ interface TravelInfo {
   budget: string;
 }
 
-interface VisitedPlace {
+interface VisitedPlaceLocal {
   _id: string;
   name: string;
+  location?: {
+    city?: string;
+    country?: string;
+  };
+  description?: string;
+  photos?: Array<{ url: string }>;
+  rating?: number;
+  budget?: number;
+  start_date?: string;
+  end_date?: string;
+  date_visited?: string;
   country: string;
   days: number;
-  photos: Array<{ url: string }>;
 }
 
 interface Photo {
@@ -63,7 +76,7 @@ interface PublicJournal {
   shares: number;
   is_liked: boolean;
   travel_info: TravelInfo;
-  places: VisitedPlace[];
+  places: VisitedPlaceLocal[];
   gallery: Photo[];
   journal_content: string;
   created_at: string;
@@ -71,6 +84,7 @@ interface PublicJournal {
 
 const PublicJournalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [journal, setJournal] = useState<PublicJournal | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -330,15 +344,105 @@ This 21-day journey through Europe showed us the incredible diversity of culture
   );
 
   useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      const journalData = id ? mockJournals[id] : null;
-      if (journalData) {
-        setJournal(journalData);
+    const loadJournalDetails = async () => {
+      try {
+        if (!id) return;
+
+        setLoading(true);
+        console.log('🔄 PublicJournalDetail: Chargement du journal:', id);
+
+        const journalData = await publicService.getPublicJournalById(id);
+        console.log('✅ PublicJournalDetail: Données reçues:', journalData);
+
+        // Vérifier que les données existent
+        if (!journalData) {
+          console.error(
+            '❌ PublicJournalDetail: Aucune donnée reçue, utilisation des données mockées'
+          );
+          // Utiliser les données mockées en fallback
+          const mockData = id ? mockJournals[id] : null;
+          if (mockData) {
+            setJournal(mockData);
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Adapter les données de l'API au format attendu par les composants
+        const adaptedJournal: PublicJournal = {
+          _id: journalData._id,
+          title: journalData.title,
+          subtitle: '', // Pas présent dans l'API
+          description: journalData.description || '',
+          cover_image: journalData.cover_image || '',
+          tags: journalData.tags || [],
+          user: {
+            _id: journalData.user_id?._id || '',
+            name: journalData.user_id?.name || 'Utilisateur inconnu',
+            location: '',
+            bio: '',
+            avatar: journalData.user_id?.avatar,
+          },
+          likes: 0, // À implémenter avec le système de likes
+          views: 0, // À implémenter avec le système de vues
+          comments: 0, // À implémenter avec le système de commentaires
+          shares: 0, // À implémenter
+          is_liked: false, // À implémenter avec le système de likes
+          travel_info: {
+            duration:
+              journalData.start_date && journalData.end_date
+                ? `${Math.ceil((new Date(journalData.end_date).getTime() - new Date(journalData.start_date).getTime()) / (1000 * 3600 * 24))} jours`
+                : '',
+            distance: '',
+            season: '',
+            budget: '',
+          },
+          places:
+            journalData.places?.map(
+              (place: {
+                _id: string;
+                name: string;
+                location?: { country?: string };
+                photos?: Array<{ url: string }>;
+              }) => ({
+                _id: place._id,
+                name: place.name,
+                country: place.location?.country || '',
+                days: 1,
+                photos: place.photos || [],
+              })
+            ) || [],
+          gallery: [], // À implémenter si nécessaire
+          journal_content:
+            journalData.personal_notes || journalData.description || '',
+          created_at: journalData.createdAt,
+        };
+
+        console.log('✅ PublicJournalDetail: Journal adapté:', adaptedJournal);
+        setJournal(adaptedJournal);
+      } catch (error) {
+        console.error(
+          '❌ PublicJournalDetail: Erreur lors du chargement:',
+          error
+        );
+        // En cas d'erreur, utiliser les données mockées si disponibles
+        const journalData = id ? mockJournals[id] : null;
+        if (journalData) {
+          setJournal(journalData);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }, 500);
-  }, [id, mockJournals]);
+    };
+
+    loadJournalDetails();
+  }, [id]);
+
+  // Gérer le clic sur un lieu pour naviguer vers ses détails
+  const handlePlaceClick = (place: VisitedPlaceLocal) => {
+    console.log('🔄 Navigation vers lieu:', place._id);
+    navigate(`/public/place/${place._id}`);
+  };
 
   if (loading) {
     return (
@@ -496,7 +600,21 @@ This 21-day journey through Europe showed us the incredible diversity of culture
           <Grid container spacing={3}>
             {journal.places.map((place) => (
               <Grid key={place._id} size={{ xs: 12, md: 6, lg: 4 }}>
-                <VisitedPlaceCard place={place} />
+                <VisitedPlaceCard
+                  place={{
+                    _id: place._id,
+                    name: place.name,
+                    location: place.location,
+                    description: place.description,
+                    photos: place.photos,
+                    rating: place.rating,
+                    budget: place.budget,
+                    start_date: place.start_date,
+                    end_date: place.end_date,
+                    date_visited: place.date_visited,
+                  }}
+                  onClick={(p) => handlePlaceClick({ ...place, ...p })}
+                />
               </Grid>
             ))}
           </Grid>

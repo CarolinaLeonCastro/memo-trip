@@ -125,8 +125,55 @@ class PublicService {
 
   // Récupérer un journal public par ID
   async getPublicJournalById(id: string) {
-    const response = await api.get(`/api/public/journals/${id}`);
-    return response.data.data;
+    try {
+      console.log('🔗 Service: Appel API getPublicJournalById pour:', id);
+      const response = await api.get(`/api/public/journals/${id}`);
+      console.log('🔗 Service: Réponse brute journal:', response.data);
+
+      // Vérifier si la réponse a le format {success: true, data: ...}
+      if (response.data.success !== undefined) {
+        if (response.data.success) {
+          console.log('✅ Service: Format avec success=true, retour data');
+          return response.data.data;
+        } else {
+          console.error(
+            '❌ Service: API retourne success=false:',
+            response.data.message
+          );
+          return null;
+        }
+      } else {
+        // La réponse est directement l'objet journal (format attendu basé sur les logs)
+        console.log('✅ Service: Format direct, retour de response.data');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicJournalById:', error);
+      return null;
+    }
+  }
+
+  // Récupérer un lieu public par ID
+  async getPublicPlaceById(id: string) {
+    try {
+      console.log('🔗 Service: Appel API getPublicPlaceById pour:', id);
+      const response = await api.get(`/api/public/places/${id}`);
+      console.log('🔗 Service: Réponse brute lieu:', response.data);
+
+      if (response.data.success) {
+        console.log('✅ Service: Lieu trouvé avec succès');
+        return response.data.data;
+      } else {
+        console.error(
+          '❌ Service: API retourne success=false:',
+          response.data.message
+        );
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      return null;
+    }
   }
 
   // Récupérer les statistiques publiques
@@ -143,19 +190,22 @@ class PublicService {
     totalPages: number;
   }> {
     try {
-      console.log('🔗 Service: Appel API getDiscoverPosts avec filtres:', filters);
+      console.log(
+        '🔗 Service: Appel API getDiscoverPosts avec filtres:',
+        filters
+      );
       const response = await api.get('/api/public/discover/posts', {
         params: filters,
       });
-      
+
       console.log('🔗 Service: Réponse brute API:', response.data);
       console.log('🔗 Service: Structure de response.data:', {
         hasSuccess: 'success' in response.data,
         hasData: 'data' in response.data,
         dataType: typeof response.data.data,
-        keys: Object.keys(response.data)
+        keys: Object.keys(response.data),
       });
-      
+
       // Gérer différents formats de réponse
       let result;
       if (response.data.data) {
@@ -165,13 +215,13 @@ class PublicService {
       } else {
         result = { posts: [], total: 0, page: 1, totalPages: 0 };
       }
-      
+
       console.log('🔗 Service: Résultat final:', {
         postsCount: result.posts?.length || 0,
         total: result.total,
-        page: result.page
+        page: result.page,
       });
-      
+
       return result;
     } catch (error) {
       console.error('❌ Service: Erreur getDiscoverPosts:', error);
@@ -184,9 +234,9 @@ class PublicService {
     try {
       console.log('🔗 Service: Appel API getDiscoverStats');
       const response = await api.get('/api/public/discover/stats');
-      
+
       console.log('🔗 Service: Réponse stats brute:', response.data);
-      
+
       // Gérer différents formats de réponse
       let result;
       if (response.data.data) {
@@ -196,7 +246,7 @@ class PublicService {
       } else {
         result = { shared_places: 0, public_journals: 0, active_travelers: 0 };
       }
-      
+
       console.log('🔗 Service: Stats résultat final:', result);
       return result;
     } catch (error) {

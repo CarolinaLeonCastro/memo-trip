@@ -19,7 +19,11 @@ import {
 import type { Place as ApiPlace } from '../../services/place-api';
 
 // Fonction utilitaire pour calculer les jours
-const calculateDays = (startDate: string, endDate: string) => {
+const calculateDays = (
+  startDate: string | undefined,
+  endDate: string | undefined
+) => {
+  if (!startDate || !endDate) return 1;
   const start = new Date(startDate);
   const end = new Date(endDate);
   const diffTime = Math.abs(end.getTime() - start.getTime());

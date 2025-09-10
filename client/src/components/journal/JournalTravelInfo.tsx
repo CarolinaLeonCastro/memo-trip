@@ -60,10 +60,10 @@ export const JournalTravelInfo: React.FC<JournalTravelInfoProps> = ({
           <Box
             sx={{
               p: 3,
-              bgcolor: 'white',
+
               borderRadius: 1,
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              border: '1px solid #f0f0f0',
+              bgcolor: 'background.paper',
               transition: 'all 0.3s ease',
               '&:hover': {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
@@ -87,19 +87,11 @@ export const JournalTravelInfo: React.FC<JournalTravelInfoProps> = ({
               >
                 <WbSunnyIcon sx={{ fontSize: 24, color: '#4CAF50' }} />
               </Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: '0.9rem' }}
-              >
+              <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
                 Saison
               </Typography>
             </Box>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              sx={{ color: '#2E3A59' }}
-            >
+            <Typography variant="h6" fontWeight="bold">
               {travelStats.season || 'Non définie'}
             </Typography>
           </Box>

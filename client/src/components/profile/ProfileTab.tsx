@@ -137,7 +137,7 @@ const ProfileTab: React.FC = () => {
         <Box
           sx={{
             background: 'linear-gradient(135deg, #3D5A80 0%, #98C1D9 100%)',
-            p: 4,
+            p: { xs: 2, sm: 4 }, // Padding responsive
             color: 'white',
             position: 'relative',
           }}
@@ -147,14 +147,29 @@ const ProfileTab: React.FC = () => {
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'space-between',
+              flexDirection: { xs: 'column', sm: 'row' }, // Stack sur mobile
+              gap: { xs: 2, sm: 0 }, // Espacement sur mobile
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 2, sm: 3 },
+                flexDirection: { xs: 'column', sm: 'row' }, // Stack sur mobile
+                textAlign: { xs: 'center', sm: 'left' },
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
               <Box sx={{ position: 'relative' }}>
                 <Avatar
                   src="/api/placeholder/120/120"
                   alt={formData.name}
-                  sx={{ width: 100, height: 100, border: '4px solid white' }}
+                  sx={{
+                    width: { xs: 80, sm: 100 },
+                    height: { xs: 80, sm: 100 },
+                    border: '4px solid white',
+                  }}
                 />
                 {isEditing && (
                   <IconButton
@@ -165,14 +180,14 @@ const ProfileTab: React.FC = () => {
                       right: 0,
                       bgcolor: 'primary.main',
                       color: 'white',
-                      width: 40,
-                      height: 40,
+                      width: { xs: 32, sm: 40 },
+                      height: { xs: 32, sm: 40 },
                       '&:hover': {
                         bgcolor: 'primary.dark',
                       },
                     }}
                   >
-                    <PhotoCameraIcon sx={{ fontSize: 20 }} />
+                    <PhotoCameraIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
                   </IconButton>
                 )}
               </Box>
@@ -183,14 +198,23 @@ const ProfileTab: React.FC = () => {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     variant="standard"
+                    fullWidth
                     InputProps={{
                       style: {
                         color: 'white',
+                        fontSize: '1.25rem',
                       },
                     }}
+                    sx={{ mb: 1 }}
                   />
                 ) : (
-                  <Typography variant="h5" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      mb: 1,
+                      fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                    }}
+                  >
                     {formData.name}
                   </Typography>
                 )}
@@ -201,6 +225,7 @@ const ProfileTab: React.FC = () => {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     variant="standard"
                     type="email"
+                    fullWidth
                     InputProps={{
                       style: {
                         color: 'rgba(255,255,255,0.9)',
@@ -208,15 +233,33 @@ const ProfileTab: React.FC = () => {
                     }}
                   />
                 ) : (
-                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      opacity: 0.9,
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                    }}
+                  >
                     {formData.email}
                   </Typography>
                 )}
               </Box>
             </Box>
 
-            {/* Bouton Modifier */}
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* Boutons Modifier/Sauvegarder - Section responsive améliorée */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                flexDirection: { xs: 'column', sm: 'row' }, // Stack verticalement sur mobile
+                width: { xs: '100%', sm: 'auto' }, // Pleine largeur sur mobile
+                '& > button': {
+                  width: { xs: '100%', sm: 'auto' }, // Boutons pleine largeur sur mobile
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  py: { xs: 1.5, sm: 1 }, // Plus de padding vertical sur mobile
+                },
+              }}
+            >
               {isEditing ? (
                 <>
                   <Button
@@ -228,6 +271,9 @@ const ProfileTab: React.FC = () => {
                       '&:hover': {
                         bgcolor: 'grey.100',
                       },
+                      '&:disabled': {
+                        bgcolor: 'rgba(255,255,255,0.7)',
+                      },
                     }}
                   >
                     {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -237,8 +283,6 @@ const ProfileTab: React.FC = () => {
                     startIcon={<CancelIcon />}
                     onClick={handleCancel}
                     sx={{
-                      borderColor: 'white',
-                      color: 'white',
                       '&:hover': {
                         borderColor: 'white',
                         bgcolor: 'rgba(255,255,255,0.1)',
@@ -267,7 +311,7 @@ const ProfileTab: React.FC = () => {
         </Box>
 
         {/* Biographie et informations */}
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {/* Biographie */}
           <Box sx={{ mb: 4 }}>
             {isEditing ? (
@@ -285,7 +329,10 @@ const ProfileTab: React.FC = () => {
               <Typography
                 variant="body1"
                 color="text.secondary"
-                sx={{ lineHeight: 1.6 }}
+                sx={{
+                  lineHeight: 1.6,
+                  fontSize: { xs: '0.9rem', sm: '1rem' },
+                }}
               >
                 {formData.bio}
               </Typography>
@@ -293,7 +340,15 @@ const ProfileTab: React.FC = () => {
           </Box>
 
           {/* Informations avec icônes */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: { xs: 2, sm: 3 },
+              mb: 2,
+              flexDirection: { xs: 'column', sm: 'row' }, // Stack sur mobile
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LocationIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
               {isEditing ? (
@@ -304,6 +359,7 @@ const ProfileTab: React.FC = () => {
                   }
                   variant="standard"
                   size="small"
+                  fullWidth
                 />
               ) : (
                 <Typography variant="body2" color="text.secondary">
@@ -329,6 +385,7 @@ const ProfileTab: React.FC = () => {
                   }
                   variant="standard"
                   size="small"
+                  fullWidth
                 />
               ) : (
                 <Typography variant="body2" color="text.secondary">

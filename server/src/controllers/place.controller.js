@@ -399,13 +399,13 @@ export const createPlace = async (req, res, next) => {
 		} else {
 			// Journal en cours ou passé → statut 'visited' autorisé (défaut)
 			if (!placeData.status) placeData.status = 'visited';
-			
+
 			if (placeData.status === 'visited') {
 				// S'assurer que les dates obligatoires sont présentes
 				if (!placeData.start_date) placeData.start_date = placeData.date_visited;
 				if (!placeData.end_date) placeData.end_date = placeData.date_visited;
 				if (!placeData.date_visited) placeData.date_visited = placeData.start_date;
-				
+
 				// Nettoyer les champs "planned" (non utilisés pour visited)
 				placeData.plannedStart = null;
 				placeData.plannedEnd = null;
@@ -561,10 +561,10 @@ export const updatePlace = async (req, res, next) => {
 				}
 			}
 
-			logger.info('Current/past journal - processing update', { 
-				existingStatus: existingPlace.status, 
+			logger.info('Current/past journal - processing update', {
+				existingStatus: existingPlace.status,
 				newStatus: updateData.status,
-				updateData 
+				updateData
 			});
 		}
 
@@ -623,24 +623,26 @@ export const deletePlace = async (req, res, next) => {
 		logger.info('🗑️ Suppression du lieu avec photos Cloudinary', {
 			placeId: req.params.id,
 			photosCount: place.photos ? place.photos.length : 0,
-			photos: place.photos ? place.photos.map(p => ({ 
-				public_id: p.public_id, 
-				url: p.url 
-			})) : []
+			photos: place.photos
+				? place.photos.map((p) => ({
+						public_id: p.public_id,
+						url: p.url
+					}))
+				: []
 		});
 
 		// 🌩️ ÉTAPE 1: Supprimer toutes les images de Cloudinary
 		if (place.photos && place.photos.length > 0) {
 			const deletionErrors = [];
-			
+
 			for (const photo of place.photos) {
 				try {
 					if (photo.public_id) {
 						// Supprimer l'image de Cloudinary
 						await deleteImage(photo.public_id);
-						logger.info('✅ Image Cloudinary supprimée', { 
+						logger.info('✅ Image Cloudinary supprimée', {
 							public_id: photo.public_id,
-							placeId: req.params.id 
+							placeId: req.params.id
 						});
 					} else if (photo.filename) {
 						// Fallback : supprimer fichier local legacy
@@ -669,7 +671,7 @@ export const deletePlace = async (req, res, next) => {
 			}
 
 			if (deletionErrors.length > 0) {
-				logger.warn('⚠️ Certaines images n\'ont pas pu être supprimées de Cloudinary', {
+				logger.warn("⚠️ Certaines images n'ont pas pu être supprimées de Cloudinary", {
 					placeId: req.params.id,
 					errors: deletionErrors
 				});
@@ -677,8 +679,8 @@ export const deletePlace = async (req, res, next) => {
 		}
 
 		// 🗄️ ÉTAPE 2: Supprimer la place du journal
-		await Journal.findByIdAndUpdate(place.journal_id, { 
-			$pull: { places: place._id } 
+		await Journal.findByIdAndUpdate(place.journal_id, {
+			$pull: { places: place._id }
 		});
 
 		// 🗄️ ÉTAPE 3: Supprimer la place de la base de données

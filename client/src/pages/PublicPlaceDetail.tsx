@@ -16,6 +16,9 @@ import {
   PlaceInfoCard,
 } from '../components';
 
+// Import du service public
+import { publicService } from '../services/public.service';
+
 // Types
 interface User {
   _id: string;
@@ -107,13 +110,80 @@ const PublicPlaceDetail: React.FC = () => {
   );
 
   useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      setPlace(mockPlace);
-      setIsLiked(mockPlace.is_liked);
-      setLoading(false);
-    }, 500);
-  }, [id, mockPlace]);
+    const loadPlaceDetails = async () => {
+      try {
+        if (!id) return;
+
+        setLoading(true);
+        console.log('🔄 PublicPlaceDetail: Chargement du lieu:', id);
+
+        const placeData = await publicService.getPublicPlaceById(id);
+        console.log('✅ PublicPlaceDetail: Données reçues:', placeData);
+
+        // Vérifier que les données existent
+        if (!placeData) {
+          console.error(
+            '❌ PublicPlaceDetail: Aucune donnée reçue, utilisation des données mockées'
+          );
+          // Utiliser les données mockées en fallback
+          setPlace(mockPlace);
+          setIsLiked(mockPlace.is_liked);
+          setLoading(false);
+          return;
+        }
+
+        // Adapter les données de l'API au format attendu par les composants
+        const adaptedPlace: PublicPlace = {
+          _id: placeData._id,
+          name: placeData.name,
+          description: placeData.description || '',
+          city: placeData.location?.city || '',
+          country: placeData.location?.country || '',
+          address: placeData.location?.address || '',
+          coordinates: placeData.location?.coordinates
+            ? `${placeData.location.coordinates[1]}° N, ${placeData.location.coordinates[0]}° E`
+            : '',
+          photos: placeData.photos || [],
+          tags: placeData.tags || [],
+          user: {
+            _id: placeData.user_id?._id || '',
+            name: placeData.user_id?.name || 'Utilisateur inconnu',
+            avatar: placeData.user_id?.avatar,
+          },
+          likes: 0, // À implémenter avec le système de likes
+          views: 0, // À implémenter avec le système de vues
+          comments: 0, // À implémenter avec le système de commentaires
+          is_liked: false, // À implémenter avec le système de likes
+          practical_info: {
+            best_time_to_visit: '',
+            average_cost: placeData.budget ? `${placeData.budget}€` : '',
+            opening_hours: '',
+            recommendations: placeData.notes || '',
+          },
+          date_visited:
+            placeData.date_visited ||
+            placeData.visitedAt ||
+            placeData.createdAt,
+        };
+
+        console.log('✅ PublicPlaceDetail: Lieu adapté:', adaptedPlace);
+        setPlace(adaptedPlace);
+        setIsLiked(adaptedPlace.is_liked);
+      } catch (error) {
+        console.error(
+          '❌ PublicPlaceDetail: Erreur lors du chargement:',
+          error
+        );
+        // En cas d'erreur, utiliser les données mockées
+        setPlace(mockPlace);
+        setIsLiked(mockPlace.is_liked);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlaceDetails();
+  }, [id]);
 
   const handleLike = () => {
     if (place) {

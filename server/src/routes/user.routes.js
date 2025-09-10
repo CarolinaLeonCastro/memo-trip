@@ -2,7 +2,12 @@ import express from 'express';
 import * as userCtrl from '../controllers/user.controller.js';
 import { uploadImages, handleUploadError } from '../config/multer.config.js';
 import { uploadLimiter } from '../config/security.config.js';
-import { validateUserCreate, validateUserUpdate, validateUserParams, validateUserSettings } from '../validation/middleware.js';
+import {
+	validateUserCreate,
+	validateUserUpdate,
+	validateUserParams,
+	validateUserSettings
+} from '../validation/middleware.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
