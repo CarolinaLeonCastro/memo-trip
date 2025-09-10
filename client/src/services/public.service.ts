@@ -125,8 +125,49 @@ class PublicService {
 
   // Récupérer un journal public par ID
   async getPublicJournalById(id: string) {
-    const response = await api.get(`/api/public/journals/${id}`);
-    return response.data.data;
+    try {
+      console.log('🔗 Service: Appel API getPublicJournalById pour:', id);
+      const response = await api.get(`/api/public/journals/${id}`);
+      console.log('🔗 Service: Réponse brute journal:', response.data);
+      
+      // Vérifier si la réponse a le format {success: true, data: ...}
+      if (response.data.success !== undefined) {
+        if (response.data.success) {
+          console.log('✅ Service: Format avec success=true, retour data');
+          return response.data.data;
+        } else {
+          console.error('❌ Service: API retourne success=false:', response.data.message);
+          return null;
+        }
+      } else {
+        // La réponse est directement l'objet journal (format attendu basé sur les logs)
+        console.log('✅ Service: Format direct, retour de response.data');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicJournalById:', error);
+      return null;
+    }
+  }
+
+  // Récupérer un lieu public par ID
+  async getPublicPlaceById(id: string) {
+    try {
+      console.log('🔗 Service: Appel API getPublicPlaceById pour:', id);
+      const response = await api.get(`/api/public/places/${id}`);
+      console.log('🔗 Service: Réponse brute lieu:', response.data);
+      
+      if (response.data.success) {
+        console.log('✅ Service: Lieu trouvé avec succès');
+        return response.data.data;
+      } else {
+        console.error('❌ Service: API retourne success=false:', response.data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      return null;
+    }
   }
 
   // Récupérer les statistiques publiques

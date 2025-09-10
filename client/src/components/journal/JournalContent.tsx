@@ -14,7 +14,7 @@ export const JournalContent: React.FC<JournalContentProps> = ({ journal }) => {
       {/* Description */}
       {journal.description && (
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ p: 3, mb: 3 }}>
+          <Box sx={{ mb: 3 }}>
             <Typography
               variant="h6"
               sx={{
@@ -35,7 +35,7 @@ export const JournalContent: React.FC<JournalContentProps> = ({ journal }) => {
       {/* Notes personnelles */}
       {journal.personalNotes && (
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ p: 3 }}>
+          <Box>
             <Typography
               variant="h6"
               sx={{

@@ -88,6 +88,7 @@ export const getPublicJournals = async (req, res) => {
 export const getPublicJournalById = async (req, res) => {
 	try {
 		const { id } = req.params;
+		console.log('🔎 API getPublicJournalById appelée pour ID:', id);
 
 		const journal = await Journal.findOne({
 			_id: id,
@@ -104,22 +105,81 @@ export const getPublicJournalById = async (req, res) => {
 				select: 'name description location photos tags rating date_visited visitedAt'
 			});
 
+		console.log('🔎 Journal trouvé:', !!journal);
+		console.log('🔎 User_id populé:', !!journal?.user_id);
+		console.log('🔎 User areJournalsPublic:', journal?.user_id?.areJournalsPublic);
+
 		if (!journal || !journal.user_id) {
+			console.log('❌ Journal non accessible:', { journal: !!journal, user_id: !!journal?.user_id });
 			return res.status(404).json({
 				success: false,
 				message: 'Journal public non trouvé'
 			});
 		}
 
+		console.log('✅ Journal accessible, retour des données');
 		res.json({
 			success: true,
 			data: journal
 		});
 	} catch (error) {
+		console.error('❌ Erreur getPublicJournalById:', error);
 		logger.error('Error fetching public journal:', error);
 		res.status(500).json({
 			success: false,
 			message: 'Erreur lors de la récupération du journal'
+		});
+	}
+};
+
+// Route pour récupérer un lieu public par ID
+export const getPublicPlaceById = async (req, res) => {
+	try {
+		const { id } = req.params;
+		console.log('🔎 API getPublicPlaceById appelée pour ID:', id);
+
+		const place = await Place.findById(id)
+			.populate({
+				path: 'user_id',
+				select: 'name avatar areJournalsPublic',
+				match: { areJournalsPublic: true }
+			})
+			.populate({
+				path: 'journal_id',
+				select: 'title description is_public status'
+			});
+
+		console.log('🔎 Lieu trouvé:', !!place);
+		console.log('🔎 User_id populé:', !!place?.user_id);
+		console.log('🔎 User areJournalsPublic:', place?.user_id?.areJournalsPublic);
+
+		if (!place || !place.user_id) {
+			console.log('❌ Lieu non accessible:', { place: !!place, user_id: !!place?.user_id });
+			return res.status(404).json({
+				success: false,
+				message: 'Lieu public non trouvé'
+			});
+		}
+
+		// Vérifier que le journal parent est public (si applicable)
+		if (place.journal_id && (!place.journal_id.is_public || place.journal_id.status !== 'published')) {
+			return res.status(404).json({
+				success: false,
+				message: 'Lieu non accessible'
+			});
+		}
+
+		console.log('✅ Lieu accessible, retour des données');
+		res.json({
+			success: true,
+			data: place
+		});
+	} catch (error) {
+		console.error('❌ Erreur getPublicPlaceById:', error);
+		logger.error('Error fetching public place:', error);
+		res.status(500).json({
+			success: false,
+			message: 'Erreur lors de la récupération du lieu'
 		});
 	}
 };
@@ -671,6 +731,7 @@ export const getPopularDestinations = async (req, res) => {
 // Configuration des routes publiques
 router.get('/journals', getPublicJournals);
 router.get('/journals/:id', getPublicJournalById);
+router.get('/places/:id', getPublicPlaceById);
 router.get('/stats', getPublicStats);
 
 // Routes pour la page Discover
