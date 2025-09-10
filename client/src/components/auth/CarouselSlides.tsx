@@ -24,7 +24,7 @@ const carouselItems: CarouselItem[] = [
     description:
       'Créez des cartes de voyage personnalisées pour chaque destination. Ajoutez des photos, des notes et des événements.',
     icon: TravelExplore,
-    gradient: ['#667eea', '#764ba2'],
+    gradient: ['#2563EB', '#1D4ED8'], // Primary main vers dark
   },
   {
     id: 2,
@@ -33,7 +33,7 @@ const carouselItems: CarouselItem[] = [
     description:
       'Créez un itinéraire personnalisé à partir de vos préférences. Prêt à explorer le monde, sans perdre de temps.',
     icon: Map,
-    gradient: ['#f093fb', '#f5576c'],
+    gradient: ['#06B6D4', '#0891B2'], // Secondary main vers dark
   },
   {
     id: 3,
@@ -42,7 +42,7 @@ const carouselItems: CarouselItem[] = [
     description:
       'Documentez vos aventures avec photos, notes et souvenirs. Gardez une trace de tous vos moments précieux.',
     icon: PhotoLibrary,
-    gradient: ['#4facfe', '#00f2fe'],
+    gradient: ['#10B981', '#059669'], // Success main vers dark
   },
   {
     id: 4,
@@ -51,7 +51,7 @@ const carouselItems: CarouselItem[] = [
     description:
       'Documentez vos aventures avec photos, notes et souvenirs. Gardez une trace de tous vos moments précieux.',
     icon: Assistant,
-    gradient: ['#43e97b', '#38f9d7'],
+    gradient: ['#F59E0B', '#D97706'], // Accent main vers dark
   },
 ];
 

@@ -225,7 +225,6 @@ const Login: React.FC = () => {
                 fontSize: '1rem',
                 fontWeight: 600,
 
-                backgroundColor: '#6C7B8A',
                 '&:hover': {
                   backgroundColor: '#5A6875',
                 },
