@@ -4,7 +4,6 @@ import {
   Container,
   Typography,
   Grid,
-  CircularProgress,
   useTheme,
   Button,
 } from '@mui/material';
@@ -25,6 +24,9 @@ import {
   PlaceCard,
   JournalCard,
 } from '../components';
+
+// Import des skeletons
+import { JournalCardSkeleton, PlaceCardSkeleton } from '../components/skeleton';
 
 // Import du service
 import {
@@ -173,6 +175,17 @@ const Discover: React.FC = () => {
     console.log('Like post:', postId);
   };
 
+  const handlePlaceClick = (place: unknown) => {
+    // Navigation vers la page publique du lieu si elle existe
+    console.log('Place clicked:', place);
+    // navigate(`/public/places/${place._id}`);
+  };
+
+  const handleViewAllPlaces = (journalId: string) => {
+    // Navigation vers la page publique du journal
+    navigate(`/public/journals/${journalId}`);
+  };
+
   const renderPost = (post: DiscoverPost) => {
     if (post.type === 'place') {
       const place = post.content as DiscoverPlace;
@@ -213,6 +226,8 @@ const Discover: React.FC = () => {
           views={post.views}
           isLiked={post.is_liked}
           onLike={() => handleLike(post._id)}
+          onPlaceClick={handlePlaceClick}
+          onViewAllPlaces={() => handleViewAllPlaces(journal._id)}
         />
       );
     }
@@ -302,9 +317,22 @@ const Discover: React.FC = () => {
 
         {/* Contenu principal */}
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress size={50} sx={{ color: '#4F86F7' }} />
-          </Box>
+          <Grid container spacing={3}>
+            {/* Afficher les skeletons selon l'onglet actif */}
+            {activeTab === 0 ? (
+              // Skeletons pour les lieux
+              <PlaceCardSkeleton count={8} />
+            ) : activeTab === 1 ? (
+              // Skeletons pour les journaux
+              <JournalCardSkeleton count={6} />
+            ) : (
+              // Skeletons mixtes pour tous
+              <>
+                <PlaceCardSkeleton count={4} />
+                <JournalCardSkeleton count={3} />
+              </>
+            )}
+          </Grid>
         ) : (
           <Grid container spacing={3}>
             {posts

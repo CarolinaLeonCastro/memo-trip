@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 // Layouts
 import Layout from './components/Layouts/Layout';
+import PublicLayout from './components/Layouts/PublicLayout';
 //Pages
 import Journals from './pages/Journals';
 import AllPlaces from './pages/AllPlaces';
@@ -40,16 +41,16 @@ function App() {
             <Router>
               {/* <AuthDebug /> */}
               <Routes>
-                {/* Routes publiques */}
-                <Route path="/public/journals" element={<PublicJournals />} />
-                <Route
-                  path="/public/journals/:id"
-                  element={<PublicJournalDetail />}
-                />
-                <Route
-                  path="/public/place/:id"
-                  element={<PublicPlaceDetail />}
-                />
+                {/* Routes publiques avec Layout */}
+                <Route path="/public" element={<PublicLayout />}>
+                  <Route path="journals" element={<PublicJournals />} />
+                  <Route
+                    path="journals/:id"
+                    element={<PublicJournalDetail />}
+                  />
+                  <Route path="place/:id" element={<PublicPlaceDetail />} />
+                </Route>
+
                 <Route path="/setup" element={<AdminSetup />} />
 
                 {/* Routes d'authentification */}

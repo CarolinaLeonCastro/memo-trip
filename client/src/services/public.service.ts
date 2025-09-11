@@ -1,5 +1,14 @@
 import { api } from '../config/api.config';
 
+export interface PublicPlacePreview {
+  _id: string;
+  name: string;
+  city: string;
+  country: string;
+  coverImage?: string | null;
+  status: 'visited' | 'planned';
+}
+
 export interface PublicJournal {
   _id: string;
   title: string;
@@ -36,6 +45,8 @@ export interface PublicJournal {
     total_photos: number;
     total_days: number;
   };
+  samplePlaces?: PublicPlacePreview[];
+  remainingPlacesCount?: number;
   createdAt: string;
 }
 
@@ -83,6 +94,8 @@ export interface DiscoverJournal {
   places_count: number;
   start_date: string;
   end_date: string;
+  samplePlaces?: PublicPlacePreview[];
+  remainingPlacesCount?: number;
 }
 
 export interface DiscoverPost {
@@ -123,11 +136,27 @@ class PublicService {
     return response.data.data;
   }
 
-  // Récupérer un journal public par ID
-  async getPublicJournalById(id: string) {
+  // Récupérer un journal public par ID avec filtres optionnels pour les lieux
+  async getPublicJournalById(
+    id: string,
+    filters?: {
+      q?: string;
+      tag?: string;
+      sort?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) {
     try {
-      console.log('🔗 Service: Appel API getPublicJournalById pour:', id);
-      const response = await api.get(`/api/public/journals/${id}`);
+      console.log(
+        '🔗 Service: Appel API getPublicJournalById pour:',
+        id,
+        'avec filtres:',
+        filters
+      );
+      const response = await api.get(`/api/public/journals/${id}`, {
+        params: filters,
+      });
       console.log('🔗 Service: Réponse brute journal:', response.data);
 
       // Vérifier si la réponse a le format {success: true, data: ...}

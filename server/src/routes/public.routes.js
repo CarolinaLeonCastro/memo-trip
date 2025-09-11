@@ -31,12 +31,42 @@ export const getPublicJournals = async (req, res) => {
 				select: 'name avatar areJournalsPublic',
 				match: { areJournalsPublic: true }
 			})
+			.populate({
+				path: 'places',
+				select: 'name location photos status',
+				options: { limit: 3 } // Limiter à 3 lieux pour l'aperçu
+			})
 			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(parseInt(limit));
 
 		// Filtrer les journaux dont l'utilisateur n'a pas areJournalsPublic: true
 		const validJournals = journals.filter((journal) => journal.user_id !== null);
+
+		// Ajouter les samplePlaces pour chaque journal
+		const journalsWithSamplePlaces = validJournals.map((journal) => {
+			const journalObj = journal.toObject();
+
+			// Créer l'aperçu des lieux (samplePlaces)
+			const samplePlaces = (journalObj.places || []).slice(0, 3).map((place) => ({
+				_id: place._id,
+				name: place.name,
+				city: place.location?.city || '',
+				country: place.location?.country || '',
+				coverImage: place.photos && place.photos.length > 0 ? place.photos[0] : null,
+				status: place.status || 'visited'
+			}));
+
+			// Compter les lieux restants pour le compteur +N
+			const remainingPlacesCount = Math.max(0, (journalObj.stats?.total_places || journalObj.places?.length || 0) - 3);
+
+			return {
+				...journalObj,
+				samplePlaces,
+				remainingPlacesCount,
+				places: undefined // Supprimer les places complètes pour économiser la bande passante
+			};
+		});
 
 		// Recalculer le total avec les utilisateurs qui ont areJournalsPublic: true
 		const totalValidJournals = await Journal.aggregate([
@@ -66,7 +96,7 @@ export const getPublicJournals = async (req, res) => {
 		res.json({
 			success: true,
 			data: {
-				journals: validJournals,
+				journals: journalsWithSamplePlaces,
 				pagination: {
 					page: parseInt(page),
 					limit: parseInt(limit),
@@ -84,12 +114,14 @@ export const getPublicJournals = async (req, res) => {
 	}
 };
 
-// Route pour récupérer un journal public par ID
+// Route pour récupérer un journal public par ID avec filtres pour les lieux
 export const getPublicJournalById = async (req, res) => {
 	try {
 		const { id } = req.params;
-		console.log('🔎 API getPublicJournalById appelée pour ID:', id);
+		const { q, tag, sort = 'recent', page = 1, limit = 20 } = req.query;
+		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', { q, tag, sort, page, limit });
 
+		// D'abord récupérer le journal de base
 		const journal = await Journal.findOne({
 			_id: id,
 			is_public: true,
@@ -99,10 +131,6 @@ export const getPublicJournalById = async (req, res) => {
 				path: 'user_id',
 				select: 'name avatar areJournalsPublic',
 				match: { areJournalsPublic: true }
-			})
-			.populate({
-				path: 'places',
-				select: 'name description location photos tags rating date_visited visitedAt'
 			});
 
 		console.log('🔎 Journal trouvé:', !!journal);
@@ -117,10 +145,92 @@ export const getPublicJournalById = async (req, res) => {
 			});
 		}
 
-		console.log('✅ Journal accessible, retour des données');
+		// Créer le filtre pour les lieux
+		const placeFilter = { journal_id: journal._id };
+
+		// Filtrage par recherche textuelle
+		if (q && q.trim()) {
+			placeFilter.$or = [
+				{ name: { $regex: q.trim(), $options: 'i' } },
+				{ description: { $regex: q.trim(), $options: 'i' } }
+			];
+		}
+
+		// Filtrage par tag
+		if (tag && tag.trim()) {
+			placeFilter.tags = { $in: [new RegExp(tag.trim(), 'i')] };
+		}
+
+		// Définir le tri
+		let sortOptions = {};
+		switch (sort) {
+			case 'likes':
+				sortOptions = { rating: -1, createdAt: -1 }; // Trier par rating comme proxy pour les likes
+				break;
+			case 'photos':
+				sortOptions = { 'photos.length': -1, createdAt: -1 }; // Trier par nombre de photos
+				break;
+			case 'recent':
+			default:
+				sortOptions = { date_visited: -1, visitedAt: -1, createdAt: -1 };
+				break;
+		}
+
+		// Pagination
+		const skip = (parseInt(page) - 1) * parseInt(limit);
+
+		// Récupérer les lieux avec filtres et pagination
+		const places = await Place.find(placeFilter)
+			.select(
+				'name description location photos tags rating date_visited visitedAt start_date end_date status createdAt'
+			)
+			.sort(sortOptions)
+			.skip(skip)
+			.limit(parseInt(limit));
+
+		// Compter le total pour la pagination
+		const totalPlaces = await Place.countDocuments(placeFilter);
+
+		// Formater les lieux pour l'API publique
+		const formattedPlaces = places.map((place) => ({
+			_id: place._id,
+			name: place.name,
+			city: place.location?.city || '',
+			country: place.location?.country || '',
+			description: place.description ? place.description.substring(0, 300) : '', // Limiter à 300 caractères
+			coverImage: place.photos && place.photos.length > 0 ? place.photos[0] : null,
+			photosCount: place.photos ? place.photos.length : 0,
+			rating: place.rating,
+			dateVisited: place.date_visited || place.visitedAt,
+			visitPeriod:
+				place.start_date && place.end_date
+					? {
+							start: place.start_date,
+							end: place.end_date
+					  }
+					: null,
+			tags: place.tags || [],
+			status: place.status || 'visited',
+			coordinates: place.location?.coordinates || []
+		}));
+
+		// Réponse avec journal et lieux paginés
+		const response = {
+			...journal.toObject(),
+			places: formattedPlaces,
+			placesMetadata: {
+				total: totalPlaces,
+				page: parseInt(page),
+				limit: parseInt(limit),
+				totalPages: Math.ceil(totalPlaces / parseInt(limit)),
+				hasMore: skip + places.length < totalPlaces
+			}
+		};
+
+		console.log('✅ Journal accessible, retour des données avec', formattedPlaces.length, 'lieux');
 		res.json({
 			success: true,
-			data: journal
+			data: response
 		});
 	} catch (error) {
 		console.error('❌ Erreur getPublicJournalById:', error);
@@ -310,6 +420,11 @@ export const getDiscoverPosts = async (req, res) => {
 					select: 'name avatar areJournalsPublic',
 					match: { areJournalsPublic: true }
 				})
+				.populate({
+					path: 'places',
+					select: 'name location photos status',
+					options: { limit: 3 } // Limiter à 3 lieux pour l'aperçu
+				})
 				.select('title description cover_image tags start_date end_date stats createdAt')
 				.sort({ createdAt: sort === 'recent' ? -1 : 1 })
 				.limit(parseInt(limit));
@@ -330,30 +445,47 @@ export const getDiscoverPosts = async (req, res) => {
 			console.log('🔎 Journaux valides après filtrage user:', validJournals.length);
 
 			posts = posts.concat(
-				validJournals.map((journal) => ({
-					_id: journal._id,
-					type: 'journal',
-					user: {
-						_id: journal.user_id._id,
-						name: journal.user_id.name,
-						avatar: journal.user_id.avatar
-					},
-					content: {
+				validJournals.map((journal) => {
+					// Créer l'aperçu des lieux (samplePlaces)
+					const samplePlaces = (journal.places || []).slice(0, 3).map((place) => ({
+						_id: place._id,
+						name: place.name,
+						city: place.location?.city || '',
+						country: place.location?.country || '',
+						coverImage: place.photos && place.photos.length > 0 ? place.photos[0] : null,
+						status: place.status || 'visited'
+					}));
+
+					// Compter les lieux restants
+					const remainingPlacesCount = Math.max(0, (journal.stats?.total_places || journal.places?.length || 0) - 3);
+
+					return {
 						_id: journal._id,
-						title: journal.title,
-						description: journal.description,
-						cover_image: journal.cover_image,
-						tags: journal.tags,
-						places_count: journal.stats?.total_places || 0,
-						start_date: journal.start_date,
-						end_date: journal.end_date
-					},
-					likes: 0, // À implémenter avec un système de likes
-					comments: 0, // À implémenter avec un système de commentaires
-					views: 0, // À implémenter avec un système de vues
-					is_liked: false,
-					created_at: journal.createdAt
-				}))
+						type: 'journal',
+						user: {
+							_id: journal.user_id._id,
+							name: journal.user_id.name,
+							avatar: journal.user_id.avatar
+						},
+						content: {
+							_id: journal._id,
+							title: journal.title,
+							description: journal.description,
+							cover_image: journal.cover_image,
+							tags: journal.tags,
+							places_count: journal.stats?.total_places || 0,
+							start_date: journal.start_date,
+							end_date: journal.end_date,
+							samplePlaces,
+							remainingPlacesCount
+						},
+						likes: 0, // À implémenter avec un système de likes
+						comments: 0, // À implémenter avec un système de commentaires
+						views: 0, // À implémenter avec un système de vues
+						is_liked: false,
+						created_at: journal.createdAt
+					};
+				})
 			);
 		}
 

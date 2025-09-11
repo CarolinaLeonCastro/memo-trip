@@ -15,6 +15,8 @@ import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from 'react-router-dom';
+import { PlacePreviewList } from './index';
+import type { PlacePreview } from './types';
 
 interface JournalCardProps {
   journal: {
@@ -24,6 +26,8 @@ interface JournalCardProps {
     cover_image: string;
     tags: string[];
     places_count: number;
+    samplePlaces?: PlacePreview[];
+    remainingPlacesCount?: number;
   };
   user: {
     _id: string;
@@ -35,6 +39,8 @@ interface JournalCardProps {
   views: number;
   isLiked: boolean;
   onLike: () => void;
+  onPlaceClick?: (place: PlacePreview) => void;
+  onViewAllPlaces?: () => void;
 }
 
 const getImageUrl = (image: string) => {
@@ -52,6 +58,8 @@ export const JournalCard: React.FC<JournalCardProps> = ({
   views,
   isLiked,
   onLike,
+  onPlaceClick,
+  onViewAllPlaces,
 }) => {
   const navigate = useNavigate();
 
@@ -172,6 +180,18 @@ export const JournalCard: React.FC<JournalCardProps> = ({
               />
             ))}
           </Box>
+
+          {/* Aperçu des lieux */}
+          {journal.samplePlaces && journal.samplePlaces.length > 0 && (
+            <PlacePreviewList
+              places={journal.samplePlaces}
+              remainingCount={journal.remainingPlacesCount || 0}
+              size="small"
+              variant="minimal"
+              onPlaceClick={onPlaceClick}
+              onViewAllClick={onViewAllPlaces}
+            />
+          )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <MenuBookIcon sx={{ fontSize: 14, color: '#9CA3AF', mr: 0.5 }} />
