@@ -218,6 +218,7 @@ const Navbar: React.FC = () => {
                 color="inherit"
                 aria-label="open drawer"
                 edge="start"
+                sx={{ bgcolor: 'primary.main' }}
                 onClick={handleDrawerToggle}
               >
                 <MenuIcon />

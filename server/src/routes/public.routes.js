@@ -126,12 +126,11 @@ export const getPublicJournalById = async (req, res) => {
 			_id: id,
 			is_public: true,
 			status: 'published'
-		})
-			.populate({
-				path: 'user_id',
-				select: 'name avatar areJournalsPublic',
-				match: { areJournalsPublic: true }
-			});
+		}).populate({
+			path: 'user_id',
+			select: 'name avatar areJournalsPublic',
+			match: { areJournalsPublic: true }
+		});
 
 		console.log('🔎 Journal trouvé:', !!journal);
 		console.log('🔎 User_id populé:', !!journal?.user_id);
@@ -207,7 +206,7 @@ export const getPublicJournalById = async (req, res) => {
 					? {
 							start: place.start_date,
 							end: place.end_date
-					  }
+						}
 					: null,
 			tags: place.tags || [],
 			status: place.status || 'visited',

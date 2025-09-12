@@ -82,7 +82,41 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
       }}
     >
       {/* Liste des lieux */}
-      <Box sx={{ flex: 1, overflow: 'auto', px: isMobile ? 0 : 1 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          px: isMobile ? 0 : 1,
+          // Style personnalisé pour la scrollbar
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+            borderRadius: '10px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background:
+              muiTheme.palette.mode === 'dark'
+                ? 'rgba(255, 255, 255, 0.3)'
+                : 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '10px',
+            border: 'none',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background:
+              muiTheme.palette.mode === 'dark'
+                ? 'rgba(255, 255, 255, 0.5)'
+                : 'rgba(0, 0, 0, 0.5)',
+          },
+          // Pour Firefox
+          scrollbarWidth: 'thin',
+          scrollbarColor:
+            muiTheme.palette.mode === 'dark'
+              ? 'rgba(255, 255, 255, 0.3) transparent'
+              : 'rgba(0, 0, 0, 0.3) transparent',
+        }}
+      >
         {places.length === 0 ? (
           <Box
             sx={{
@@ -107,7 +141,7 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {places.slice(0, 3).map((place, index) => (
+            {places.map((place, index) => (
               <ListItem
                 key={place.id}
                 sx={{
