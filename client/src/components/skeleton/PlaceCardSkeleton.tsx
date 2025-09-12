@@ -10,13 +10,13 @@ const PlaceCardSkeleton: React.FC<PlaceCardSkeletonProps> = ({
   count = 1,
   compact = false,
 }) => {
-  const cardHeight = compact ? 200 : 280;
+  const cardHeight = compact ? 200 : 380;
   const imageHeight = compact ? 120 : 160;
 
   return (
     <>
       {Array.from({ length: count }).map((_, index) => (
-        <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <Card
             sx={{
               height: cardHeight,

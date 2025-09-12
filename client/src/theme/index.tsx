@@ -366,14 +366,13 @@ const createCustomTheme = (mode: 'light' | 'dark') => {
       },
       MuiFab: {
         styleOverrides: {
-          root: ({ theme }) => ({
-            background: `linear-gradient(135deg, ${theme.palette.accent?.main || theme.palette.secondary.main}, ${theme.palette.accent?.dark || theme.palette.secondary.dark})`,
-            boxShadow: `0 8px 32px rgba(245, 158, 11, 0.3)`,
+          root: {
+            bgcolor: 'rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(4px)',
             '&:hover': {
-              transform: 'scale(1.05)',
-              boxShadow: `0 12px 48px rgba(245, 158, 11, 0.4)`,
+              bgcolor: 'rgba(255, 255, 255, 0.4)',
             },
-          }),
+          },
         },
       },
     },
