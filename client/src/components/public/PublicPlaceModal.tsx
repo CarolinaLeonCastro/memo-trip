@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +11,8 @@ import {
   Rating,
   Card,
   CardMedia,
+  Grid,
+  Modal,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -20,6 +22,8 @@ import {
   CheckCircle as VisitedIcon,
   Schedule as PlannedIcon,
   StarRate as StarIcon,
+  ArrowBackIos as ArrowBackIcon,
+  ArrowForwardIos as ArrowForwardIcon,
 } from '@mui/icons-material';
 import type { PublicPlace } from './PublicPlaceCard';
 
@@ -34,7 +38,29 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
   onClose,
   place,
 }) => {
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(
+    null
+  );
+
   if (!place) return null;
+
+  const getImageUrl = (): string | undefined => {
+    if (!place.coverImage) return undefined;
+
+    if (typeof place.coverImage === 'string') {
+      return place.coverImage;
+    }
+
+    if (
+      place.coverImage &&
+      typeof place.coverImage === 'object' &&
+      place.coverImage.url
+    ) {
+      return place.coverImage.url;
+    }
+
+    return undefined;
+  };
 
   const getLocationText = () => {
     if (place.city && place.country) {
@@ -157,12 +183,12 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
         </Box>
 
         {/* Image de couverture */}
-        {place.coverImage && (
+        {getImageUrl() && (
           <Card sx={{ mb: 3, borderRadius: 2 }}>
             <CardMedia
               component="img"
               height="300"
-              image={place.coverImage}
+              image={getImageUrl()}
               alt={place.name}
               sx={{
                 objectFit: 'cover',
@@ -170,6 +196,73 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
               }}
             />
           </Card>
+        )}
+
+        {/* Galerie d'images supplémentaires */}
+        {place.photos && place.photos.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight="600"
+              sx={{ mb: 2, display: 'flex', alignItems: 'center' }}
+            >
+              <PhotoIcon sx={{ fontSize: 18, mr: 1 }} />
+              Photos ({place.photos.length})
+            </Typography>
+            <Grid container spacing={2}>
+              {place.photos.slice(0, 6).map((photo, index) => (
+                <Grid key={index} size={{ xs: 4, sm: 3 }}>
+                  <Card
+                    sx={{
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'scale(1.02)',
+                        boxShadow: 2,
+                      },
+                    }}
+                    onClick={() => setSelectedPhotoIndex(index)}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="100"
+                      image={photo.url}
+                      alt={photo.caption || `Photo ${index + 1}`}
+                      sx={{
+                        objectFit: 'cover',
+                        backgroundColor: 'grey.100',
+                      }}
+                    />
+                  </Card>
+                </Grid>
+              ))}
+              {place.photos.length > 6 && (
+                <Grid size={{ xs: 4, sm: 3 }}>
+                  <Card
+                    sx={{
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      height: 100,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                      },
+                    }}
+                    onClick={() => setSelectedPhotoIndex(6)}
+                  >
+                    <Typography variant="body2" fontWeight="600">
+                      +{place.photos.length - 6}
+                    </Typography>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
+          </Box>
         )}
 
         {/* Rating */}
@@ -261,6 +354,138 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
           </Box>
         )}
       </DialogContent>
+
+      {/* Modal pour voir les photos en plein écran */}
+      {selectedPhotoIndex !== null && place.photos && (
+        <Modal
+          open={selectedPhotoIndex !== null}
+          onClose={() => setSelectedPhotoIndex(null)}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={() => setSelectedPhotoIndex(null)}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  color: 'white',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  },
+                }}
+                onClick={() => setSelectedPhotoIndex(null)}
+              >
+                <CloseIcon />
+              </IconButton>
+
+              {selectedPhotoIndex > 0 && (
+                <IconButton
+                  sx={{
+                    position: 'absolute',
+                    left: 20,
+                    color: 'white',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    },
+                  }}
+                  onClick={() =>
+                    setSelectedPhotoIndex(Math.max(0, selectedPhotoIndex - 1))
+                  }
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+              )}
+
+              {selectedPhotoIndex < place.photos.length - 1 && (
+                <IconButton
+                  sx={{
+                    position: 'absolute',
+                    right: 20,
+                    color: 'white',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    },
+                  }}
+                  onClick={() =>
+                    setSelectedPhotoIndex(
+                      Math.min(place.photos!.length - 1, selectedPhotoIndex + 1)
+                    )
+                  }
+                >
+                  <ArrowForwardIcon />
+                </IconButton>
+              )}
+
+              <Box
+                component="img"
+                src={place.photos[selectedPhotoIndex].url}
+                alt={
+                  place.photos[selectedPhotoIndex].caption ||
+                  `Photo ${selectedPhotoIndex + 1}`
+                }
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  borderRadius: 2,
+                }}
+              />
+
+              {place.photos[selectedPhotoIndex].caption && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 20,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    maxWidth: '80%',
+                  }}
+                >
+                  <Typography variant="body2" textAlign="center">
+                    {place.photos[selectedPhotoIndex].caption}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Modal>
+      )}
     </Dialog>
   );
 };
