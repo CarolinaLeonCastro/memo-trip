@@ -182,10 +182,40 @@ class PublicService {
     }
   }
 
-  // Récupérer un lieu public par ID
+  // Récupérer un lieu public par ID avec toutes ses photos
   async getPublicPlaceById(id: string) {
     try {
       console.log('🔗 Service: Appel API getPublicPlaceById pour:', id);
+      const response = await api.get(`/api/public/places/${id}`);
+      console.log('🔗 Service: Réponse brute lieu:', response.data);
+
+      // Vérifier si la réponse a le format {success: true, data: ...}
+      if (response.data.success !== undefined) {
+        if (response.data.success) {
+          console.log('✅ Service: Format avec success=true, retour data');
+          return response.data.data;
+        } else {
+          console.error(
+            '❌ Service: API retourne success=false:',
+            response.data.message
+          );
+          return null;
+        }
+      } else {
+        // La réponse est directement l'objet lieu (format direct)
+        console.log('✅ Service: Format direct, retour de response.data');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      return null;
+    }
+  }
+
+  // Récupérer un lieu public par ID (ancienne version, maintenant un alias)
+  async getPublicPlaceByIdLegacy(id: string) {
+    try {
+      console.log('🔗 Service: Appel API getPublicPlaceByIdLegacy pour:', id);
       const response = await api.get(`/api/public/places/${id}`);
       console.log('🔗 Service: Réponse brute lieu:', response.data);
 
@@ -200,7 +230,7 @@ class PublicService {
         return null;
       }
     } catch (error) {
-      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      console.error('❌ Service: Erreur API getPublicPlaceByIdLegacy:', error);
       return null;
     }
   }
@@ -253,7 +283,14 @@ class PublicService {
 
       return result;
     } catch (error) {
-      console.error('❌ Service: Erreur getDiscoverPosts:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn(
+          '⚠️ Service: Requête annulée (timeout ou abort):',
+          error.message
+        );
+      } else {
+        console.error('❌ Service: Erreur getDiscoverPosts:', error);
+      }
       return { posts: [], total: 0, page: 1, totalPages: 0 };
     }
   }

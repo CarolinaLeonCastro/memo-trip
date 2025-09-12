@@ -170,9 +170,31 @@ const Discover: React.FC = () => {
     setActiveTab(newTab);
   };
 
-  const handleLike = async (postId: string) => {
-    // TODO: Implémenter la fonctionnalité de like
-    console.log('Like post:', postId);
+  const handleLike = async (postId: string, postType: 'place' | 'journal') => {
+    try {
+      console.log('🔄 Tentative de like pour:', postId, 'type:', postType);
+
+      // Appeler le service pour toggler le like
+      const result = await publicService.toggleLike(postId, postType);
+      console.log('✅ Résultat like:', result);
+
+      // Mettre à jour l'état local des posts
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              is_liked: result.liked,
+              likes: result.likesCount,
+            };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error('❌ Erreur lors du like:', error);
+      // Optionnel: Afficher une notification d'erreur à l'utilisateur
+    }
   };
 
   const handlePlaceClick = (place: unknown) => {
@@ -203,7 +225,7 @@ const Discover: React.FC = () => {
           comments={post.comments}
           views={post.views}
           isLiked={post.is_liked}
-          onLike={() => handleLike(post._id)}
+          onLike={() => handleLike(post._id, 'place')}
         />
       );
     } else {
@@ -225,7 +247,7 @@ const Discover: React.FC = () => {
           comments={post.comments}
           views={post.views}
           isLiked={post.is_liked}
-          onLike={() => handleLike(post._id)}
+          onLike={() => handleLike(post._id, 'journal')}
           onPlaceClick={handlePlaceClick}
           onViewAllPlaces={() => handleViewAllPlaces(journal._id)}
         />

@@ -25,7 +25,18 @@ export interface PublicPlace {
   city: string;
   country: string;
   description?: string;
-  coverImage?: string | null;
+  coverImage?:
+    | {
+        url: string;
+        uploadedAt?: string;
+        _id?: string;
+      }
+    | string
+    | null;
+  photos?: Array<{
+    url: string;
+    caption?: string;
+  }>;
   photosCount: number;
   rating?: number;
   dateVisited?: string;
@@ -51,6 +62,24 @@ const PublicPlaceCard: React.FC<PublicPlaceCardProps> = ({
   showStatus = true,
   compact = false,
 }) => {
+  const getImageUrl = () => {
+    if (!place.coverImage) return '/api/placeholder/300/160';
+
+    if (typeof place.coverImage === 'string') {
+      return place.coverImage;
+    }
+
+    if (
+      place.coverImage &&
+      typeof place.coverImage === 'object' &&
+      place.coverImage.url
+    ) {
+      return place.coverImage.url;
+    }
+
+    return '/api/placeholder/300/160';
+  };
+
   const getLocationText = () => {
     if (place.city && place.country) {
       return `${place.city}, ${place.country}`;
@@ -127,7 +156,7 @@ const PublicPlaceCard: React.FC<PublicPlaceCardProps> = ({
         <CardMedia
           component="img"
           height={imageHeight}
-          image={place.coverImage || '/api/placeholder/300/160'}
+          image={getImageUrl()}
           alt={place.name}
           sx={{
             objectFit: 'cover',
