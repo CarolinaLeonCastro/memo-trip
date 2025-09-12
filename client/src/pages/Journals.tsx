@@ -14,6 +14,7 @@ import {
   InputAdornment,
   Container,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -37,6 +38,9 @@ const Journals: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Responsive breakpoints
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const filteredJournals = journals.filter(
     (journal) =>
@@ -85,79 +89,160 @@ const Journals: React.FC = () => {
       }}
     >
       <Container maxWidth="xl" sx={{ py: 2 }}>
-        {/* Header */}
+        {/* Header responsive */}
         <Box
           sx={{
             display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            alignItems: 'flex-start',
             mb: 4,
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: { xs: 2, md: 0 },
           }}
         >
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
-          ></Button>
+          {/* Bouton retour - aligné à gauche sur desktop, centré sur mobile */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignSelf: { xs: 'stretch', md: 'flex-start' },
+              justifyContent: { xs: 'flex-start', md: 'flex-start' },
+            }}
+          >
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              sx={{
+                minWidth: 'auto',
+                px: { xs: 1, md: 2 },
+              }}
+              size={isMobile ? 'small' : 'medium'}
+            >
+              {isMobile ? '' : 'Retour'}
+            </Button>
+          </Box>
 
-          <Box sx={{ textAlign: 'center', flex: 1, ml: 8 }}>
+          {/* Titre central responsive */}
+          <Box
+            sx={{
+              textAlign: 'center',
+              flex: { xs: '0 1 auto', md: 1 },
+              mx: { xs: 0, md: 2 },
+              order: { xs: 1, md: 0 },
+            }}
+          >
             <Typography
-              variant="h3"
+              variant={isMobile ? 'h5' : 'h3'}
               fontWeight="bold"
               sx={{
                 color: 'primary.main',
                 mb: 0.5,
                 fontFamily: '"Chau Philomene One", cursive',
+                fontSize: {
+                  xs: '1.5rem',
+                  sm: '2rem',
+                  md: '2.5rem',
+                  lg: '3rem',
+                },
+                lineHeight: {
+                  xs: 1.2,
+                  md: 1.167,
+                },
               }}
             >
-              Mes Journaux de Voyage
+              {isMobile ? 'Mes Journaux' : 'Mes Journaux de Voyage'}
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Découvrez et gérez tous vos souvenirs de voyage
+            <Typography
+              variant={isMobile ? 'body2' : 'subtitle1'}
+              color="text.secondary"
+              sx={{
+                fontSize: {
+                  xs: '0.875rem',
+                  md: '1rem',
+                },
+              }}
+            >
+              {isMobile
+                ? 'Gérez vos souvenirs de voyage'
+                : 'Découvrez et gérez tous vos souvenirs de voyage'}
             </Typography>
           </Box>
-          <Button
-            component={Link}
-            to="/journals/new"
-            variant="contained"
-            startIcon={<AddIcon />}
+
+          {/* Bouton nouveau journal responsive */}
+          <Box
             sx={{
-              background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
-              px: 3,
-              py: 1.5,
-              boxShadow: '0 4px 20px rgba(79, 134, 247, 0.3)',
-              '&:hover': {
-                bgcolor: '#3A73E0',
-                boxShadow: '0 6px 24px rgba(79, 134, 247, 0.4)',
-              },
+              display: 'flex',
+              alignSelf: { xs: 'stretch', md: 'flex-start' },
+              justifyContent: { xs: 'center', md: 'flex-end' },
+              order: { xs: 2, md: 0 },
             }}
           >
-            Nouveau Journal
-          </Button>
+            <Button
+              component={Link}
+              to="/journals/new"
+              variant="contained"
+              startIcon={!isMobile && <AddIcon />}
+              size={isMobile ? 'small' : 'medium'}
+              sx={{
+                background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
+                px: { xs: 2, md: 3 },
+                py: { xs: 1, md: 1.5 },
+                fontSize: {
+                  xs: '0.875rem',
+                  md: '1rem',
+                },
+                boxShadow: '0 4px 20px rgba(79, 134, 247, 0.3)',
+                '&:hover': {
+                  bgcolor: '#3A73E0',
+                  boxShadow: '0 6px 24px rgba(79, 134, 247, 0.4)',
+                },
+                minWidth: { xs: 120, md: 'auto' },
+              }}
+            >
+              {isMobile ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <AddIcon sx={{ fontSize: '1.1rem' }} />
+                  Nouveau
+                </Box>
+              ) : (
+                'Nouveau Journal'
+              )}
+            </Button>
+          </Box>
         </Box>
 
-        {/* Statistiques */}
+        {/* Statistiques responsive */}
         <Grid container spacing={3} sx={{ mb: 4, mt: 2 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <DiscoverStatsCard
-              icon={<MenuBookIcon sx={{ fontSize: 24, color: '#4F86F7' }} />}
+              icon={
+                <MenuBookIcon
+                  sx={{ fontSize: { xs: 20, md: 24 }, color: '#4F86F7' }}
+                />
+              }
               label="Journaux créés"
               value={totalJournals}
               color="79, 134, 247"
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <DiscoverStatsCard
               icon={
-                <LocationIcon sx={{ fontSize: 24, color: 'warning.main' }} />
+                <LocationIcon
+                  sx={{ fontSize: { xs: 20, md: 24 }, color: 'warning.main' }}
+                />
               }
               label="Lieux visités"
               value={totalPlaces}
               color="255, 138, 0"
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <DiscoverStatsCard
-              icon={<PhotoIcon sx={{ fontSize: 24, color: '#4F86F7' }} />}
+              icon={
+                <PhotoIcon
+                  sx={{ fontSize: { xs: 20, md: 24 }, color: '#4F86F7' }}
+                />
+              }
               label="Photos partagées"
               value={totalPhotos}
               color="79, 134, 247"
@@ -165,17 +250,25 @@ const Journals: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Search Bar */}
-        <Box sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+        {/* Search Bar responsive */}
+        <Box sx={{ mb: 4, maxWidth: { xs: '100%', md: 600 }, mx: 'auto' }}>
           <TextField
             fullWidth
-            placeholder="Rechercher dans vos journaux..."
+            placeholder={
+              isMobile ? 'Rechercher...' : 'Rechercher dans vos journaux...'
+            }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            size={isMobile ? 'small' : 'medium'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#9CA3AF' }} />
+                  <SearchIcon
+                    sx={{
+                      color: '#9CA3AF',
+                      fontSize: { xs: '1.2rem', md: '1.5rem' },
+                    }}
+                  />
                 </InputAdornment>
               ),
             }}
@@ -186,6 +279,10 @@ const Journals: React.FC = () => {
                   theme.palette.mode === 'dark' ? 'background.paper' : 'white',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                 border: '1px solid #f0f0f0',
+                fontSize: {
+                  xs: '0.875rem',
+                  md: '1rem',
+                },
                 '&:hover': {
                   boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
                 },
@@ -198,12 +295,12 @@ const Journals: React.FC = () => {
           />
         </Box>
 
-        {/* Journals Grid */}
+        {/* Journals Grid responsive */}
         {filteredJournals.length === 0 ? (
           <Box
             sx={{
               textAlign: 'center',
-              py: 8,
+              py: { xs: 4, md: 8 },
               border: '2px dashed',
               borderColor:
                 theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300',
@@ -212,11 +309,25 @@ const Journals: React.FC = () => {
                 theme.palette.mode === 'dark' ? 'background.paper' : 'white',
             }}
           >
-            <MenuBookIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
+            <MenuBookIcon
+              sx={{
+                fontSize: { xs: 48, md: 64 },
+                color: 'grey.400',
+                mb: 2,
+              }}
+            />
+            <Typography
+              variant={isMobile ? 'subtitle1' : 'h6'}
+              color="text.secondary"
+              gutterBottom
+            >
               {searchTerm ? 'Aucun résultat trouvé' : 'Aucun journal créé'}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 2, px: { xs: 2, md: 0 } }}
+            >
               {searchTerm
                 ? "Essayez avec d'autres mots-clés"
                 : 'Commencez votre aventure en créant votre premier journal de voyage'}
@@ -227,18 +338,19 @@ const Journals: React.FC = () => {
                 to="/journals/new"
                 variant="contained"
                 startIcon={<AddIcon />}
+                size={isMobile ? 'small' : 'medium'}
                 sx={{
                   background: `linear-gradient(45deg, ${theme.palette.error.main} 30%, ${theme.palette.error.light} 90%)`,
-                  px: 3,
-                  py: 1.5,
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 1, md: 1.5 },
                 }}
               >
-                Créer mon premier journal
+                {isMobile ? 'Créer journal' : 'Créer mon premier journal'}
               </Button>
             )}
           </Box>
         ) : (
-          <Grid container spacing={4}>
+          <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
             {filteredJournals.map((journal) => (
               <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={journal.id}>
                 <Card
@@ -258,10 +370,12 @@ const Journals: React.FC = () => {
                     position: 'relative',
                     '&:hover': {
                       boxShadow: '0 12px 40px rgba(79, 134, 247, 0.15)',
-                      transform: 'translateY(-8px) scale(1.02)',
+                      transform: isMobile
+                        ? 'none'
+                        : 'translateY(-8px) scale(1.02)',
                     },
                     '&:hover .journal-image': {
-                      transform: 'scale(1.1)',
+                      transform: isMobile ? 'none' : 'scale(1.1)',
                     },
                     '&:hover .journal-overlay': {
                       opacity: 0.3,
@@ -272,7 +386,7 @@ const Journals: React.FC = () => {
                     sx={{
                       position: 'relative',
                       overflow: 'hidden',
-                      height: 280,
+                      height: { xs: 200, sm: 250, md: 280 },
                     }}
                   >
                     <CardMedia
@@ -310,11 +424,11 @@ const Journals: React.FC = () => {
                     <Box
                       sx={{
                         position: 'absolute',
-                        top: 16,
-                        right: 16,
+                        top: { xs: 12, md: 16 },
+                        right: { xs: 12, md: 16 },
                         display: 'flex',
                         gap: 1,
-                        opacity: 0,
+                        opacity: { xs: 1, md: 0 },
                         transition: 'opacity 0.3s ease',
                         '.MuiCard-root:hover &': {
                           opacity: 1,
@@ -324,7 +438,7 @@ const Journals: React.FC = () => {
                       <IconButton
                         component={Link}
                         to={`/journals/${journal.id}/edit`}
-                        size="small"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           backgroundColor: 'rgba(255,255,255,0.9)',
                           backdropFilter: 'blur(12px)',
@@ -334,16 +448,16 @@ const Journals: React.FC = () => {
                             color: 'white',
                             transform: 'scale(1.1)',
                           },
-                          width: 36,
-                          height: 36,
+                          width: { xs: 32, md: 36 },
+                          height: { xs: 32, md: 36 },
                           transition: 'all 0.2s ease',
                         }}
                       >
-                        <EditIcon sx={{ fontSize: 18 }} />
+                        <EditIcon sx={{ fontSize: { xs: 16, md: 18 } }} />
                       </IconButton>
                       <IconButton
                         onClick={() => handleDelete(journal.id, journal.title)}
-                        size="small"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           backgroundColor: 'rgba(255,255,255,0.9)',
                           backdropFilter: 'blur(12px)',
@@ -353,12 +467,12 @@ const Journals: React.FC = () => {
                             color: 'white',
                             transform: 'scale(1.1)',
                           },
-                          width: 36,
-                          height: 36,
+                          width: { xs: 32, md: 36 },
+                          height: { xs: 32, md: 36 },
                           transition: 'all 0.2s ease',
                         }}
                       >
-                        <DeleteIcon sx={{ fontSize: 18 }} />
+                        <DeleteIcon sx={{ fontSize: { xs: 16, md: 18 } }} />
                       </IconButton>
                     </Box>
                     {/* Title Overlay */}
@@ -368,17 +482,23 @@ const Journals: React.FC = () => {
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        p: 3,
+                        p: { xs: 2, md: 3 },
                       }}
                     >
                       <Typography
-                        variant="h5"
+                        variant={isMobile ? 'h6' : 'h5'}
                         fontWeight="700"
                         sx={{
                           color: 'white',
                           mb: 1,
                           textShadow: '0 2px 8px rgba(0,0,0,0.5)',
                           cursor: 'pointer',
+                          fontSize: {
+                            xs: '1.1rem',
+                            sm: '1.25rem',
+                            md: '1.5rem',
+                          },
+                          lineHeight: 1.2,
                           '&:hover': {
                             textDecoration: 'underline',
                           },
@@ -391,16 +511,24 @@ const Journals: React.FC = () => {
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                       >
                         <LocationIcon
-                          sx={{ fontSize: '1.1rem', color: '#FF6B6B' }}
+                          sx={{
+                            fontSize: { xs: '1rem', md: '1.1rem' },
+                            color: '#FF6B6B',
+                          }}
                         />
                         <Typography
                           variant="body2"
                           sx={{
                             color: 'rgba(255,255,255,0.9)',
                             fontWeight: 500,
+                            fontSize: {
+                              xs: '0.8rem',
+                              md: '0.875rem',
+                            },
                           }}
                         >
-                          {journal.places.length} lieux
+                          {journal.places.length} lieu
+                          {journal.places.length > 1 ? 'x' : ''}
                         </Typography>
                       </Box>
                     </Box>
@@ -408,7 +536,7 @@ const Journals: React.FC = () => {
 
                   <CardContent
                     sx={{
-                      p: 3,
+                      p: { xs: 2, md: 3 },
                       flex: 1,
                       display: 'flex',
                       flexDirection: 'column',
@@ -422,18 +550,20 @@ const Journals: React.FC = () => {
                       sx={{
                         mb: 2,
                         lineHeight: 1.6,
-                        fontSize: '0.875rem',
+                        fontSize: { xs: '0.8rem', md: '0.875rem' },
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: { xs: 2, md: 3 },
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4rem',
+                        minHeight: { xs: '2.5rem', md: '4rem' },
                       }}
                     >
-                      {journal.description.substring(0, 100)}
-                      {journal.description.length > 100 && '...'}
+                      {journal.description.substring(0, isMobile ? 80 : 100)}
+                      {journal.description.length > (isMobile ? 80 : 100) &&
+                        '...'}
                     </Typography>
+
                     {/* Date Range */}
                     <Box sx={{ mb: 2.5 }}>
                       <Typography
@@ -445,75 +575,82 @@ const Journals: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: 1,
+                          fontSize: {
+                            xs: '0.8rem',
+                            md: '0.875rem',
+                          },
                         }}
                       >
                         <Box
                           sx={{
-                            width: 8,
-                            height: 8,
+                            width: { xs: 6, md: 8 },
+                            height: { xs: 6, md: 8 },
                             borderRadius: '50%',
                             bgcolor: '#4F86F7',
                           }}
                         />
                         {formatWithOptions(
                           { locale: fr },
-                          'dd MMM'
+                          isMobile ? 'dd MMM' : 'dd MMM'
                         )(journal.startDate)}{' '}
                         -{' '}
                         {formatWithOptions(
                           { locale: fr },
-                          'dd MMM yyyy'
+                          isMobile ? 'dd MMM yy' : 'dd MMM yyyy'
                         )(journal.endDate)}
                       </Typography>
                     </Box>
+
                     {/* Tags */}
                     <Box sx={{ mb: 3 }}>
                       <Box
                         sx={{
                           display: 'flex',
-                          gap: 1,
+                          gap: 0.5,
                           flexWrap: 'wrap',
-                          minHeight: '32px',
+                          minHeight: { xs: '24px', md: '32px' },
                           alignItems: 'flex-start',
                         }}
                       >
                         {journal.tags && journal.tags.length > 0 ? (
-                          journal.tags.slice(0, 3).map((tag, index) => (
-                            <Chip
-                              key={index}
-                              label={tag}
-                              size="small"
-                              sx={{
-                                backgroundColor: [
-                                  '#E3F2FD', // Bleu clair
-                                  '#F3E5F5', // Violet clair
-                                  '#E8F5E8', // Vert clair
-                                  '#FFF3E0', // Orange clair
-                                  '#FCE4EC', // Rose clair
-                                ][index % 5],
-                                color: [
-                                  '#1976D2', // Bleu foncé
-                                  '#7B1FA2', // Violet foncé
-                                  '#2E7D32', // Vert foncé
-                                  '#E65100', // Orange foncé
-                                  '#C2185B', // Rose foncé
-                                ][index % 5],
-                                fontWeight: 600,
-                                fontSize: '0.75rem',
-                                height: 28,
-                                border: 'none',
-                                '&:hover': {
+                          journal.tags
+                            .slice(0, isMobile ? 2 : 3)
+                            .map((tag, index) => (
+                              <Chip
+                                key={index}
+                                label={tag}
+                                size="small"
+                                sx={{
                                   backgroundColor: [
-                                    '#BBDEFB',
-                                    '#E1BEE7',
-                                    '#C8E6C9',
-                                    '#FFE0B2',
-                                    '#F8BBD9',
+                                    '#E3F2FD', // Bleu clair
+                                    '#F3E5F5', // Violet clair
+                                    '#E8F5E8', // Vert clair
+                                    '#FFF3E0', // Orange clair
+                                    '#FCE4EC', // Rose clair
                                   ][index % 5],
-                                },
-                              }}
-                            />
-                          ))
+                                  color: [
+                                    '#1976D2', // Bleu foncé
+                                    '#7B1FA2', // Violet foncé
+                                    '#2E7D32', // Vert foncé
+                                    '#E65100', // Orange foncé
+                                    '#C2185B', // Rose foncé
+                                  ][index % 5],
+                                  fontWeight: 600,
+                                  fontSize: { xs: '0.65rem', md: '0.75rem' },
+                                  height: { xs: 24, md: 28 },
+                                  border: 'none',
+                                  '&:hover': {
+                                    backgroundColor: [
+                                      '#BBDEFB',
+                                      '#E1BEE7',
+                                      '#C8E6C9',
+                                      '#FFE0B2',
+                                      '#F8BBD9',
+                                    ][index % 5],
+                                  },
+                                }}
+                              />
+                            ))
                         ) : (
                           <Chip
                             label="Sans catégorie"
@@ -522,31 +659,33 @@ const Journals: React.FC = () => {
                               backgroundColor: '#F5F5F5',
                               color: '#757575',
                               fontWeight: 500,
-                              fontSize: '0.75rem',
-                              height: 28,
+                              fontSize: { xs: '0.65rem', md: '0.75rem' },
+                              height: { xs: 24, md: 28 },
                             }}
                           />
                         )}
-                        {journal.tags && journal.tags.length > 3 && (
-                          <Chip
-                            label={`+${journal.tags.length - 3}`}
-                            size="small"
-                            sx={{
-                              backgroundColor: '#F5F5F5',
-                              color: '#757575',
-                              fontWeight: 600,
-                              fontSize: '0.75rem',
-                              height: 28,
-                            }}
-                          />
-                        )}
+                        {journal.tags &&
+                          journal.tags.length > (isMobile ? 2 : 3) && (
+                            <Chip
+                              label={`+${journal.tags.length - (isMobile ? 2 : 3)}`}
+                              size="small"
+                              sx={{
+                                backgroundColor: '#F5F5F5',
+                                color: '#757575',
+                                fontWeight: 600,
+                                fontSize: { xs: '0.65rem', md: '0.75rem' },
+                                height: { xs: 24, md: 28 },
+                              }}
+                            />
+                          )}
                       </Box>
                     </Box>
+
                     {/* Statistiques d'engagement */}
                     <Box
                       sx={{
                         mt: 'auto',
-                        pt: 3,
+                        pt: { xs: 2, md: 3 },
                         borderTop: '1px solid',
                         borderColor:
                           theme.palette.mode === 'dark'
@@ -559,28 +698,40 @@ const Journals: React.FC = () => {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          gap: { xs: 2, sm: 0 },
                         }}
                       >
-                        <Box sx={{ display: 'flex', gap: 3 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: { xs: 2, md: 3 },
+                            order: { xs: 2, sm: 1 },
+                          }}
+                        >
                           <Box
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: 1,
-                              px: 1.5,
+                              px: { xs: 1, md: 1.5 },
                               py: 0.5,
                               borderRadius: '12px',
                               backgroundColor: '#FFE8E8',
                             }}
                           >
                             <FavoriteIcon
-                              sx={{ fontSize: '1rem', color: '#FF6B6B' }}
+                              sx={{
+                                fontSize: { xs: '0.9rem', md: '1rem' },
+                                color: '#FF6B6B',
+                              }}
                             />
                             <Typography
                               variant="caption"
                               sx={{
                                 fontWeight: 600,
                                 color: '#FF6B6B',
+                                fontSize: { xs: '0.7rem', md: '0.75rem' },
                               }}
                             >
                               24
@@ -591,27 +742,31 @@ const Journals: React.FC = () => {
                               display: 'flex',
                               alignItems: 'center',
                               gap: 1,
-                              px: 1.5,
+                              px: { xs: 1, md: 1.5 },
                               py: 0.5,
                               borderRadius: '12px',
                               backgroundColor: '#E3F2FD',
                             }}
                           >
                             <PhotoIcon
-                              sx={{ fontSize: '1rem', color: '#4F86F7' }}
+                              sx={{
+                                fontSize: { xs: '0.9rem', md: '1rem' },
+                                color: '#4F86F7',
+                              }}
                             />
                             <Typography
                               variant="caption"
                               sx={{
                                 fontWeight: 600,
                                 color: '#4F86F7',
+                                fontSize: { xs: '0.7rem', md: '0.75rem' },
                               }}
                             >
                               {journal.places.reduce(
                                 (acc, place) => acc + place.photos.length,
                                 0
                               )}{' '}
-                              photos
+                              {isMobile ? '' : 'photos'}
                             </Typography>
                           </Box>
                         </Box>
@@ -620,26 +775,27 @@ const Journals: React.FC = () => {
                           component={Link}
                           to={`/journals/${journal.id}`}
                           variant="contained"
-                          size="small"
+                          size={isMobile ? 'small' : 'medium'}
                           sx={{
                             fontWeight: '600',
                             backgroundColor: '#4F86F7',
                             color: 'white',
-                            px: 2.5,
-                            py: 1,
-
+                            px: { xs: 2, md: 2.5 },
+                            py: { xs: 0.5, md: 1 },
                             textTransform: 'none',
-                            fontSize: '0.875rem',
+                            fontSize: { xs: '0.8rem', md: '0.875rem' },
                             boxShadow: '0 4px 12px rgba(79, 134, 247, 0.3)',
+                            order: { xs: 1, sm: 2 },
+                            alignSelf: { xs: 'stretch', sm: 'auto' },
                             '&:hover': {
                               backgroundColor: '#3A73E0',
                               boxShadow: '0 6px 20px rgba(79, 134, 247, 0.4)',
-                              transform: 'translateY(-1px)',
+                              transform: isMobile ? 'none' : 'translateY(-1px)',
                             },
                             transition: 'all 0.2s ease',
                           }}
                         >
-                          Voir le journal
+                          {isMobile ? 'Voir' : 'Voir le journal'}
                         </Button>
                       </Box>
                     </Box>
