@@ -1,5 +1,14 @@
 import { api } from '../config/api.config';
 
+export interface PublicPlacePreview {
+  _id: string;
+  name: string;
+  city: string;
+  country: string;
+  coverImage?: string | null;
+  status: 'visited' | 'planned';
+}
+
 export interface PublicJournal {
   _id: string;
   title: string;
@@ -36,6 +45,8 @@ export interface PublicJournal {
     total_photos: number;
     total_days: number;
   };
+  samplePlaces?: PublicPlacePreview[];
+  remainingPlacesCount?: number;
   createdAt: string;
 }
 
@@ -83,6 +94,8 @@ export interface DiscoverJournal {
   places_count: number;
   start_date: string;
   end_date: string;
+  samplePlaces?: PublicPlacePreview[];
+  remainingPlacesCount?: number;
 }
 
 export interface DiscoverPost {
@@ -123,11 +136,27 @@ class PublicService {
     return response.data.data;
   }
 
-  // Récupérer un journal public par ID
-  async getPublicJournalById(id: string) {
+  // Récupérer un journal public par ID avec filtres optionnels pour les lieux
+  async getPublicJournalById(
+    id: string,
+    filters?: {
+      q?: string;
+      tag?: string;
+      sort?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) {
     try {
-      console.log('🔗 Service: Appel API getPublicJournalById pour:', id);
-      const response = await api.get(`/api/public/journals/${id}`);
+      console.log(
+        '🔗 Service: Appel API getPublicJournalById pour:',
+        id,
+        'avec filtres:',
+        filters
+      );
+      const response = await api.get(`/api/public/journals/${id}`, {
+        params: filters,
+      });
       console.log('🔗 Service: Réponse brute journal:', response.data);
 
       // Vérifier si la réponse a le format {success: true, data: ...}
@@ -153,10 +182,40 @@ class PublicService {
     }
   }
 
-  // Récupérer un lieu public par ID
+  // Récupérer un lieu public par ID avec toutes ses photos
   async getPublicPlaceById(id: string) {
     try {
       console.log('🔗 Service: Appel API getPublicPlaceById pour:', id);
+      const response = await api.get(`/api/public/places/${id}`);
+      console.log('🔗 Service: Réponse brute lieu:', response.data);
+
+      // Vérifier si la réponse a le format {success: true, data: ...}
+      if (response.data.success !== undefined) {
+        if (response.data.success) {
+          console.log('✅ Service: Format avec success=true, retour data');
+          return response.data.data;
+        } else {
+          console.error(
+            '❌ Service: API retourne success=false:',
+            response.data.message
+          );
+          return null;
+        }
+      } else {
+        // La réponse est directement l'objet lieu (format direct)
+        console.log('✅ Service: Format direct, retour de response.data');
+        return response.data;
+      }
+    } catch (error) {
+      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      return null;
+    }
+  }
+
+  // Récupérer un lieu public par ID (ancienne version, maintenant un alias)
+  async getPublicPlaceByIdLegacy(id: string) {
+    try {
+      console.log('🔗 Service: Appel API getPublicPlaceByIdLegacy pour:', id);
       const response = await api.get(`/api/public/places/${id}`);
       console.log('🔗 Service: Réponse brute lieu:', response.data);
 
@@ -171,7 +230,7 @@ class PublicService {
         return null;
       }
     } catch (error) {
-      console.error('❌ Service: Erreur API getPublicPlaceById:', error);
+      console.error('❌ Service: Erreur API getPublicPlaceByIdLegacy:', error);
       return null;
     }
   }
@@ -194,9 +253,22 @@ class PublicService {
         '🔗 Service: Appel API getDiscoverPosts avec filtres:',
         filters
       );
-      const response = await api.get('/api/public/discover/posts', {
-        params: filters,
-      });
+
+      // Nettoyer les filtres undefined
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([, value]) => value !== undefined && value !== null
+            )
+          )
+        : {};
+
+      console.log('🔗 Service: Filtres nettoyés:', cleanFilters);
+
+      const response = await api.get(
+        '/api/public/discover/posts',
+        cleanFilters
+      );
 
       console.log('🔗 Service: Réponse brute API:', response.data);
       console.log('🔗 Service: Structure de response.data:', {
@@ -224,7 +296,14 @@ class PublicService {
 
       return result;
     } catch (error) {
-      console.error('❌ Service: Erreur getDiscoverPosts:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn(
+          '⚠️ Service: Requête annulée (timeout ou abort):',
+          error.message
+        );
+      } else {
+        console.error('❌ Service: Erreur getDiscoverPosts:', error);
+      }
       return { posts: [], total: 0, page: 1, totalPages: 0 };
     }
   }
@@ -257,16 +336,61 @@ class PublicService {
 
   // Liker/Unliker un post
   async toggleLike(
-    postId: string,
-    type: 'place' | 'journal'
+    targetId: string,
+    targetType: 'place' | 'journal'
   ): Promise<{
     liked: boolean;
     likesCount: number;
   }> {
-    const response = await api.post(
-      `/api/public/discover/${type}s/${postId}/like`
-    );
-    return response.data.data;
+    console.log('📡 Service toggleLike appelé avec:', { targetId, targetType });
+
+    try {
+      const response = await api.post('/api/public/like', {
+        targetId,
+        targetType,
+      });
+
+      console.log('📡 Réponse complète API:', response);
+      console.log('📡 Données de la réponse:', response.data);
+      console.log('📡 response.data.success:', response.data?.success);
+      console.log('📡 response.data.data:', response.data?.data);
+      console.log('📡 Type de response.data.data:', typeof response.data?.data);
+
+      // Version simplifiée - essayons différentes structures
+      if (response.data) {
+        // Cas 1: Structure normale {success: true, data: {liked, likesCount}}
+        if (response.data.success && response.data.data) {
+          const result = response.data.data;
+          console.log('✅ Structure normale détectée:', result);
+          return {
+            liked: result.liked,
+            likesCount: result.likesCount,
+          };
+        }
+
+        // Cas 2: Données directement dans response.data
+        if (typeof response.data.liked === 'boolean') {
+          console.log('✅ Structure directe détectée:', response.data);
+          return {
+            liked: response.data.liked,
+            likesCount: response.data.likesCount,
+          };
+        }
+
+        // Cas 3: Debug - afficher toute la structure
+        console.error('❌ Structure inconnue:', {
+          responseData: response.data,
+          keys: Object.keys(response.data),
+          success: response.data.success,
+          data: response.data.data,
+        });
+      }
+
+      throw new Error('Structure de réponse inattendue');
+    } catch (error) {
+      console.error('❌ Erreur dans toggleLike service:', error);
+      throw error;
+    }
   }
 
   // Récupérer les tags tendance

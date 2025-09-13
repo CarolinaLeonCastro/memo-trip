@@ -31,7 +31,7 @@ export const JournalTravelInfo: React.FC<JournalTravelInfoProps> = ({
         fontWeight={700}
         sx={{
           mb: 3,
-          color: theme.palette.mode === 'dark' ? '#fff' : 'primary.main',
+          color: 'primary.main',
           fontFamily: '"Chau Philomene One", cursive',
         }}
       >

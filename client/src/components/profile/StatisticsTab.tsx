@@ -43,6 +43,59 @@ const StatisticsTab: React.FC = () => {
     journals.flatMap((journal) => journal.places.map((place) => place.country))
   ).size;
 
+  // Calcul de la saison préférée
+  const getSeasonFromDate = (dateInput: string | Date) => {
+    const date = new Date(dateInput);
+    const month = date.getMonth() + 1; // getMonth() retourne 0-11, on veut 1-12
+
+    if (month >= 3 && month <= 5) return 'Printemps';
+    if (month >= 6 && month <= 8) return 'Été';
+    if (month >= 9 && month <= 11) return 'Automne';
+    return 'Hiver';
+  };
+
+  const seasonCounts = journals.reduce(
+    (acc, journal) => {
+      journal.places.forEach((place) => {
+        // Essayer différentes propriétés de date
+        const dateToAnalyze =
+          place.dateVisited ||
+          place.visitedAt ||
+          place.startDate ||
+          journal.startDate;
+
+        if (dateToAnalyze) {
+          const season = getSeasonFromDate(dateToAnalyze);
+          acc[season] = (acc[season] || 0) + 1;
+        }
+      });
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  // Créer une description dynamique
+  const getSeasonDescription = () => {
+    if (Object.keys(seasonCounts).length === 0) {
+      return 'Aucune donnée de voyage disponible pour déterminer vos préférences saisonnières.';
+    }
+
+    const sortedSeasons = Object.entries(seasonCounts)
+      .sort(([, a], [, b]) => b - a)
+      .filter(([, count]) => count > 0);
+
+    if (sortedSeasons.length === 1) {
+      return `Vous voyagez en ${sortedSeasons[0][0].toLowerCase()}.`;
+    }
+
+    if (sortedSeasons.length >= 2) {
+      const [first, second] = sortedSeasons;
+      return `Vous voyagez principalement en ${first[0].toLowerCase()} et en ${second[0].toLowerCase()}.`;
+    }
+
+    return 'Profitant des différentes saisons pour explorer de nouvelles destinations.';
+  };
+
   const stats = [
     {
       label: 'Journaux créés',
@@ -256,9 +309,7 @@ const StatisticsTab: React.FC = () => {
                   Période de voyage favorite
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Vous voyagez principalement au <strong>printemps</strong> et
-                  en <strong>été</strong>, profitant des beaux jours pour
-                  explorer de nouvelles destinations.
+                  {getSeasonDescription()}
                 </Typography>
               </Box>
             </Grid>

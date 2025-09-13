@@ -10,6 +10,25 @@ export interface UserSettingsResponse {
   message?: string;
 }
 
+export interface UserActivity {
+  type: string;
+  title: string;
+  description: string;
+  date: string;
+  formattedDate: string;
+  icon: string;
+  color: string;
+}
+
+export interface UserActivityResponse {
+  success: boolean;
+  data: UserActivity[];
+  meta: {
+    total: number;
+    limit: number;
+  };
+}
+
 class UserService {
   // Récupérer les paramètres de l'utilisateur connecté
   async getSettings(): Promise<UserSettings> {
@@ -65,6 +84,27 @@ class UserService {
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour des paramètres:', error);
       throw error;
+    }
+  }
+
+  // Récupérer l'activité récente de l'utilisateur connecté
+  async getUserActivity(limit = 10): Promise<UserActivity[]> {
+    try {
+      const response = await api.get(`/api/users/activity?limit=${limit}`);
+
+      // Vérifier différentes structures possibles
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.error('❌ Structure de données inattendue:', response.data);
+        return [];
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors de la récupération de l'activité:", error);
+      // Retourner un tableau vide en cas d'erreur
+      return [];
     }
   }
 }

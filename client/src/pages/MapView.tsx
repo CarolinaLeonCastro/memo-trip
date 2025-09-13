@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
-  Menu as MenuIcon,
+  Widgets as WidgetsIcon,
   Close as CloseIcon,
   Search as SearchIcon,
   Satellite as SatelliteIcon,
@@ -284,15 +284,10 @@ const MapView: React.FC = () => {
               aria-label="open drawer"
               onClick={handleDrawerToggle}
               sx={{
-                mr: 1,
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
+                color: 'primary.main',
               }}
             >
-              <MenuIcon />
+              <WidgetsIcon />
             </IconButton>
           )}
 
@@ -307,7 +302,7 @@ const MapView: React.FC = () => {
                   fontSize: '1.2rem',
                 }}
               >
-                Carte des lieux
+                Carte des lieux ({places.length})
               </Typography>
             ) : (
               <MapHeader
@@ -528,9 +523,10 @@ const MapView: React.FC = () => {
             sx={{
               mb: 2,
               bgcolor: 'background.default',
+              borderRadius: 1,
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'background.default',
-                borderRadius: '5px',
+                borderRadius: 1,
                 '& fieldset': { border: 'none' },
                 '&:hover': {
                   backgroundColor: 'background.default',

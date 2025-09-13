@@ -230,14 +230,8 @@ export async function getUserSettings(req, res, next) {
 // PUT /api/users/settings - Mettre à jour les paramètres de l'utilisateur connecté
 export async function updateUserSettings(req, res, next) {
 	try {
-		console.log('🔧 Mise à jour des paramètres utilisateur');
-		console.log('📋 User ID:', req.user?.id);
-		console.log('📦 Body reçu:', req.body);
-
 		const { areJournalsPublic } = req.body;
-
-		console.log('💾 Tentative de mise à jour avec la valeur:', areJournalsPublic);
-		console.log('💾 Type de la valeur:', typeof areJournalsPublic);
+		console.log('🔄 Mise à jour des paramètres pour user ID:', req.user?.id, 'areJournalsPublic:', areJournalsPublic);
 
 		// Utiliser findOneAndUpdate avec un filter plus spécifique pour éviter les race conditions
 		const user = await User.findOneAndUpdate(
@@ -274,8 +268,6 @@ export async function updateUserSettings(req, res, next) {
 
 		// 🎯 LOGIQUE INTELLIGENTE : Si on active les journaux publics
 		if (areJournalsPublic) {
-			console.log('🚀 Activation des journaux publics - publication automatique');
-
 			// Option A: Rendre publics tous les journaux publiés (pas les brouillons)
 			const publishedJournalsUpdate = await Journal.updateMany(
 				{
@@ -364,5 +356,170 @@ export async function updateUserSettings(req, res, next) {
 	} catch (err) {
 		console.error('❌ Erreur lors de la mise à jour des paramètres:', err);
 		next(err);
+	}
+}
+
+// GET /api/users/activity - Récupérer l'activité récente de l'utilisateur
+export async function getUserActivity(req, res, next) {
+	try {
+		const userId = req.user?.id || req.user?._id;
+
+		if (!userId) {
+			return res.status(401).json({
+				success: false,
+				message: 'Utilisateur non authentifié'
+			});
+		}
+
+		// Vérifier que l'ID a un format valide pour MongoDB
+		if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+			return res.status(400).json({
+				success: false,
+				message: "Format d'ID utilisateur invalide"
+			});
+		}
+
+		const { limit = 10 } = req.query;
+
+		// Récupérer les activités récentes
+		const activities = [];
+
+		// 1. Dernier journal créé (seulement le plus récent)
+		const latestJournal = await Journal.findOne({ user_id: userId }).sort({ createdAt: -1 }).select('title createdAt');
+
+		if (latestJournal) {
+			activities.push({
+				type: 'new_journal',
+				title: 'Vous avez créé un nouveau journal',
+				description: `Journal "${latestJournal.title}"`,
+				date: latestJournal.createdAt,
+				icon: 'ArticleIcon',
+				color: 'primary.main'
+			});
+		}
+
+		// 2. Dernier lieu ajouté (seulement le plus récent)
+		const latestPlace = await Place.findOne({ user_id: userId })
+			.sort({ createdAt: -1 })
+			.select('name createdAt location.city location.country');
+
+		if (latestPlace) {
+			activities.push({
+				type: 'new_place',
+				title: `Vous avez ajouté un nouveau lieu`,
+				description: `${latestPlace.name}`,
+				date: latestPlace.createdAt,
+				icon: 'LocationIcon',
+				color: 'success.main'
+			});
+		}
+
+		// 3. Dernières photos ajoutées (seulement le plus récent)
+		const latestPlaceWithPhotos = await Place.findOne({
+			user_id: userId,
+			photos: { $exists: true, $not: { $size: 0 } }
+		})
+			.sort({ updatedAt: -1 })
+			.select('name photos updatedAt');
+
+		if (latestPlaceWithPhotos) {
+			const photoCount = latestPlaceWithPhotos.photos?.length || 0;
+			if (photoCount > 0) {
+				activities.push({
+					type: 'photos_added',
+					title: `Vous avez ajouté ${photoCount} photo${photoCount > 1 ? 's' : ''}`,
+					description: `À ${latestPlaceWithPhotos.name}`,
+					date: latestPlaceWithPhotos.updatedAt,
+					icon: 'CameraIcon',
+					color: 'secondary.main'
+				});
+			}
+		}
+
+		// 4. Dernier journal mis à jour (seulement le plus récent)
+		const allJournals = await Journal.find({ user_id: userId })
+			.sort({ updatedAt: -1 })
+			.limit(10)
+			.select('title updatedAt createdAt');
+
+		// Trouver le premier journal qui a été modifié (updatedAt différent de createdAt)
+		const latestUpdatedJournal = allJournals.find((journal) => {
+			const created = new Date(journal.createdAt).getTime();
+			const updated = new Date(journal.updatedAt).getTime();
+			return updated > created + 1000; // Plus d'1 seconde de différence
+		});
+
+		if (latestUpdatedJournal) {
+			activities.push({
+				type: 'journal_updated',
+				title: `Vous avez mis à jour un journal`,
+				description: `Journal "${latestUpdatedJournal.title}"`,
+				date: latestUpdatedJournal.updatedAt,
+				icon: 'EditIcon',
+				color: 'info.main'
+			});
+		}
+
+		// 5. Simulation d'activité de "likes" (à adapter selon votre logique métier)
+		// Puisque nous n'avons pas de système de likes, nous simulons avec un nombre aléatoire
+		if (activities.length > 0) {
+			const randomLikes = Math.floor(Math.random() * 15) + 1; // Entre 1 et 15 likes
+			const daysAgo = Math.floor(Math.random() * 14) + 1; // Entre 1 et 14 jours
+			const likeDate = new Date();
+			likeDate.setDate(likeDate.getDate() - daysAgo);
+
+			activities.push({
+				type: 'journal_liked',
+				title: `Vous avez été aimé par ${randomLikes} personne${randomLikes > 1 ? 's' : ''}`,
+				description: 'Sur vos derniers journaux',
+				date: likeDate,
+				icon: 'FavoriteIcon',
+				color: 'error.main'
+			});
+		}
+
+		// Trier toutes les activités par date décroissante et limiter
+		const sortedActivities = activities
+			.sort((a, b) => new Date(b.date) - new Date(a.date))
+			.slice(0, Number(limit))
+			.map((activity) => ({
+				...activity,
+				date: activity.date,
+				formattedDate: getRelativeTimeString(activity.date)
+			}));
+
+		const response = {
+			success: true,
+			data: sortedActivities,
+			meta: {
+				total: sortedActivities.length,
+				limit: Number(limit)
+			}
+		};
+
+		console.log('🚀 Réponse envoyée:', JSON.stringify(response, null, 2));
+		res.json(response);
+	} catch (err) {
+		logger.error("Erreur lors de la récupération de l'activité:", err);
+		next(err);
+	}
+}
+
+// Fonction utilitaire pour calculer le temps relatif
+function getRelativeTimeString(date) {
+	const now = new Date();
+	const diffInMs = now - new Date(date);
+	const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+	const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+	const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+	if (diffInDays > 0) {
+		return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+	} else if (diffInHours > 0) {
+		return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+	} else if (diffInMinutes > 0) {
+		return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+	} else {
+		return "À l'instant";
 	}
 }

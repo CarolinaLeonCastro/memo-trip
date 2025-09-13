@@ -50,7 +50,7 @@ export async function getJournals(req, res, next) {
 			.populate('user_id', 'name email')
 			.populate({
 				path: 'places',
-				select: 'name location date_visited photos rating',
+				select: 'name description location date_visited photos rating',
 				options: { sort: { date_visited: 1 } }
 			})
 			.skip((page - 1) * limit)

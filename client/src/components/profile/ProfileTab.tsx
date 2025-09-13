@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -9,6 +9,7 @@ import {
   Button,
   IconButton,
   Alert,
+  Skeleton,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -22,14 +23,19 @@ import {
   FavoriteOutlined as FavoriteIcon,
   CameraAlt as CameraIcon,
   TrendingUp as TrendingUpIcon,
+  EditNote as EditNoteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { userService } from '../../services/user.service';
+import type { UserActivity } from '../../services/user.service';
 
 const ProfileTab: React.FC = () => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [recentActivities, setRecentActivities] = useState<UserActivity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   // États pour les champs modifiables
   const [formData, setFormData] = useState({
@@ -41,37 +47,37 @@ const ProfileTab: React.FC = () => {
     memberSince: user?.created_at || 'Mars 2025',
   });
 
-  // Activité récente
-  const recentActivities = [
-    {
-      type: 'new_journal',
-      title: `${formData.name} a créé un nouveau journal`,
-      date: `Il y a ${new Date().getDate() - 2} jours`,
-      icon: ArticleIcon,
-      color: 'primary.main',
-    },
-    {
-      type: 'new_place',
-      title: `${formData.name} a ajouté un nouveau lieu`,
-      date: `Il y a ${new Date().getDate() - 3} jours`,
-      icon: LocationIcon,
-      color: 'success.main',
-    },
-    {
-      type: 'photos_added',
-      title: `${formData.name} a ajouté ${new Date().getDate() - 5} photos`,
-      date: `Il y a ${new Date().getDate() - 5} jours`,
-      icon: CameraIcon,
-      color: 'secondary.main',
-    },
-    {
-      type: 'journal_liked',
-      title: `${formData.name} a été aimé par ${new Date().getDate() - 1} personnes`,
-      date: `Il y a ${new Date().getDate() - 1} jours`,
-      icon: FavoriteIcon,
-      color: 'error.main',
-    },
-  ];
+  // Charger l'activité récente au montage du composant
+  useEffect(() => {
+    const loadRecentActivity = async () => {
+      try {
+        setActivitiesLoading(true);
+
+        const activities = await userService.getUserActivity(8);
+
+        setRecentActivities(activities);
+      } catch (error) {
+        // En cas d'erreur, garder un tableau vide
+        setRecentActivities([]);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    loadRecentActivity();
+  }, []);
+
+  // Mapper les icônes depuis les chaînes vers les composants React
+  const getIconComponent = (iconName: string) => {
+    const iconMap: { [key: string]: React.ElementType } = {
+      ArticleIcon,
+      LocationIcon,
+      CameraIcon,
+      FavoriteIcon,
+      EditNoteIcon,
+    };
+    return iconMap[iconName] || ArticleIcon;
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -133,7 +139,7 @@ const ProfileTab: React.FC = () => {
       )}
 
       {/* Header avec avatar et informations principales */}
-      <Card sx={{ borderRadius: 1, border: 'none', mb: 3 }}>
+      <Card sx={{ borderRadius: 1, mb: 3 }}>
         <Box
           sx={{
             background: 'linear-gradient(135deg, #3D5A80 0%, #98C1D9 100%)',
@@ -411,41 +417,104 @@ const ProfileTab: React.FC = () => {
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {recentActivities.map((activity, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 2,
-                  p: 2,
-                  bgcolor: 'background.paper',
-                  borderRadius: '12px',
-                  border: 'none',
-                  borderColor: 'divider',
-                }}
-              >
-                <Avatar
+            {activitiesLoading ? (
+              // Skeleton loader pendant le chargement
+              Array.from({ length: 4 }).map((_, index) => (
+                <Box
+                  key={index}
                   sx={{
-                    width: 32,
-                    height: 32,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    p: 2,
                     bgcolor: 'background.paper',
-                    border: '2px solid',
-                    borderColor: activity.color,
+                    borderRadius: '12px',
                   }}
                 >
-                  <activity.icon sx={{ fontSize: 16, color: activity.color }} />
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                    {activity.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {activity.date}
-                  </Typography>
+                  <Skeleton variant="circular" width={32} height={32} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="80%" height={20} />
+                    <Skeleton variant="text" width="40%" height={16} />
+                  </Box>
                 </Box>
+              ))
+            ) : !recentActivities || recentActivities.length === 0 ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  py: 4,
+                  textAlign: 'center',
+                }}
+              >
+                <TrendingUpIcon
+                  sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}
+                />
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  Aucune activité récente
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Commencez à créer des journaux et ajouter des lieux pour voir
+                  votre activité ici
+                </Typography>
               </Box>
-            ))}
+            ) : (
+              recentActivities.map((activity, index) => {
+                const IconComponent = getIconComponent(activity.icon);
+                return (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 2,
+                      p: 2,
+                      bgcolor: 'background.paper',
+                      borderRadius: '12px',
+                      border: 'none',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: 'background.paper',
+                        border: '2px solid',
+                        borderColor: activity.color,
+                      }}
+                    >
+                      <IconComponent
+                        sx={{ fontSize: 16, color: activity.color }}
+                      />
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={500}
+                        sx={{ mb: 0.5 }}
+                      >
+                        {activity.title}
+                      </Typography>
+                      {activity.description && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 0.5 }}
+                        >
+                          {activity.description}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {activity.formattedDate}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              })
+            )}
           </Box>
         </CardContent>
       </Card>

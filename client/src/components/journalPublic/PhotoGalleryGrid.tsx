@@ -20,7 +20,7 @@ export const PhotoGalleryGrid: React.FC<PhotoGalleryGridProps> = ({
   }
 
   return (
-    <Box sx={{ bgcolor: 'white', px: 3, py: 4 }}>
+    <Box sx={{ bgcolor: 'background.paper', px: 3, py: 4 }}>
       <Container maxWidth="xl">
         <Typography
           variant="h5"

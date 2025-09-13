@@ -12,10 +12,10 @@ import {
   Chip,
   useTheme,
   useMediaQuery,
+  Grid,
 } from '@mui/material';
 import {
   Close as CloseIcon,
-  LocationOn as LocationIcon,
   CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +56,28 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
     onClose();
   };
 
+  // Styles pour le scroll personnalisé
+  const scrollStyles = {
+    '& ::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '& ::-webkit-scrollbar-track': {
+      backgroundColor: theme.palette.mode === 'dark' ? '#2b2b2b' : '#f1f1f1',
+      borderRadius: '3px',
+    },
+    '& ::-webkit-scrollbar-thumb': {
+      backgroundColor: theme.palette.mode === 'dark' ? '#555' : '#c1c1c1',
+      borderRadius: '3px',
+      '&:hover': {
+        backgroundColor: theme.palette.mode === 'dark' ? '#666' : '#a8a8a8',
+      },
+    },
+    // Pour Firefox
+    scrollbarWidth: 'thin',
+    scrollbarColor:
+      theme.palette.mode === 'dark' ? '#555 #2b2b2b' : '#c1c1c1 #f1f1f1',
+  };
+
   return (
     <Dialog
       open={open}
@@ -63,6 +85,7 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
       maxWidth="md"
       fullWidth
       fullScreen={isMobile}
+      sx={scrollStyles}
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -74,13 +97,21 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           </IconButton>
         </Box>
       </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2}>
+
+      <DialogContent sx={scrollStyles}>
+        <Stack spacing={3}>
           <Box>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Journal
             </Typography>
-            <Chip label={place.journalTitle} color="primary" />
+            <Chip
+              label={place.journalTitle}
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                fontWeight: 500,
+              }}
+            />
           </Box>
 
           <Box>
@@ -92,8 +123,8 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Box>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Date de visite
               </Typography>
@@ -107,19 +138,22 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   })}
                 </Typography>
               </Box>
-            </Box>
+            </Grid>
 
-            <Box>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Statut
               </Typography>
               <Chip
                 label={place.isVisited ? 'Visité' : 'À visiter'}
                 color={place.isVisited ? 'success' : 'warning'}
-                icon={place.isVisited ? <LocationIcon /> : <CalendarIcon />}
+                sx={{
+                  bgcolor: place.isVisited ? '#E8F5E8' : '#FFF3E0',
+                  color: place.isVisited ? '#2E7D32' : '#F57C00',
+                }}
               />
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
 
           {place.category && (
             <Box>
@@ -135,29 +169,53 @@ const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Photos ({place.photos.length})
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {place.photos.slice(0, 4).map((photo, index) => (
-                  <Box
-                    key={index}
-                    component="img"
-                    src={photo}
-                    alt={`${place.name} ${index + 1}`}
-                    sx={{
-                      width: '100%',
-                      height: 150,
-                      objectFit: 'cover',
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                    }}
-                  />
+
+              <Grid container spacing={2}>
+                {place.photos.map((photo, index) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                    <Box
+                      component="img"
+                      src={photo}
+                      alt={`${place.name} ${index + 1}`}
+                      sx={{
+                        width: '100%',
+                        height: {
+                          xs: 200,
+                          sm: 180,
+                          md: 160,
+                        },
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        transition:
+                          'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'scale(1.02)',
+                          boxShadow: theme.shadows[8],
+                        },
+                        // Responsive pour les très petits écrans
+                        [theme.breakpoints.down('sm')]: {
+                          height: 250,
+                        },
+                        // Responsive pour les écrans moyens et grands
+                        [theme.breakpoints.up('lg')]: {
+                          height: 180,
+                        },
+                      }}
+                      loading="lazy"
+                    />
+                  </Grid>
                 ))}
-              </Box>
+              </Grid>
             </Box>
           )}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Fermer</Button>
+
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} variant="outlined">
+          Fermer
+        </Button>
         <Button variant="contained" onClick={handleViewDetails}>
           Voir les détails complets
         </Button>
