@@ -872,8 +872,19 @@ export const getDiscoverStats = async (req, res) => {
 
 		const publicJournals = publicJournalsResult.length > 0 ? publicJournalsResult[0].total : 0;
 
-		// Compter tous les lieux des utilisateurs publics (peu importe le statut)
-		const sharedPlacesResult = await Place.aggregate([
+		// Compter tous les lieux dans des journaux publics
+		const sharedPlacesDebug = await Place.aggregate([
+			{
+				$lookup: {
+					from: 'journals',
+					localField: 'journal_id',
+					foreignField: '_id',
+					as: 'journal'
+				}
+			},
+			{
+				$unwind: '$journal'
+			},
 			{
 				$lookup: {
 					from: 'users',
@@ -883,8 +894,76 @@ export const getDiscoverStats = async (req, res) => {
 				}
 			},
 			{
+				$unwind: '$user'
+			},
+			{
 				$match: {
-					'user.areJournalsPublic': true
+					'journal.is_public': true,
+					'journal.status': 'published',
+					'user.areJournalsPublic': true,
+					// Filtrer pour ne garder que les journaux avec des dates passées (donc "visités")
+					$or: [
+						{ 'journal.end_date': { $lt: new Date() } }, // Journal terminé
+						{
+							$and: [
+								{ 'journal.start_date': { $lt: new Date() } }, // Journal commencé
+								{ 'journal.end_date': { $exists: false } } // Pas de date de fin définie
+							]
+						}
+					]
+				}
+			},
+			{
+				$project: {
+					name: 1,
+					journal_name: '$journal.title',
+					journal_id: '$journal._id',
+					user_name: '$user.name'
+				}
+			}
+		]);
+
+		logger.info('🔍 DEBUG: Lieux trouvés:', sharedPlacesDebug.length);
+		logger.info('🔍 DEBUG: Détail des lieux:', sharedPlacesDebug);
+
+		const sharedPlacesResult = await Place.aggregate([
+			{
+				$lookup: {
+					from: 'journals',
+					localField: 'journal_id',
+					foreignField: '_id',
+					as: 'journal'
+				}
+			},
+			{
+				$unwind: '$journal'
+			},
+			{
+				$lookup: {
+					from: 'users',
+					localField: 'user_id',
+					foreignField: '_id',
+					as: 'user'
+				}
+			},
+			{
+				$unwind: '$user'
+			},
+			{
+				$match: {
+					'journal.is_public': true,
+					'journal.status': 'published',
+					'user.areJournalsPublic': true,
+					// Filtrer pour ne garder que les journaux avec des dates passées (donc "visités")
+					$or: [
+						{ 'journal.end_date': { $lt: new Date() } }, // Journal terminé
+						{
+							$and: [
+								{ 'journal.start_date': { $lt: new Date() } }, // Journal commencé
+								{ 'journal.end_date': { $exists: false } } // Pas de date de fin définie
+							]
+						}
+					]
 				}
 			},
 			{
