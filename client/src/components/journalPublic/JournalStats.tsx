@@ -7,7 +7,6 @@ import {
   useTheme,
   useMediaQuery,
   Fade,
-  Stack,
   Divider,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
