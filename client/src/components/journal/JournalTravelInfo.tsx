@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Grid, useTheme } from '@mui/material';
+import { Box, Typography, Grid } from '@mui/material';
 import {
   AccessTime as AccessTimeIcon,
   Route as RouteIcon,
@@ -22,8 +22,6 @@ interface JournalTravelInfoProps {
 export const JournalTravelInfo: React.FC<JournalTravelInfoProps> = ({
   travelStats,
 }) => {
-  const theme = useTheme();
-
   return (
     <Box sx={{ mb: 4 }}>
       <Typography
