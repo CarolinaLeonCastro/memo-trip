@@ -1,10 +1,42 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Journal from '../models/Journal.js';
 import Place from '../models/Place.js';
 import User from '../models/User.js';
+import Like from '../models/Like.js';
 import logger from '../config/logger.config.js';
+import { authenticateToken } from '../middleware/auth.middleware.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
+
+// Middleware d'authentification optionnelle (ne rejette pas si pas connecté)
+const optionalAuth = (req, res, next) => {
+	// Priorité 1: Cookie HTTPOnly sécurisé
+	let token = req.cookies['auth-token'];
+
+	// Priorité 2: Header Authorization (fallback)
+	if (!token) {
+		const authHeader = req.headers.authorization;
+		token = authHeader && authHeader.split(' ')[1];
+	}
+
+	if (token) {
+		jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+			if (!err && decoded) {
+				req.user = {
+					id: decoded.userId,
+					email: decoded.email,
+					role: decoded.role
+				};
+				logger.debug('Optional auth successful', { userId: decoded.userId });
+			} else {
+				logger.debug('Optional auth failed', { error: err?.message });
+			}
+		});
+	}
+	next();
+};
 
 // Route pour récupérer les journaux publics (accessible aux visiteurs)
 export const getPublicJournals = async (req, res) => {
@@ -213,10 +245,29 @@ export const getPublicJournalById = async (req, res) => {
 			coordinates: place.location?.coordinates || []
 		}));
 
+		// Récupérer les informations de likes pour ce journal
+		const likesCount = await Like.countDocuments({
+			target_id: journal._id,
+			target_type: 'journal'
+		});
+
+		// Vérifier si l'utilisateur actuel a liké ce journal (si connecté)
+		let isLiked = false;
+		if (req.user?.id) {
+			const userLike = await Like.findOne({
+				user_id: req.user.id,
+				target_id: journal._id,
+				target_type: 'journal'
+			});
+			isLiked = !!userLike;
+		}
+
 		// Réponse avec journal et lieux paginés
 		const response = {
 			...journal.toObject(),
 			places: formattedPlaces,
+			likes_count: likesCount,
+			is_liked: isLiked,
 			placesMetadata: {
 				total: totalPlaces,
 				page: parseInt(page),
@@ -532,7 +583,53 @@ export const getDiscoverPosts = async (req, res) => {
 						total_places: { $ifNull: [{ $arrayElemAt: ['$placesCount.total', 0] }, 0] }
 					}
 				},
-				// 11. Projeter les champs nécessaires
+				// 11. Joindre avec les likes pour compter
+				{
+					$lookup: {
+						from: 'likes',
+						let: { journalId: '$_id' },
+						pipeline: [
+							{
+								$match: {
+									$expr: {
+										$and: [{ $eq: ['$target_id', '$$journalId'] }, { $eq: ['$target_type', 'journal'] }]
+									}
+								}
+							},
+							{ $count: 'total' }
+						],
+						as: 'likesCount'
+					}
+				},
+				// 12. Vérifier si l'utilisateur actuel a liké (si connecté)
+				{
+					$lookup: {
+						from: 'likes',
+						let: { journalId: '$_id' },
+						pipeline: [
+							{
+								$match: {
+									$expr: {
+										$and: [
+											{ $eq: ['$target_id', '$$journalId'] },
+											{ $eq: ['$target_type', 'journal'] },
+											...(req.user?.id ? [{ $eq: ['$user_id', new mongoose.Types.ObjectId(req.user.id)] }] : [])
+										]
+									}
+								}
+							}
+						],
+						as: 'userLike'
+					}
+				},
+				// 13. Ajouter les compteurs de likes
+				{
+					$addFields: {
+						likes_count: { $ifNull: [{ $arrayElemAt: ['$likesCount.total', 0] }, 0] },
+						is_liked: { $gt: [{ $size: '$userLike' }, 0] }
+					}
+				},
+				// 14. Projeter les champs nécessaires
 				{
 					$project: {
 						title: 1,
@@ -543,6 +640,8 @@ export const getDiscoverPosts = async (req, res) => {
 						end_date: 1,
 						stats: 1,
 						total_places: 1,
+						likes_count: 1,
+						is_liked: 1,
 						createdAt: 1,
 						places: 1,
 						user_id: {
@@ -603,10 +702,10 @@ export const getDiscoverPosts = async (req, res) => {
 							samplePlaces,
 							remainingPlacesCount
 						},
-						likes: 0, // À implémenter avec un système de likes
+						likes: journal.likes_count || 0,
 						comments: 0, // À implémenter avec un système de commentaires
 						views: 0, // À implémenter avec un système de vues
-						is_liked: false,
+						is_liked: journal.is_liked || false,
 						created_at: journal.createdAt
 					};
 				})
@@ -998,9 +1097,123 @@ export const getPopularDestinations = async (req, res) => {
 	}
 };
 
+// Route pour gérer les likes (toggle like/unlike)
+export const toggleLike = async (req, res) => {
+	try {
+		const { targetId, targetType } = req.body;
+		const userId = req.user?.id;
+
+		logger.info('🔄 ToggleLike appelé', {
+			targetId,
+			targetType,
+			userId,
+			userPresent: !!req.user,
+			cookies: Object.keys(req.cookies || {})
+		});
+
+		// Vérifier que l'utilisateur est connecté
+		if (!userId) {
+			logger.warn('❌ ToggleLike: Utilisateur non connecté');
+			return res.status(401).json({
+				success: false,
+				message: 'Vous devez être connecté pour aimer un contenu'
+			});
+		}
+
+		// Valider les paramètres
+		if (!targetId || !targetType) {
+			return res.status(400).json({
+				success: false,
+				message: 'ID et type de contenu requis'
+			});
+		}
+
+		if (!['journal', 'place'].includes(targetType)) {
+			return res.status(400).json({
+				success: false,
+				message: 'Type de contenu invalide'
+			});
+		}
+
+		// Vérifier que l'entité existe et est publique
+		let targetEntity;
+		if (targetType === 'journal') {
+			targetEntity = await Journal.findOne({
+				_id: targetId,
+				is_public: true,
+				status: 'published'
+			}).populate('user_id', 'areJournalsPublic');
+
+			if (!targetEntity || !targetEntity.user_id?.areJournalsPublic) {
+				return res.status(404).json({
+					success: false,
+					message: 'Journal non trouvé ou non accessible'
+				});
+			}
+		} else if (targetType === 'place') {
+			targetEntity = await Place.findById(targetId).populate('user_id', 'areJournalsPublic');
+
+			if (!targetEntity || !targetEntity.user_id?.areJournalsPublic) {
+				return res.status(404).json({
+					success: false,
+					message: 'Lieu non trouvé ou non accessible'
+				});
+			}
+		}
+
+		// Vérifier si l'utilisateur a déjà liké ce contenu
+		const existingLike = await Like.findOne({
+			user_id: userId,
+			target_id: targetId,
+			target_type: targetType
+		});
+
+		let liked = false;
+		if (existingLike) {
+			// Supprimer le like (unlike)
+			await Like.deleteOne({ _id: existingLike._id });
+			liked = false;
+		} else {
+			// Ajouter le like
+			await Like.create({
+				user_id: userId,
+				target_id: targetId,
+				target_type: targetType
+			});
+			liked = true;
+		}
+
+		// Compter le nombre total de likes pour cette entité
+		const likesCount = await Like.countDocuments({
+			target_id: targetId,
+			target_type: targetType
+		});
+
+		logger.info(`✅ User ${userId} ${liked ? 'liked' : 'unliked'} ${targetType} ${targetId}`, {
+			liked,
+			likesCount,
+			existingLikeFound: !!existingLike
+		});
+
+		res.json({
+			success: true,
+			data: {
+				liked,
+				likesCount
+			}
+		});
+	} catch (error) {
+		logger.error('Error toggling like:', error);
+		res.status(500).json({
+			success: false,
+			message: 'Erreur lors de la gestion du like'
+		});
+	}
+};
+
 // Configuration des routes publiques
 router.get('/journals', getPublicJournals);
-router.get('/journals/:id', getPublicJournalById);
+router.get('/journals/:id', optionalAuth, getPublicJournalById);
 router.get('/places/:id', getPublicPlaceById);
 router.get('/stats', getPublicStats);
 
@@ -1010,5 +1223,8 @@ router.get('/discover/stats', getDiscoverStats);
 router.get('/discover/trending-tags', getTrendingTags);
 router.get('/discover/active-travelers', getActiveTravelers);
 router.get('/discover/popular-destinations', getPopularDestinations);
+
+// Route pour les likes (nécessite authentification)
+router.post('/like', authenticateToken, toggleLike);
 
 export default router;

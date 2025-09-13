@@ -6,13 +6,11 @@ import {
   Typography,
   Box,
   Avatar,
-  IconButton,
   Chip,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -55,8 +53,6 @@ export const JournalCard: React.FC<JournalCardProps> = ({
   likes,
   comments,
   views,
-  isLiked,
-  onLike,
   currentUserId,
 }) => {
   const navigate = useNavigate();
@@ -147,7 +143,6 @@ export const JournalCard: React.FC<JournalCardProps> = ({
           }}
           onClick={() => navigate(`/public/journals/${journal._id}`)}
         />
-
       </Box>
 
       {/* Contenu */}

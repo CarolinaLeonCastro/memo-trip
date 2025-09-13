@@ -7,9 +7,16 @@ import {
   Typography,
   Pagination,
   Alert,
+  Button,
+  IconButton,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+
+// Import du contexte d'authentification
+import { useAuth } from '../context/AuthContext';
 
 // Import des composants publics
 import {
@@ -97,8 +104,14 @@ interface PublicJournal {
 
 const PublicJournalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuth(); // Ajout du contexte d'auth
   const [journal, setJournal] = useState<PublicJournal | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // États pour les likes
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [likingInProgress, setLikingInProgress] = useState(false);
 
   // Nouveaux états pour les filtres de lieux
   const [places, setPlaces] = useState<PublicPlace[]>([]);
@@ -273,6 +286,63 @@ const PublicJournalDetail: React.FC = () => {
     [filters]
   );
 
+  // Fonction pour gérer les likes
+  const handleLike = async () => {
+    console.log('🔄 HandleLike appelé avec:', {
+      journalId: journal?._id,
+      likingInProgress,
+      currentLiked: isLiked,
+      currentCount: likesCount,
+      userAuthenticated: isAuthenticated,
+      userId: user?.id,
+    });
+
+    if (!journal?._id || likingInProgress) return;
+
+    // Vérifier si l'utilisateur est connecté
+    if (!isAuthenticated) {
+      console.warn('⚠️ Utilisateur non connecté, impossible de liker');
+      // Optionnel: afficher une notification ou rediriger vers la connexion
+      return;
+    }
+
+    try {
+      setLikingInProgress(true);
+      console.log('📡 Appel toggleLike API...');
+
+      const result = await publicService.toggleLike(journal._id, 'journal');
+      console.log('✅ Résultat toggleLike:', result);
+
+      if (result && typeof result.liked === 'boolean') {
+        setIsLiked(result.liked);
+        setLikesCount(result.likesCount);
+
+        console.log('🔄 États mis à jour:', {
+          newLiked: result.liked,
+          newCount: result.likesCount,
+        });
+
+        // Mettre à jour aussi les stats du journal pour la cohérence
+        if (journal.stats) {
+          setJournal({
+            ...journal,
+            stats: {
+              ...journal.stats,
+              likes: result.likesCount,
+            },
+          });
+        }
+      } else {
+        console.error('❌ Résultat invalide de toggleLike:', result);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du like:', error);
+      // Optionnel: afficher une notification d'erreur
+    } finally {
+      setLikingInProgress(false);
+    }
+  };
+
   // Fonction pour gérer les changements de page
   const handlePageChange = (
     _event: React.ChangeEvent<unknown>,
@@ -366,6 +436,14 @@ const PublicJournalDetail: React.FC = () => {
 
         // Utiliser directement les données de l'API
         setJournal(journalData);
+
+        // Initialiser les états des likes avec les nouvelles données de l'API
+        setLikesCount(journalData.likes_count || 0);
+        setIsLiked(journalData.is_liked || false);
+        console.log('📊 Likes initialisés:', {
+          likes_count: journalData.likes_count,
+          is_liked: journalData.is_liked,
+        });
       } catch (error) {
         console.error(
           '❌ PublicJournalDetail: Erreur lors du chargement:',
@@ -441,9 +519,49 @@ const PublicJournalDetail: React.FC = () => {
           }}
         />
         <Container maxWidth="xl" sx={{ position: 'relative', pb: 4 }}>
-          <Typography variant="h2" fontWeight={700} sx={{ mb: 2 }}>
-            {journal.title}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              mb: 2,
+            }}
+          >
+            <Typography variant="h2" fontWeight={700}>
+              {journal.title}
+            </Typography>
+
+            {/* Bouton Like */}
+            <Button
+              variant="contained"
+              startIcon={isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              onClick={handleLike}
+              disabled={likingInProgress || !isAuthenticated}
+              title={
+                !isAuthenticated
+                  ? 'Vous devez être connecté pour aimer ce journal'
+                  : `${isLiked ? 'Retirer le like' : 'Aimer ce journal'}`
+              }
+              sx={{
+                bgcolor: isLiked ? '#ef4444' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                opacity: !isAuthenticated ? 0.6 : 1,
+                '&:hover': {
+                  bgcolor: isLiked ? '#dc2626' : 'rgba(255,255,255,0.3)',
+                },
+                '&:disabled': {
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.5)',
+                },
+                minWidth: 120,
+              }}
+            >
+              {likesCount} {!isAuthenticated && '🔒'}
+            </Button>
+          </Box>
+
           {journal.subtitle && (
             <Typography variant="h5" sx={{ mb: 2, opacity: 0.9 }}>
               {journal.subtitle}

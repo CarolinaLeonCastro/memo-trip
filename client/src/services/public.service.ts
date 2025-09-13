@@ -336,16 +336,61 @@ class PublicService {
 
   // Liker/Unliker un post
   async toggleLike(
-    postId: string,
-    type: 'place' | 'journal'
+    targetId: string,
+    targetType: 'place' | 'journal'
   ): Promise<{
     liked: boolean;
     likesCount: number;
   }> {
-    const response = await api.post(
-      `/api/public/discover/${type}s/${postId}/like`
-    );
-    return response.data.data;
+    console.log('📡 Service toggleLike appelé avec:', { targetId, targetType });
+
+    try {
+      const response = await api.post('/api/public/like', {
+        targetId,
+        targetType,
+      });
+
+      console.log('📡 Réponse complète API:', response);
+      console.log('📡 Données de la réponse:', response.data);
+      console.log('📡 response.data.success:', response.data?.success);
+      console.log('📡 response.data.data:', response.data?.data);
+      console.log('📡 Type de response.data.data:', typeof response.data?.data);
+
+      // Version simplifiée - essayons différentes structures
+      if (response.data) {
+        // Cas 1: Structure normale {success: true, data: {liked, likesCount}}
+        if (response.data.success && response.data.data) {
+          const result = response.data.data;
+          console.log('✅ Structure normale détectée:', result);
+          return {
+            liked: result.liked,
+            likesCount: result.likesCount,
+          };
+        }
+
+        // Cas 2: Données directement dans response.data
+        if (typeof response.data.liked === 'boolean') {
+          console.log('✅ Structure directe détectée:', response.data);
+          return {
+            liked: response.data.liked,
+            likesCount: response.data.likesCount,
+          };
+        }
+
+        // Cas 3: Debug - afficher toute la structure
+        console.error('❌ Structure inconnue:', {
+          responseData: response.data,
+          keys: Object.keys(response.data),
+          success: response.data.success,
+          data: response.data.data,
+        });
+      }
+
+      throw new Error('Structure de réponse inattendue');
+    } catch (error) {
+      console.error('❌ Erreur dans toggleLike service:', error);
+      throw error;
+    }
   }
 
   // Récupérer les tags tendance

@@ -38,12 +38,26 @@ class ApiClient {
 
       clearTimeout(timeoutId);
 
+      console.log('🌐 API Response:', {
+        url: `${this.baseURL}${endpoint}`,
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+      });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('🌐 API Error:', {
+          status: response.status,
+          errorData,
+          endpoint,
+        });
         throw new Error(errorData.message || `HTTP ${response.status}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('🌐 API Success:', result);
+      return result;
     } catch (error) {
       clearTimeout(timeoutId);
       throw error;
