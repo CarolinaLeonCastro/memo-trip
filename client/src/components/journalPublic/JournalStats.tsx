@@ -27,7 +27,7 @@ interface JournalStatsProps {
 
 // Composant pour chaque statistique minimaliste
 const MinimalStat: React.FC<{
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   label: string;
   value: number;
   color: string;
@@ -72,7 +72,7 @@ const MinimalStat: React.FC<{
             color: color,
           }}
         >
-          {React.cloneElement(icon as React.ReactElement, {
+          {React.cloneElement(icon, {
             sx: { fontSize: { xs: 20, sm: 24 } },
           })}
         </Box>
