@@ -22,7 +22,6 @@ import {
   LocationOn as LocationIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Favorite as FavoriteIcon,
   Photo as PhotoIcon,
   ArrowBack as ArrowBackIcon,
   MenuBook as MenuBookIcon,
@@ -231,7 +230,7 @@ const Journals: React.FC = () => {
                   sx={{ fontSize: { xs: 20, md: 24 }, color: 'warning.main' }}
                 />
               }
-              label="Lieux visités"
+              label="Lieux"
               value={totalPlaces}
               color="255, 138, 0"
             />
@@ -716,35 +715,7 @@ const Journals: React.FC = () => {
                               gap: 1,
                               px: { xs: 1, md: 1.5 },
                               py: 0.5,
-                              borderRadius: '12px',
-                              backgroundColor: '#FFE8E8',
-                            }}
-                          >
-                            <FavoriteIcon
-                              sx={{
-                                fontSize: { xs: '0.9rem', md: '1rem' },
-                                color: '#FF6B6B',
-                              }}
-                            />
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontWeight: 600,
-                                color: '#FF6B6B',
-                                fontSize: { xs: '0.7rem', md: '0.75rem' },
-                              }}
-                            >
-                              24
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              px: { xs: 1, md: 1.5 },
-                              py: 0.5,
-                              borderRadius: '12px',
+                              borderRadius: 1,
                               backgroundColor: '#E3F2FD',
                             }}
                           >
