@@ -13,11 +13,6 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  Grid,
   Pagination,
   Alert,
   CircularProgress,
@@ -29,7 +24,6 @@ import {
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
-  Search as SearchIcon,
   AdminPanelSettings as AdminIcon,
   Person as PersonIcon,
   Block as BlockIcon,
@@ -175,14 +169,6 @@ const UserManagement: React.FC = () => {
     );
   };
 
-  const handleFilterChange = (field: string, value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value,
-      page: 1, // Reset to first page when filtering
-    }));
-  };
-
   const handlePageChange = (
     _event: React.ChangeEvent<unknown>,
     value: number
@@ -311,51 +297,6 @@ const UserManagement: React.FC = () => {
           {error}
         </Alert>
       )}
-
-      {/* Filtres */}
-      <Grid container spacing={3} sx={{ mb: 3, ml: 2 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <TextField
-            fullWidth
-            label="Rechercher"
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              ),
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>Statut</InputLabel>
-            <Select
-              value={filters.status}
-              label="Statut"
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="active">Actif</MenuItem>
-              <MenuItem value="blocked">Bloqué</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>Rôle</InputLabel>
-            <Select
-              value={filters.role}
-              label="Rôle"
-              onChange={(e) => handleFilterChange('role', e.target.value)}
-            >
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="user">Utilisateur</MenuItem>
-              <MenuItem value="admin">Administrateur</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
 
       {/* Tableau des utilisateurs */}
       <TableContainer>
