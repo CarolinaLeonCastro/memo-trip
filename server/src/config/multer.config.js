@@ -69,9 +69,26 @@ const uploadImages = multer({
 		const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 		const fileExtension = path.extname(file.originalname).toLowerCase();
 
+		// Debug logs pour comprendre le problème
+		console.log('🔍 [Multer Filter] Fichier reçu:', {
+			originalname: file.originalname,
+			mimetype: file.mimetype,
+			fileExtension: fileExtension,
+			size: file.size,
+			fieldname: file.fieldname,
+			encoding: file.encoding
+		});
+
 		if (imageTypes.includes(file.mimetype) && imageExtensions.includes(fileExtension)) {
+			console.log('✅ [Multer Filter] Fichier accepté');
 			cb(null, true);
 		} else {
+			console.log('❌ [Multer Filter] Fichier rejeté:', {
+				mimetype: file.mimetype,
+				expectedTypes: imageTypes,
+				extension: fileExtension,
+				expectedExtensions: imageExtensions
+			});
 			cb(new Error('Seules les images sont autorisées (JPG, JPEG, PNG, GIF, WebP)'), false);
 		}
 	},

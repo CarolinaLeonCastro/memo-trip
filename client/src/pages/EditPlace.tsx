@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import {
   Container,
   TextField,
@@ -385,48 +384,36 @@ const EditPlace: React.FC = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = event.target.files;
-    if (files && originalPlace) {
+    if (files) {
       const fileArray = Array.from(files);
 
       // Limiter à 4 photos maximum
       const filesToProcess = fileArray.slice(0, 4 - formData.photos.length);
 
-      try {
-        // Créer un FormData pour l'upload
-        const formDataUpload = new FormData();
-        filesToProcess.forEach((file, index) => {
-          formDataUpload.append('photos', file);
-          formDataUpload.append(`captions[${index}]`, ''); // Caption vide par défaut
-        });
+      const newPhotos: string[] = [];
+      let processedCount = 0;
 
-        // Utiliser l'API existante d'upload de photos avec axios
-        const response = await axios.post(
-          `${API_CONFIG.BASE_URL}/api/places/${originalPlace.id}/photos`,
-          formDataUpload,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            withCredentials: true,
+      filesToProcess.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (reader.result) {
+            newPhotos.push(reader.result as string);
+            processedCount++;
+
+            // Quand toutes les images sont traitées, mettre à jour l'état
+            if (processedCount === filesToProcess.length) {
+              setFormData((prev) => ({
+                ...prev,
+                photos: [...prev.photos, ...newPhotos].slice(0, 4),
+              }));
+            }
           }
-        );
+        };
+        reader.readAsDataURL(file);
+      });
 
-        const updatedPlace = response.data as { photos: { url: string }[] };
-
-        // Mettre à jour les photos avec les URLs Cloudinary retournées
-        const newPhotoUrls = updatedPlace.photos.map((photo) => photo.url);
-
-        setFormData((prev) => ({
-          ...prev,
-          photos: newPhotoUrls.slice(0, 4),
-        }));
-
-        // Réinitialiser l'input file
-        event.target.value = '';
-      } catch (error) {
-        console.error("Erreur lors de l'upload des photos:", error);
-        alert("Erreur lors de l'upload des photos");
-      }
+      // Réinitialiser l'input file
+      event.target.value = '';
     }
   };
 
