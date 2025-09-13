@@ -9,13 +9,14 @@ import {
   Stack,
   Rating,
   Button,
+  useTheme,
+  useMediaQuery,
+  Fade,
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
   Photo as PhotoIcon,
   CalendarToday as DateIcon,
-  CheckCircle as VisitedIcon,
-  Schedule as PlannedIcon,
   Visibility as ViewIcon,
 } from '@mui/icons-material';
 import type { PublicPlace } from '../public/PublicPlaceCard';
@@ -31,6 +32,22 @@ const PublicPlaceDetailCard: React.FC<PublicPlaceDetailCardProps> = ({
   onClick,
   showViewButton = true,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Hauteurs fixes responsives pour garantir l'uniformité
+  const cardHeight = {
+    xs: 520, // Mobile
+    sm: 580, // Tablet
+    md: 500, // Desktop
+  };
+
+  const imageHeight = {
+    xs: 200, // Mobile
+    sm: 240, // Tablet
+    md: 200, // Desktop
+  };
+
   const getImageUrl = () => {
     if (!place.coverImage) return '/api/placeholder/400/240';
 
@@ -96,250 +113,381 @@ const PublicPlaceDetailCard: React.FC<PublicPlaceDetailCardProps> = ({
     return 1;
   };
 
-  const getStatusIcon = () => {
-    return place.status === 'visited' ? (
-      <VisitedIcon sx={{ fontSize: 18, color: 'success.main' }} />
-    ) : (
-      <PlannedIcon sx={{ fontSize: 18, color: 'warning.main' }} />
-    );
-  };
-
-  const getStatusColor = () => {
-    return place.status === 'visited' ? 'success' : 'warning';
-  };
-
   return (
-    <Card
-      sx={{
-        borderRadius: 2,
-        overflow: 'hidden',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        transition: 'all 0.3s ease',
-        cursor: onClick ? 'pointer' : 'default',
-        border: '1px solid',
-        borderColor: 'divider',
-        '&:hover': onClick
-          ? {
-              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              transform: 'translateY(-2px)',
-              borderColor: 'primary.main',
-            }
-          : {},
-      }}
-    >
-      {/* Image */}
-      <Box sx={{ position: 'relative' }}>
-        <CardMedia
-          component="img"
-          height="240"
-          image={getImageUrl()}
-          alt={place.name}
+    <Fade in timeout={600}>
+      <Card
+        sx={{
+          // Hauteur fixe responsive pour uniformité
+          height: cardHeight,
+          borderRadius: 1,
+          overflow: 'hidden',
+          boxShadow:
+            theme.palette.mode === 'dark'
+              ? '0 8px 32px rgba(0,0,0,0.3)'
+              : '0 8px 32px rgba(0,0,0,0.08)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: onClick ? 'pointer' : 'default',
+          border: `1px solid ${theme.palette.divider}`,
+          position: 'relative',
+          background: theme.palette.background.paper,
+          display: 'flex', // Flexbox pour contrôler la structure
+          flexDirection: 'column', // Direction verticale
+          '&:hover': onClick
+            ? {
+                boxShadow:
+                  theme.palette.mode === 'dark'
+                    ? '0 20px 60px rgba(0,0,0,0.4)'
+                    : '0 20px 60px rgba(0,0,0,0.15)',
+                transform: 'translateY(-8px)',
+                '& .place-image': {
+                  transform: 'scale(1.05)',
+                },
+                '& .place-overlay': {
+                  opacity: 1,
+                },
+              }
+            : {},
+        }}
+      >
+        {/* Image avec hauteur fixe */}
+        <Box
           sx={{
-            objectFit: 'cover',
-            backgroundColor: 'grey.100',
+            position: 'relative',
+            overflow: 'hidden',
+            flexShrink: 0, // Empêche la compression
           }}
-        />
-
-        {/* Badge de statut */}
-        <Chip
-          icon={getStatusIcon()}
-          label={place.status === 'visited' ? 'Visité' : 'À visiter'}
-          size="small"
-          color={getStatusColor()}
-          sx={{
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(4px)',
-            fontWeight: 600,
-          }}
-        />
-
-        {/* Badge photos */}
-        {place.photosCount > 0 && (
-          <Chip
-            icon={<PhotoIcon sx={{ fontSize: 14 }} />}
-            label={place.photosCount}
-            size="small"
+        >
+          <CardMedia
+            component="img"
+            image={getImageUrl()}
+            alt={place.name}
+            className="place-image"
             sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              color: 'white',
-              fontWeight: 600,
-              '& .MuiChip-icon': {
-                color: 'white',
+              height: {
+                xs: imageHeight.xs,
+                sm: imageHeight.sm,
+                md: imageHeight.md,
               },
+              objectFit: 'cover',
+              transition: 'transform 0.4s ease',
             }}
           />
-        )}
 
-        {/* Badge durée */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 12,
-            right: 12,
-            backgroundColor: 'rgba(79, 134, 247, 0.9)',
-            color: 'white',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
-            fontSize: '0.75rem',
-            fontWeight: 600,
-          }}
-        >
-          {getDays()} jour{getDays() > 1 ? 's' : ''}
-        </Box>
-      </Box>
-
-      {/* Contenu */}
-      <CardContent sx={{ p: 3 }}>
-        {/* Titre et localisation */}
-        <Box sx={{ mb: 2 }}>
-          <Typography
-            variant="h6"
-            fontWeight="700"
+          {/* Overlay gradient */}
+          <Box
+            className="place-overlay"
             sx={{
-              color: 'text.primary',
-              mb: 0.5,
-              lineHeight: 1.2,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background:
+                'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%)',
+              opacity: 0,
+              transition: 'opacity 0.3s ease',
             }}
-          >
-            {place.name}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <LocationIcon
-              sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }}
-            />
-            <Typography variant="body2" color="text.secondary">
-              {getLocationText()}
-            </Typography>
-          </Box>
-          {getDateText() && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <DateIcon
-                sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                {getDateText()}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+          />
 
-        {/* Description */}
-        {place.description && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 2,
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              lineHeight: 1.4,
-            }}
-          >
-            {place.description}
-          </Typography>
-        )}
-
-        {/* Tags */}
-        {place.tags.length > 0 && (
-          <Stack
-            direction="row"
-            spacing={0.5}
-            sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}
-          >
-            {place.tags.slice(0, 3).map((tag, index) => (
-              <Chip
-                key={index}
-                label={tag}
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: '0.7rem',
-                  height: 20,
-                  borderColor: 'primary.main',
-                  color: 'primary.main',
-                }}
-              />
-            ))}
-            {place.tags.length > 3 && (
-              <Chip
-                label={`+${place.tags.length - 3}`}
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: '0.7rem',
-                  height: 20,
-                  borderColor: 'primary.main',
-                  color: 'primary.main',
-                }}
-              />
-            )}
-          </Stack>
-        )}
-
-        {/* Rating et bouton d'action */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          {/* Rating */}
-          {place.rating && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Rating
-                value={place.rating}
-                size="small"
-                readOnly
-                sx={{ mr: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                {place.rating.toFixed(1)}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Bouton Voir */}
-          {showViewButton && (
-            <Button
-              onClick={
-                onClick
-                  ? () => {
-                      console.log(
-                        '🔍 PublicPlaceDetailCard: Button clicked for place:',
-                        place.name
-                      );
-                      onClick(place);
-                    }
-                  : undefined
-              }
-              variant="outlined"
-              size="small"
-              startIcon={<ViewIcon sx={{ fontSize: 16 }} />}
+          {/* Badge photos */}
+          {place.photosCount > 0 && (
+            <Box
               sx={{
-                borderColor: 'primary.main',
-                color: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.light',
-                  borderColor: 'primary.main',
-                },
+                position: 'absolute',
+                bottom: 12,
+                right: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                bgcolor: 'rgba(0,0,0,0.7)',
+                color: 'white',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 2,
+                backdropFilter: 'blur(8px)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
               }}
             >
-              Voir
-            </Button>
+              <PhotoIcon sx={{ fontSize: 14 }} />
+              <Typography
+                variant="caption"
+                sx={{ color: 'white', fontWeight: 600 }}
+              >
+                {place.photosCount}
+              </Typography>
+            </Box>
           )}
+
+          {/* Badge durée */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 12,
+              left: 12,
+              bgcolor: theme.palette.primary.main,
+              color: 'white',
+              px: 2,
+              py: 0.75,
+              borderRadius: 2,
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(79, 134, 247, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+            }}
+          >
+            <DateIcon sx={{ fontSize: 16 }} />
+            {getDays()} jour{getDays() > 1 ? 's' : ''}
+          </Box>
         </Box>
-      </CardContent>
-    </Card>
+
+        {/* Contenu avec flex-grow pour remplir l'espace restant */}
+        <CardContent
+          sx={{
+            p: { xs: 2, sm: 2.5, md: 3 },
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1, // Prend tout l'espace restant
+            minHeight: 0, // Important pour que le contenu puisse se comprimer
+          }}
+        >
+          {/* Header avec titre et rating */}
+          <Box sx={{ mb: 1.5, flexShrink: 0 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                mb: 1,
+                gap: 1,
+              }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight="700"
+                sx={{
+                  color: theme.palette.text.primary,
+                  lineHeight: 1.2,
+                  fontSize: { xs: '0.95rem', sm: '1rem', md: '1.125rem' },
+                  flex: 1,
+                  // Limiter à 2 lignes maximum
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {place.name}
+              </Typography>
+              {place.rating && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Rating
+                    value={place.rating}
+                    size="small"
+                    readOnly
+                    sx={{
+                      '& .MuiRating-iconFilled': {
+                        color: '#FFB400',
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {place.rating.toFixed(1)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            {/* Localisation */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                mb: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              <LocationIcon
+                sx={{
+                  fontSize: 16,
+                  color: theme.palette.primary.main,
+                  flexShrink: 0,
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  fontWeight: 500,
+                  fontSize: '0.85rem',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {getLocationText()}
+              </Typography>
+            </Box>
+
+            {/* Date */}
+            {getDateText() && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  flexShrink: 0,
+                }}
+              >
+                <DateIcon
+                  sx={{
+                    fontSize: 16,
+                    color: theme.palette.text.secondary,
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    fontWeight: 500,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {getDateText()}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* Description - zone flexible */}
+          {place.description && (
+            <Typography
+              variant="body2"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: '-webkit-box',
+                WebkitLineClamp: { xs: 2, sm: 3, md: 3 }, // Responsive line clamp
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                lineHeight: 1.5,
+                fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
+                flex: 1, // Prend l'espace disponible
+                minHeight: 0,
+              }}
+            >
+              {place.description.length > 50
+                ? `${place.description.substring(0, 50)}...`
+                : place.description}
+            </Typography>
+          )}
+
+          {/* Tags - zone flexible */}
+          {place.tags.length > 0 && (
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{
+                mb: 1.5,
+                flexWrap: 'wrap',
+                gap: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              {place.tags.slice(0, isMobile ? 2 : 3).map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    fontSize: '0.7rem',
+                    height: 22,
+                    bgcolor:
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(79, 134, 247, 0.15)'
+                        : 'rgba(79, 134, 247, 0.08)',
+                    color: theme.palette.primary.main,
+                    border: `1px solid ${theme.palette.primary.main}20`,
+                    fontWeight: 600,
+                    borderRadius: 1.5,
+                  }}
+                />
+              ))}
+              {place.tags.length > (isMobile ? 2 : 3) && (
+                <Chip
+                  label={`+${place.tags.length - (isMobile ? 2 : 3)}`}
+                  size="small"
+                  sx={{
+                    fontSize: '0.7rem',
+                    height: 22,
+                    color: theme.palette.text.secondary,
+                    fontWeight: 600,
+                    borderRadius: 1.5,
+                  }}
+                />
+              )}
+            </Stack>
+          )}
+
+          {/* Bouton d'action - toujours en bas */}
+          {showViewButton && (
+            <Box sx={{ mt: 'auto', flexShrink: 0 }}>
+              <Button
+                onClick={
+                  onClick
+                    ? (e) => {
+                        e.stopPropagation();
+                        onClick(place);
+                      }
+                    : undefined
+                }
+                variant="contained"
+                fullWidth
+                startIcon={<ViewIcon sx={{ fontSize: 16 }} />}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  py: { xs: 1, sm: 1.25 },
+                  borderRadius: 2.5,
+                  fontWeight: 700,
+                  fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem' },
+                  textTransform: 'none',
+                  boxShadow: `0 4px 12px ${theme.palette.primary.main}30`,
+                  '&:hover': {
+                    bgcolor: theme.palette.primary.dark,
+                    boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
+              >
+                Découvrir ce lieu
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Fade>
   );
 };
 

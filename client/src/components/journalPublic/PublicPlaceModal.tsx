@@ -63,7 +63,6 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
     ) {
       return place.coverImage.url;
     }
-
     return undefined;
   };
 
@@ -324,7 +323,7 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
         {place.tags.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1 }}>
-              Catégories
+              Tags
             </Typography>
             <Stack
               direction="row"

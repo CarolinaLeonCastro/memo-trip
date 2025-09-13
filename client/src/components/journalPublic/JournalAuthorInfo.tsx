@@ -1,6 +1,12 @@
 import React from 'react';
-import { Box, Container, Typography, Avatar } from '@mui/material';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import {
+  Box,
+  Container,
+  Typography,
+  Avatar,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
 
 interface JournalAuthorInfoProps {
   user: {
@@ -16,8 +22,11 @@ export const JournalAuthorInfo: React.FC<JournalAuthorInfoProps> = ({
   user,
   publishedDate,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <Box sx={{ bgcolor: 'white', px: 3, py: 4 }}>
+    <Box sx={{ px: 3, py: 4 }}>
       <Container maxWidth="xl">
         <Box
           sx={{
@@ -29,27 +38,21 @@ export const JournalAuthorInfo: React.FC<JournalAuthorInfoProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Avatar
               src={user.avatar?.url}
-              sx={{ width: 64, height: 64 }}
+              sx={{
+                width: isMobile ? 48 : 64,
+                height: isMobile ? 48 : 64,
+                bgcolor: theme.palette.primary.main,
+                fontSize: isMobile ? '1.2rem' : '1.5rem',
+                border: `2px solid ${theme.palette.background.paper}`,
+                boxShadow: theme.shadows[2],
+              }}
               alt={user.name}
-            />
+            >
+              {user.name.charAt(0).toUpperCase()}
+            </Avatar>
             <Box>
               <Typography variant="h6" fontWeight="700" sx={{ mb: 0.5 }}>
                 {user.name}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LocationOnIcon
-                  sx={{ fontSize: 16, color: 'text.secondary' }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {user.location}
-                </Typography>
-              </Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 1, maxWidth: '400px' }}
-              >
-                {user.bio}
               </Typography>
             </Box>
           </Box>
