@@ -253,9 +253,22 @@ class PublicService {
         '🔗 Service: Appel API getDiscoverPosts avec filtres:',
         filters
       );
-      const response = await api.get('/api/public/discover/posts', {
-        params: filters,
-      });
+
+      // Nettoyer les filtres undefined
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([, value]) => value !== undefined && value !== null
+            )
+          )
+        : {};
+
+      console.log('🔗 Service: Filtres nettoyés:', cleanFilters);
+
+      const response = await api.get(
+        '/api/public/discover/posts',
+        cleanFilters
+      );
 
       console.log('🔗 Service: Réponse brute API:', response.data);
       console.log('🔗 Service: Structure de response.data:', {

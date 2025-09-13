@@ -389,62 +389,187 @@ export const getDiscoverPosts = async (req, res) => {
 		const { page = 1, limit = 12, search, tags, type = 'all', sort = 'recent' } = req.query;
 		const skip = (page - 1) * limit;
 
+		console.log('🔍 Paramètres de filtrage:', {
+			search,
+			tags,
+			tagsType: typeof tags,
+			tagsLength: tags?.length,
+			type,
+			sort
+		});
+
 		let posts = [];
 		console.log('🔎 Type de contenu demandé:', type);
 
 		if (type === 'all' || type === 'journal') {
-			// Récupérer les journaux publics
-			const journalFilter = {
+			console.log('🔎 Récupération des journaux publics...');
+
+			// Construire le filtre de base
+			const baseFilter = {
 				is_public: true,
 				status: 'published'
 			};
 
-			if (search) {
-				journalFilter.$or = [
-					{ title: { $regex: search, $options: 'i' } },
-					{ description: { $regex: search, $options: 'i' } }
+			// Ajouter le filtre de recherche
+			if (search && search.trim() !== '') {
+				baseFilter.$or = [
+					{ title: { $regex: search.trim(), $options: 'i' } },
+					{ description: { $regex: search.trim(), $options: 'i' } }
 				];
+				console.log('🔍 Filtre de recherche ajouté:', search.trim());
 			}
 
-			if (tags && tags.length > 0) {
-				const tagArray = Array.isArray(tags) ? tags : tags.split(',');
-				journalFilter.tags = { $in: tagArray };
+			// Ajouter le filtre de tags - traitement amélioré
+			if (tags) {
+				let tagArray = [];
+
+				if (Array.isArray(tags)) {
+					tagArray = tags.filter((tag) => tag && tag.trim() !== '');
+				} else if (typeof tags === 'string' && tags.trim() !== '') {
+					// Peut être une chaîne avec des virgules ou un seul tag
+					tagArray = tags
+						.split(',')
+						.map((tag) => tag.trim())
+						.filter((tag) => tag !== '');
+				}
+
+				if (tagArray.length > 0) {
+					baseFilter.tags = { $in: tagArray };
+					logger.info('🏷️ Filtre de tags ajouté:', tagArray);
+				}
 			}
 
-			console.log('🔎 Filtre journal appliqué:', journalFilter);
+			console.log('🔎 Filtre MongoDB final:', JSON.stringify(baseFilter, null, 2));
 
-			const journals = await Journal.find(journalFilter)
-				.populate({
-					path: 'user_id',
-					select: 'name avatar areJournalsPublic',
-					match: { areJournalsPublic: true }
-				})
-				.populate({
-					path: 'places',
-					select: 'name location photos status',
-					options: { limit: 3 } // Limiter à 3 lieux pour l'aperçu
-				})
-				.select('title description cover_image tags start_date end_date stats createdAt')
-				.sort({ createdAt: sort === 'recent' ? -1 : 1 })
-				.limit(parseInt(limit));
+			// Utiliser une agrégation pour filtrer efficacement par areJournalsPublic
+			const journalPipeline = [
+				// 1. Filtrer les journaux de base
+				{
+					$match: baseFilter
+				},
+				// 2. Joindre avec les utilisateurs
+				{
+					$lookup: {
+						from: 'users',
+						localField: 'user_id',
+						foreignField: '_id',
+						as: 'user'
+					}
+				},
+				// 3. Filtrer par areJournalsPublic AVANT la pagination
+				{
+					$match: {
+						'user.areJournalsPublic': true
+					}
+				},
+				// 4. Filtrer pour ne garder que les journaux avec des dates passées (donc "visités")
+				{
+					$match: {
+						$or: [
+							{ end_date: { $lt: new Date() } }, // Journal terminé
+							{
+								$and: [
+									{ start_date: { $lt: new Date() } }, // Journal commencé
+									{ end_date: { $exists: false } } // Pas de date de fin définie
+								]
+							}
+						]
+					}
+				},
+				// 5. Restructurer l'utilisateur
+				{
+					$addFields: {
+						user_id: { $arrayElemAt: ['$user', 0] }
+					}
+				},
+				// 6. Trier
+				{
+					$sort: { createdAt: sort === 'recent' ? -1 : 1 }
+				},
+				// 7. Paginer APRÈS le filtrage
+				{
+					$skip: skip
+				},
+				{
+					$limit: parseInt(limit)
+				},
+				// 8. Compter le nombre total de lieux pour chaque journal
+				{
+					$lookup: {
+						from: 'places',
+						let: { journalId: '$_id' },
+						pipeline: [
+							{
+								$match: {
+									$expr: { $eq: ['$journal_id', '$$journalId'] }
+								}
+							},
+							{ $count: 'total' }
+						],
+						as: 'placesCount'
+					}
+				},
+				// 9. Joindre avec quelques lieux du journal (pour l'aperçu si nécessaire)
+				{
+					$lookup: {
+						from: 'places',
+						let: { journalId: '$_id' },
+						pipeline: [
+							{
+								$match: {
+									$expr: { $eq: ['$journal_id', '$$journalId'] }
+								}
+							},
+							{ $limit: 3 },
+							{ $project: { name: 1, location: 1, photos: 1, status: 1 } }
+						],
+						as: 'places'
+					}
+				},
+				// 10. Ajouter le nombre total de lieux
+				{
+					$addFields: {
+						total_places: { $ifNull: [{ $arrayElemAt: ['$placesCount.total', 0] }, 0] }
+					}
+				},
+				// 11. Projeter les champs nécessaires
+				{
+					$project: {
+						title: 1,
+						description: 1,
+						cover_image: 1,
+						tags: 1,
+						start_date: 1,
+						end_date: 1,
+						stats: 1,
+						total_places: 1,
+						createdAt: 1,
+						places: 1,
+						user_id: {
+							_id: 1,
+							name: 1,
+							avatar: 1,
+							areJournalsPublic: 1
+						}
+					}
+				}
+			];
 
-			console.log('🔎 Journaux trouvés avant filtrage:', journals.length);
+			console.log("🔎 Pipeline d'agrégation journal:", JSON.stringify(journalPipeline, null, 2));
+
+			const journals = await Journal.aggregate(journalPipeline);
+
+			console.log('🔎 Journaux trouvés avec agrégation:', journals.length);
 			console.log(
 				'🔎 Détails des journaux:',
 				journals.map((j) => ({
 					title: j.title,
-					is_public: j.is_public,
-					status: j.status,
-					user_populated: !!j.user_id,
 					user_areJournalsPublic: j.user_id?.areJournalsPublic
 				}))
 			);
 
-			const validJournals = journals.filter((journal) => journal.user_id !== null);
-			console.log('🔎 Journaux valides après filtrage user:', validJournals.length);
-
 			posts = posts.concat(
-				validJournals.map((journal) => {
+				journals.map((journal) => {
 					// Créer l'aperçu des lieux (samplePlaces)
 					const samplePlaces = (journal.places || []).slice(0, 3).map((place) => ({
 						_id: place._id,
@@ -456,7 +581,7 @@ export const getDiscoverPosts = async (req, res) => {
 					}));
 
 					// Compter les lieux restants
-					const remainingPlacesCount = Math.max(0, (journal.stats?.total_places || journal.places?.length || 0) - 3);
+					const remainingPlacesCount = Math.max(0, (journal.total_places || 0) - 3);
 
 					return {
 						_id: journal._id,
@@ -472,7 +597,7 @@ export const getDiscoverPosts = async (req, res) => {
 							description: journal.description,
 							cover_image: journal.cover_image,
 							tags: journal.tags,
-							places_count: journal.stats?.total_places || 0,
+							places_count: journal.total_places || 0,
 							start_date: journal.start_date,
 							end_date: journal.end_date,
 							samplePlaces,
@@ -606,7 +731,7 @@ export const getDiscoverPosts = async (req, res) => {
 // Route pour récupérer les statistiques de découverte
 export const getDiscoverStats = async (req, res) => {
 	try {
-		// Compter les journaux publics
+		// Compter les journaux publics avec des dates passées (donc "visités")
 		const publicJournalsResult = await Journal.aggregate([
 			{
 				$match: {
@@ -627,6 +752,20 @@ export const getDiscoverStats = async (req, res) => {
 					'user.areJournalsPublic': true
 				}
 			},
+			// Filtrer pour ne garder que les journaux avec des dates passées
+			{
+				$match: {
+					$or: [
+						{ end_date: { $lt: new Date() } }, // Journal terminé
+						{
+							$and: [
+								{ start_date: { $lt: new Date() } }, // Journal commencé
+								{ end_date: { $exists: false } } // Pas de date de fin définie
+							]
+						}
+					]
+				}
+			},
 			{
 				$count: 'total'
 			}
@@ -634,7 +773,7 @@ export const getDiscoverStats = async (req, res) => {
 
 		const publicJournals = publicJournalsResult.length > 0 ? publicJournalsResult[0].total : 0;
 
-		// Compter les lieux partagés des utilisateurs publics
+		// Compter tous les lieux des utilisateurs publics (peu importe le statut)
 		const sharedPlacesResult = await Place.aggregate([
 			{
 				$lookup: {

@@ -14,6 +14,8 @@ import {
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { useDebounce } from '../hooks/useDebounce';
 
 // Import des nouveaux composants
 import {
@@ -21,19 +23,17 @@ import {
   DiscoverSearchBar,
   DiscoverTrendingTags,
   DiscoverTabs,
-  PlaceCard,
   JournalCard,
 } from '../components';
 
 // Import des skeletons
-import { JournalCardSkeleton, PlaceCardSkeleton } from '../components/skeleton';
+import { JournalCardSkeleton } from '../components/skeleton';
 
 // Import du service
 import {
   publicService,
   type DiscoverStats,
   type DiscoverPost,
-  type DiscoverPlace,
   type DiscoverJournal,
 } from '../services/public.service';
 
@@ -57,17 +57,20 @@ const TRENDING_TAGS = [
 const Discover: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [posts, setPosts] = useState<DiscoverPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
   const [stats, setStats] = useState<DiscoverStats>({
     shared_places: 0,
     public_journals: 0,
     active_travelers: 0,
   });
   const [trendingTags, setTrendingTags] = useState<string[]>(TRENDING_TAGS);
+
+  // Debounce du terme de recherche pour éviter trop de requêtes
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Charger les données initiales
   useEffect(() => {
@@ -80,8 +83,7 @@ const Discover: React.FC = () => {
         const [statsData, postsData, tagsData] = await Promise.all([
           publicService.getDiscoverStats(),
           publicService.getDiscoverPosts({
-            type:
-              activeTab === 0 ? 'place' : activeTab === 1 ? 'journal' : 'all',
+            type: 'journal', // Toujours charger les journaux
             limit: 12,
           }),
           publicService.getTrendingTags(),
@@ -118,56 +120,69 @@ const Discover: React.FC = () => {
     };
 
     loadInitialData();
-  }, [activeTab]);
+  }, []); // Plus de dépendance activeTab
 
   // Recharger les posts quand les filtres changent
   useEffect(() => {
+    console.log('� useEffect filtrage déclenché:', {
+      loading,
+      debouncedSearchTerm,
+      selectedTags,
+    });
+
     if (!loading) {
       const loadFilteredPosts = async () => {
         try {
-          console.log('🔄 Discover: Chargement des posts filtrés...', {
-            activeTab,
-            searchTerm,
-            selectedTags,
-          });
+          console.log('🔄 Début du chargement des posts filtrés...');
 
-          const postsData = await publicService.getDiscoverPosts({
-            type:
-              activeTab === 0 ? 'place' : activeTab === 1 ? 'journal' : 'all',
-            search: searchTerm || undefined,
+          const filters = {
+            type: 'journal' as const,
+            search: debouncedSearchTerm || undefined,
             tags: selectedTags.length > 0 ? selectedTags : undefined,
             limit: 12,
-          });
+          };
+
+          console.log('🔄 Discover: Chargement des posts filtrés...', filters);
+          console.log('🔍 Search term:', debouncedSearchTerm);
+          console.log('🏷️ Selected tags:', selectedTags);
+
+          const postsData = await publicService.getDiscoverPosts(filters);
 
           console.log('📚 Discover: Posts filtrés reçus:', postsData);
           console.log(
             '📚 Discover: Nombre de posts filtrés:',
             postsData?.posts?.length || 0
           );
+          console.log('📚 Discover: Détail des posts:', postsData?.posts);
 
           setPosts(postsData?.posts || []);
         } catch (error) {
-          console.error('Erreur lors du chargement des posts filtrés:', error);
+          console.error(
+            '❌ Erreur lors du chargement des posts filtrés:',
+            error
+          );
         }
       };
 
       loadFilteredPosts();
     }
-  }, [searchTerm, selectedTags, activeTab, loading]);
+  }, [debouncedSearchTerm, selectedTags, loading]);
 
   // Gestionnaires d'événements
   const handleSearchChange = (term: string) => {
+    console.log('🔍 Recherche changée:', term);
     setSearchTerm(term);
   };
 
   const handleTagClick = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const handleTabChange = (newTab: number) => {
-    setActiveTab(newTab);
+    console.log('🏷️ Tag cliqué:', tag);
+    setSelectedTags((prev) => {
+      const newTags = prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag];
+      console.log('🏷️ Nouveaux tags sélectionnés:', newTags);
+      return newTags;
+    });
   };
 
   const handleLike = async (postId: string, postType: 'place' | 'journal') => {
@@ -197,62 +212,28 @@ const Discover: React.FC = () => {
     }
   };
 
-  const handlePlaceClick = (place: unknown) => {
-    // Navigation vers la page publique du lieu si elle existe
-    console.log('Place clicked:', place);
-    // navigate(`/public/places/${place._id}`);
-  };
-
-  const handleViewAllPlaces = (journalId: string) => {
-    // Navigation vers la page publique du journal
-    navigate(`/public/journals/${journalId}`);
-  };
-
   const renderPost = (post: DiscoverPost) => {
-    if (post.type === 'place') {
-      const place = post.content as DiscoverPlace;
-      const user = {
-        ...post.user,
-        avatar: post.user.avatar?.url
-          ? { url: post.user.avatar.url }
-          : undefined,
-      };
-      return (
-        <PlaceCard
-          place={place}
-          user={user}
-          likes={post.likes}
-          comments={post.comments}
-          views={post.views}
-          isLiked={post.is_liked}
-          onLike={() => handleLike(post._id, 'place')}
-        />
-      );
-    } else {
-      const journal = {
-        ...(post.content as DiscoverJournal),
-        cover_image: (post.content as DiscoverJournal).cover_image || '',
-      };
-      const user = {
-        ...post.user,
-        avatar: post.user.avatar?.url
-          ? { url: post.user.avatar.url }
-          : undefined,
-      };
-      return (
-        <JournalCard
-          journal={journal}
-          user={user}
-          likes={post.likes}
-          comments={post.comments}
-          views={post.views}
-          isLiked={post.is_liked}
-          onLike={() => handleLike(post._id, 'journal')}
-          onPlaceClick={handlePlaceClick}
-          onViewAllPlaces={() => handleViewAllPlaces(journal._id)}
-        />
-      );
-    }
+    // Ne gérer que les journaux
+    const journal = {
+      ...(post.content as DiscoverJournal),
+      cover_image: (post.content as DiscoverJournal).cover_image || '',
+    };
+    const user = {
+      ...post.user,
+      avatar: post.user.avatar?.url ? { url: post.user.avatar.url } : undefined,
+    };
+    return (
+      <JournalCard
+        journal={journal}
+        user={user}
+        likes={post.likes}
+        comments={post.comments}
+        views={post.views}
+        isLiked={post.is_liked}
+        onLike={() => handleLike(post._id, 'journal')}
+        currentUserId={currentUser?.id}
+      />
+    );
   };
 
   return (
@@ -333,36 +314,20 @@ const Discover: React.FC = () => {
             onTagClick={handleTagClick}
           />
 
-          {/* Tabs Lieux/Journaux */}
-          <DiscoverTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          {/* Tabs Journaux seulement */}
+          <DiscoverTabs />
         </Box>
 
         {/* Contenu principal */}
         {loading ? (
           <Grid container spacing={3}>
-            {/* Afficher les skeletons selon l'onglet actif */}
-            {activeTab === 0 ? (
-              // Skeletons pour les lieux
-              <PlaceCardSkeleton count={8} />
-            ) : activeTab === 1 ? (
-              // Skeletons pour les journaux
-              <JournalCardSkeleton count={6} />
-            ) : (
-              // Skeletons mixtes pour tous
-              <>
-                <PlaceCardSkeleton count={4} />
-                <JournalCardSkeleton count={3} />
-              </>
-            )}
+            {/* Skeletons pour les journaux */}
+            <JournalCardSkeleton count={6} />
           </Grid>
         ) : (
           <Grid container spacing={3}>
             {posts
-              .filter((post) => {
-                if (activeTab === 0) return post.type === 'place';
-                if (activeTab === 1) return post.type === 'journal';
-                return true;
-              })
+              .filter((post) => post.type === 'journal') // Ne montrer que les journaux
               .map((post) => (
                 <Grid
                   key={post._id}
@@ -376,6 +341,54 @@ const Discover: React.FC = () => {
                   {renderPost(post)}
                 </Grid>
               ))}
+
+            {/* Message si aucun résultat */}
+            {posts.filter((post) => post.type === 'journal').length === 0 && (
+              <Grid size={{ xs: 12 }}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 8,
+                    px: 3,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    border: '1px solid #f0f0f0',
+                  }}
+                >
+                  <MenuBookIcon
+                    sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 1, color: 'text.primary' }}
+                  >
+                    Aucun journal trouvé
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: 'text.secondary', mb: 2 }}
+                  >
+                    {debouncedSearchTerm || selectedTags.length > 0
+                      ? 'Essayez de modifier vos critères de recherche'
+                      : "Il n'y a pas encore de journaux publics à découvrir"}
+                  </Typography>
+                  {(debouncedSearchTerm || selectedTags.length > 0) && (
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        console.log('🔄 Bouton reset cliqué');
+                        setSearchTerm('');
+                        setSelectedTags([]);
+                        console.log('🔄 Filtres effacés');
+                      }}
+                      sx={{ mt: 1 }}
+                    >
+                      Effacer les filtres
+                    </Button>
+                  )}
+                </Box>
+              </Grid>
+            )}
           </Grid>
         )}
       </Container>

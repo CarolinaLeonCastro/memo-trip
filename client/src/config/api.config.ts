@@ -51,9 +51,28 @@ class ApiClient {
   }
 
   async get(endpoint: string, params?: Record<string, any>): Promise<any> {
-    const url = params
-      ? `${endpoint}?${new URLSearchParams(params).toString()}`
-      : endpoint;
+    let url = endpoint;
+    if (params) {
+      const searchParams = new URLSearchParams();
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            // Pour les arrays, on les joint avec des virgules
+            if (value.length > 0) {
+              searchParams.append(key, value.join(','));
+            }
+          } else {
+            searchParams.append(key, String(value));
+          }
+        }
+      });
+
+      const queryString = searchParams.toString();
+      if (queryString) {
+        url = `${endpoint}?${queryString}`;
+      }
+    }
     return this.request(url, { method: 'GET' });
   }
 

@@ -230,6 +230,9 @@ export async function getUserSettings(req, res, next) {
 // PUT /api/users/settings - Mettre à jour les paramètres de l'utilisateur connecté
 export async function updateUserSettings(req, res, next) {
 	try {
+		const { areJournalsPublic } = req.body;
+		console.log('🔄 Mise à jour des paramètres pour user ID:', req.user?.id, 'areJournalsPublic:', areJournalsPublic);
+
 		// Utiliser findOneAndUpdate avec un filter plus spécifique pour éviter les race conditions
 		const user = await User.findOneAndUpdate(
 			{ _id: req.user.id },

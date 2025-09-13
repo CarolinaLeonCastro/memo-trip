@@ -32,7 +32,7 @@ export const DiscoverSearchBar: React.FC<DiscoverSearchBarProps> = ({
         <Grid size={{ xs: 12, md: 8 }}>
           <TextField
             fullWidth
-            placeholder="Rechercher des lieux, journaux ou utilisateurs..."
+            placeholder="Rechercher dans les journaux (titre et description)..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             InputProps={{
