@@ -44,11 +44,6 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
 
   if (!place) return null;
 
-  console.log('🔍 PublicPlaceModal rendering with:', {
-    open,
-    place: place?.name,
-  });
-
   const getImageUrl = (): string | undefined => {
     if (!place.coverImage) return undefined;
 

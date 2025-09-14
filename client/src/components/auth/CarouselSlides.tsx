@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
-import {
-  TravelExplore,
-  PhotoLibrary,
-  Map,
-  Assistant,
-} from '@mui/icons-material';
+import { TravelExplore, PhotoLibrary, Assistant } from '@mui/icons-material';
 
 interface CarouselItem {
   id: number;
@@ -19,37 +14,28 @@ interface CarouselItem {
 const carouselItems: CarouselItem[] = [
   {
     id: 1,
-    title: 'Cartes de voyage',
+    title: 'Découvrez le monde',
     image: 'dashboard-carousel.png',
     description:
-      'Créez des cartes de voyage personnalisées pour chaque destination. Ajoutez des photos, des notes et des événements.',
+      'Explorez de nouvelles destinations avec MemoTrip. Planifiez vos voyages, découvrez des lieux authentiques et créez des souvenirs inoubliables.',
     icon: TravelExplore,
     gradient: ['#2563EB', '#1D4ED8'], // Primary main vers dark
   },
   {
     id: 2,
-    title: 'Itinéraire',
+    title: 'Partagez vos aventures',
     image: 'dashboard-carousel.png',
     description:
-      'Créez un itinéraire personnalisé à partir de vos préférences. Prêt à explorer le monde, sans perdre de temps.',
-    icon: Map,
-    gradient: ['#06B6D4', '#0891B2'], // Secondary main vers dark
-  },
-  {
-    id: 3,
-    title: 'Carnets de voyage',
-    image: 'dashboard-carousel.png',
-    description:
-      'Documentez vos aventures avec photos, notes et souvenirs. Gardez une trace de tous vos moments précieux.',
+      'Créez des albums photo géolocalisés et partagez vos expériences avec la communauté. Inspirez et laissez-vous inspirer !',
     icon: PhotoLibrary,
     gradient: ['#10B981', '#059669'], // Success main vers dark
   },
   {
-    id: 4,
-    title: 'Creer un journal de voyage',
+    id: 3,
+    title: 'Journal personnel',
     image: 'dashboard-carousel.png',
     description:
-      'Documentez vos aventures avec photos, notes et souvenirs. Gardez une trace de tous vos moments précieux.',
+      'Gardez une trace de vos émotions et découvertes. Créez votre journal de voyage personnel avec des notes, photos et cartes interactives.',
     icon: Assistant,
     gradient: ['#F59E0B', '#D97706'], // Accent main vers dark
   },

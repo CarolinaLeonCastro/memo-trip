@@ -147,11 +147,11 @@ const EditPlace: React.FC = () => {
       if (!id) return;
 
       try {
-        console.log('🔍 [EditPlace] Chargement du lieu avec ID:', id);
+        //console.log('🔍 [EditPlace] Chargement du lieu avec ID:', id);
 
         // 1. Charger les données complètes depuis l'API (comme PlaceDetail)
         const apiPlace = await placeApi.getPlaceById(id);
-        console.log("✅ [EditPlace] Données complètes de l'API:", apiPlace);
+        //console.log("✅ [EditPlace] Données complètes de l'API:", apiPlace);
 
         // 2. Trouver le journal associé dans le contexte local
         let journalId = '';
@@ -245,9 +245,9 @@ const EditPlace: React.FC = () => {
           journalId,
         };
 
-        console.log("📝 [EditPlace] Données complètes de l'API:", apiPlace);
-        console.log('📝 [EditPlace] Données converties:', place);
-        console.log('📝 [EditPlace] FormData générées:', newFormData);
+        //console.log("📝 [EditPlace] Données complètes de l'API:", apiPlace);
+        //console.log('📝 [EditPlace] Données converties:', place);
+        //console.log('📝 [EditPlace] FormData générées:', newFormData);
 
         setOriginalPlace(place);
         setFormData(newFormData);

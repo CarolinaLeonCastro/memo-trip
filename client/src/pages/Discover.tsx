@@ -187,11 +187,11 @@ const Discover: React.FC = () => {
 
   const handleLike = async (postId: string, postType: 'place' | 'journal') => {
     try {
-      console.log('🔄 Tentative de like pour:', postId, 'type:', postType);
+      //console.log('🔄 Tentative de like pour:', postId, 'type:', postType);
 
       // Appeler le service pour toggler le like
       const result = await publicService.toggleLike(postId, postType);
-      console.log('✅ Résultat like:', result);
+      //console.log('✅ Résultat like:', result);
 
       // Mettre à jour l'état local des posts
       setPosts((prevPosts) =>

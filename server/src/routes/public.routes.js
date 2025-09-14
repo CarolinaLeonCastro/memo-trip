@@ -151,14 +151,14 @@ export const getPublicJournalById = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const { q, tag, sort = 'recent', page = 1, limit = 20, increment_views = 'true' } = req.query;
-		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', {
-			q,
-			tag,
-			sort,
-			page,
-			limit,
-			increment_views
-		});
+		// console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', {
+		// 	q,
+		// 	tag,
+		// 	sort,
+		// 	page,
+		// 	limit,
+		// 	increment_views
+		// });
 
 		// D'abord récupérer le journal de base
 		const journal = await Journal.findOne({
@@ -171,12 +171,12 @@ export const getPublicJournalById = async (req, res) => {
 			match: { areJournalsPublic: true }
 		});
 
-		console.log('🔎 Journal trouvé:', !!journal);
-		console.log('🔎 User_id populé:', !!journal?.user_id);
-		console.log('🔎 User areJournalsPublic:', journal?.user_id?.areJournalsPublic);
+		//console.log('🔎 Journal trouvé:', !!journal);
+		//console.log('🔎 User_id populé:', !!journal?.user_id);
+		//console.log('🔎 User areJournalsPublic:', journal?.user_id?.areJournalsPublic);
 
 		if (!journal || !journal.user_id) {
-			console.log('❌ Journal non accessible:', { journal: !!journal, user_id: !!journal?.user_id });
+			//console.log('❌ Journal non accessible:', { journal: !!journal, user_id: !!journal?.user_id });
 			return res.status(404).json({
 				success: false,
 				message: 'Journal public non trouvé'
@@ -185,12 +185,12 @@ export const getPublicJournalById = async (req, res) => {
 
 		// Incrémenter le compteur de vues seulement si demandé (par défaut true)
 		if (increment_views === 'true') {
-			console.log('📈 Incrémentation des vues pour journal:', id);
+			//console.log('📈 Incrémentation des vues pour journal:', id);
 			Journal.findByIdAndUpdate(id, { $inc: { 'stats.views': 1 } })
 				.exec()
 				.then(() => console.log('✅ Vues incrémentées pour:', id))
 				.catch((err) => {
-					console.warn("⚠️ Erreur lors de l'incrémentation des vues:", err);
+					//console.warn("⚠️ Erreur lors de l'incrémentation des vues:", err);
 				});
 		} else {
 			console.log("🚫 Pas d'incrémentation des vues pour journal:", id, '(increment_views=false)');

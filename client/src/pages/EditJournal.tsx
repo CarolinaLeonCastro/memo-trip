@@ -194,7 +194,7 @@ const EditJournal: React.FC = () => {
         await deletePlace(journal.id, deleteConfirm.placeId);
         setDeleteConfirm({ open: false, placeId: '', placeName: '' });
         // Optionnel : Afficher une notification de succès
-        console.log("✅ Lieu supprimé avec succès de l'interface");
+        //console.log("✅ Lieu supprimé avec succès de l'interface");
       } catch (error) {
         console.error('❌ Erreur lors de la suppression:', error);
         // Optionnel : Afficher une notification d'erreur à l'utilisateur

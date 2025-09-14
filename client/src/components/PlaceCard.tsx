@@ -53,7 +53,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
     ) {
       try {
         await deletePlace(journalId, place.id);
-        console.log(`✅ Lieu "${place.name}" supprimé avec succès`);
+        //console.log(`✅ Lieu "${place.name}" supprimé avec succès`);
       } catch (error) {
         console.error('❌ Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression du lieu. Veuillez réessayer.');
