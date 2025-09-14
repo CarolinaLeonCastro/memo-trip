@@ -114,11 +114,7 @@ const Login: React.FC = () => {
               }}
             >
               <img
-                src={
-                  isDarkMode
-                    ? ' ./src/assets/icon-white.png'
-                    : ' ./src/assets/icon.png'
-                }
+                src={isDarkMode ? '/assets/icon-white.png' : '/assets/icon.png'}
                 alt="Logo"
                 style={{ width: 40, height: 40 }}
               />

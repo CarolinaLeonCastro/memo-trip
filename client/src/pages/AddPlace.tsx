@@ -996,16 +996,6 @@ const AddPlacePage: React.FC = () => {
           placeholder="Vos impressions, conseils, anecdotes..."
         />
 
-        {/* Favori */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.isFavorite}
-              onChange={(e) => handleChange('isFavorite', e.target.checked)}
-            />
-          }
-          label="⭐ Marquer comme lieu favori"
-        />
       </Stack>
     </Box>
   );
@@ -1055,7 +1045,7 @@ const AddPlacePage: React.FC = () => {
         )}
 
         {/* Résumé avant sauvegarde */}
-        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+        <Paper sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Résumé
           </Typography>
