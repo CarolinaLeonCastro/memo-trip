@@ -144,17 +144,34 @@ class PublicService {
       sort?: string;
       page?: number;
       limit?: number;
-    }
+    },
+    incrementViews: boolean = true
   ) {
     try {
       console.log(
-        '🔗 Service: Appel API getPublicJournalById pour:',
+        '�🚨🚨 APPEL getPublicJournalById - ID:',
+        id,
+        'INCREMENT_VIEWS:',
+        incrementViews,
+        'TIMESTAMP:',
+        new Date().toISOString()
+      );
+      console.log(
+        '�🔗 Service: Appel API getPublicJournalById pour:',
         id,
         'avec filtres:',
-        filters
+        filters,
+        'incrementViews:',
+        incrementViews
       );
+      
+      const params = {
+        ...filters,
+        increment_views: incrementViews ? 'true' : 'false',
+      };
+      
       const response = await api.get(`/api/public/journals/${id}`, {
-        params: filters,
+        params: params,
       });
       console.log('🔗 Service: Réponse brute journal:', response.data);
 

@@ -4,6 +4,7 @@ import { Suspense, lazy } from 'react';
 import ThemeProvider from './providers/ThemeProvider';
 import { JournalProvider } from './context/JournalContext';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 // Components
 import { Box } from '@mui/material';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,66 +47,71 @@ function App() {
 
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <JournalProvider>
-          <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-            <Router>
-              {/* <AuthDebug /> */}
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  {/* Routes publiques avec Layout */}
-                  <Route path="/public" element={<PublicLayout />}>
-                    <Route path="journals" element={<PublicJournals />} />
+      <ToastProvider>
+        <AuthProvider>
+          <JournalProvider>
+            <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+              <Router>
+                {/* <AuthDebug /> */}
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    {/* Routes publiques avec Layout */}
+                    <Route path="/public" element={<PublicLayout />}>
+                      <Route path="journals" element={<PublicJournals />} />
+                      <Route
+                        path="journals/:id"
+                        element={<PublicJournalDetail />}
+                      />
+                      <Route path="place/:id" element={<PublicPlaceDetail />} />
+                    </Route>
+
+                    <Route path="/setup" element={<AdminSetup />} />
+
+                    {/* Routes d'authentification */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+
+                    {/* Routes protégées */}
                     <Route
-                      path="journals/:id"
-                      element={<PublicJournalDetail />}
-                    />
-                    <Route path="place/:id" element={<PublicPlaceDetail />} />
-                  </Route>
-
-                  <Route path="/setup" element={<AdminSetup />} />
-
-                  {/* Routes d'authentification */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-
-                  {/* Routes protégées */}
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <Layout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<MapView />} />
-                    <Route path="discover" element={<Discover />} />
-                    <Route path="journals" element={<Journals />} />
-                    <Route path="journals/new" element={<NewJournal />} />
-                    <Route path="journals/:id" element={<JournalDetail />} />
-                    <Route path="journals/:id/edit" element={<EditJournal />} />
-                    <Route path="place/new" element={<AddPlace />} />
-                    <Route path="place/:id" element={<PlaceDetail />} />
-                    <Route path="place/:id/edit" element={<EditPlace />} />
-                    <Route path="profile" element={<Profile />} />
-                    <Route
-                      path="admin"
+                      path="/"
                       element={
-                        <AdminRoute>
-                          <AdminDashboard />
-                        </AdminRoute>
+                        <ProtectedRoute>
+                          <Layout />
+                        </ProtectedRoute>
                       }
-                    />
-                  </Route>
+                    >
+                      <Route index element={<MapView />} />
+                      <Route path="discover" element={<Discover />} />
+                      <Route path="journals" element={<Journals />} />
+                      <Route path="journals/new" element={<NewJournal />} />
+                      <Route path="journals/:id" element={<JournalDetail />} />
+                      <Route
+                        path="journals/:id/edit"
+                        element={<EditJournal />}
+                      />
+                      <Route path="place/new" element={<AddPlace />} />
+                      <Route path="place/:id" element={<PlaceDetail />} />
+                      <Route path="place/:id/edit" element={<EditPlace />} />
+                      <Route path="profile" element={<Profile />} />
+                      <Route
+                        path="admin"
+                        element={
+                          <AdminRoute>
+                            <AdminDashboard />
+                          </AdminRoute>
+                        }
+                      />
+                    </Route>
 
-                  {/* Route catch-all pour les pages non trouvées */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </Router>
-          </Box>
-        </JournalProvider>
-      </AuthProvider>
+                    {/* Route catch-all pour les pages non trouvées */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </Router>
+            </Box>
+          </JournalProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

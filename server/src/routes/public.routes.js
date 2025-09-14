@@ -150,8 +150,8 @@ export const getPublicJournals = async (req, res) => {
 export const getPublicJournalById = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { q, tag, sort = 'recent', page = 1, limit = 20 } = req.query;
-		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', { q, tag, sort, page, limit });
+		const { q, tag, sort = 'recent', page = 1, limit = 20, increment_views = 'true' } = req.query;
+		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', { q, tag, sort, page, limit, increment_views });
 
 		// D'abord récupérer le journal de base
 		const journal = await Journal.findOne({
@@ -174,6 +174,19 @@ export const getPublicJournalById = async (req, res) => {
 				success: false,
 				message: 'Journal public non trouvé'
 			});
+		}
+
+		// Incrémenter le compteur de vues seulement si demandé (par défaut true)
+		if (increment_views === 'true') {
+			console.log('📈 Incrémentation des vues pour journal:', id);
+			Journal.findByIdAndUpdate(id, { $inc: { 'stats.views': 1 } })
+				.exec()
+				.then(() => console.log('✅ Vues incrémentées pour:', id))
+				.catch((err) => {
+					console.warn("⚠️ Erreur lors de l'incrémentation des vues:", err);
+				});
+		} else {
+			console.log('🚫 Pas d\'incrémentation des vues pour journal:', id, '(increment_views=false)');
 		}
 
 		// Créer le filtre pour les lieux
@@ -213,7 +226,7 @@ export const getPublicJournalById = async (req, res) => {
 		// Récupérer les lieux avec filtres et pagination
 		const places = await Place.find(placeFilter)
 			.select(
-				'name description location photos tags rating date_visited visitedAt start_date end_date status createdAt'
+				'name description location photos tags rating date_visited visitedAt start_date end_date status budget createdAt'
 			)
 			.sort(sortOptions)
 			.skip(skip)
@@ -232,6 +245,7 @@ export const getPublicJournalById = async (req, res) => {
 			coverImage: place.photos && place.photos.length > 0 ? place.photos[0] : null,
 			photosCount: place.photos ? place.photos.length : 0,
 			rating: place.rating,
+			budget: place.budget || 0,
 			dateVisited: place.date_visited || place.visitedAt,
 			visitPeriod:
 				place.start_date && place.end_date
@@ -703,7 +717,7 @@ export const getDiscoverPosts = async (req, res) => {
 							remainingPlacesCount
 						},
 						likes: journal.likes_count || 0,
-						views: 0, // À implémenter avec un système de vues
+						views: journal.stats?.views || 0,
 						is_liked: journal.is_liked || false,
 						created_at: journal.createdAt
 					};

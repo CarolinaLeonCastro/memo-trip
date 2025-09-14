@@ -65,7 +65,7 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     if (isAuthLoading) {
       return;
     }
-    
+
     if (!user?.id) {
       setJournals([]); // Si pas d'utilisateur, vider les journaux
       return;
