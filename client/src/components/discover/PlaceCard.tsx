@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,7 +30,6 @@ interface PlaceCardProps {
     avatar?: { url: string };
   };
   likes: number;
-  comments: number;
   views: number;
   isLiked: boolean;
   onLike: () => void;
@@ -51,7 +49,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   place,
   user,
   likes,
-  comments,
   views,
   isLiked,
   onLike,
@@ -229,19 +226,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 }}
               >
                 {likes}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CommentIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '0.8rem',
-                  color: '#6B7280',
-                  fontWeight: '500',
-                }}
-              >
-                {comments}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

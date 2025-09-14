@@ -15,7 +15,6 @@ import PublicLayout from './components/Layouts/PublicLayout';
 
 // Lazy-loaded Pages for code splitting
 const Journals = lazy(() => import('./pages/Journals'));
-const AllPlaces = lazy(() => import('./pages/AllPlaces'));
 const JournalDetail = lazy(() => import('./pages/JournalDetail'));
 const EditJournal = lazy(() => import('./pages/EditJournal'));
 const EditPlace = lazy(() => import('./pages/EditPlace'));
@@ -82,7 +81,6 @@ function App() {
                     <Route index element={<MapView />} />
                     <Route path="discover" element={<Discover />} />
                     <Route path="journals" element={<Journals />} />
-                    <Route path="places" element={<AllPlaces />} />
                     <Route path="journals/new" element={<NewJournal />} />
                     <Route path="journals/:id" element={<JournalDetail />} />
                     <Route path="journals/:id/edit" element={<EditJournal />} />

@@ -104,7 +104,6 @@ export interface DiscoverPost {
   user: DiscoverUser;
   content: DiscoverPlace | DiscoverJournal;
   likes: number;
-  comments: number;
   views: number;
   is_liked: boolean;
   created_at: string;

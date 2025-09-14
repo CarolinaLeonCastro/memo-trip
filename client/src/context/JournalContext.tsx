@@ -10,7 +10,7 @@ import type { Journal } from '../types';
 import type { Place } from '../types';
 import { journalApi } from '../services/journal-api';
 import { placeApi, type PlaceCreateRequest } from '../services/place-api';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './AuthContext';
 
 interface JournalContextType {
   journals: Journal[];

@@ -47,7 +47,6 @@ interface PublicPlace {
   user: User;
   likes: number;
   views: number;
-  comments: number;
   is_liked: boolean;
   practical_info?: PracticalInfo;
   date_visited: string;
@@ -92,7 +91,6 @@ const PublicPlaceDetail: React.FC = () => {
       },
       likes: 124,
       views: 892,
-      comments: 18,
       is_liked: false,
       practical_info: {
         best_time_to_visit:
@@ -152,7 +150,6 @@ const PublicPlaceDetail: React.FC = () => {
           },
           likes: 0, // À implémenter avec le système de likes
           views: 0, // À implémenter avec le système de vues
-          comments: 0, // À implémenter avec le système de commentaires
           is_liked: false, // À implémenter avec le système de likes
           practical_info: {
             best_time_to_visit: '',
@@ -229,7 +226,6 @@ const PublicPlaceDetail: React.FC = () => {
         user={place.user}
         dateVisited={place.date_visited}
         likes={place.likes}
-        comments={place.comments}
         views={place.views}
         isLiked={isLiked}
         onLike={handleLike}

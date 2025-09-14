@@ -703,7 +703,6 @@ export const getDiscoverPosts = async (req, res) => {
 							remainingPlacesCount
 						},
 						likes: journal.likes_count || 0,
-						comments: 0, // À implémenter avec un système de commentaires
 						views: 0, // À implémenter avec un système de vues
 						is_liked: journal.is_liked || false,
 						created_at: journal.createdAt
@@ -781,7 +780,6 @@ export const getDiscoverPosts = async (req, res) => {
 						date_visited: place.date_visited || place.visitedAt
 					},
 					likes: 0,
-					comments: 0,
 					views: 0,
 					is_liked: false,
 					created_at: place.createdAt
