@@ -201,7 +201,9 @@ const EditPlaceModal: React.FC<EditPlaceModalProps> = ({
           alignItems: 'center',
         }}
       >
-        <Typography variant="h5">Modifier le lieu</Typography>
+        <Typography component="span" variant="h5">
+          Modifier le lieu
+        </Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>

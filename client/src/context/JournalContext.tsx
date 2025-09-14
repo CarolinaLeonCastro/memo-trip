@@ -10,7 +10,7 @@ import type { Journal } from '../types';
 import type { Place } from '../types';
 import { journalApi } from '../services/journal-api';
 import { placeApi, type PlaceCreateRequest } from '../services/place-api';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './AuthContext';
 
 interface JournalContextType {
   journals: Journal[];
@@ -50,7 +50,10 @@ interface JournalProviderProps {
 export const JournalProvider: React.FC<JournalProviderProps> = ({
   children,
 }) => {
-  const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const auth = useAuth(); // Récupérer le contexte d'auth complet
+  const user = auth?.user; // Accéder à l'utilisateur de manière sûre
+  const isAuthLoading = auth?.isLoading;
+
   const [journals, setJournals] = useState<Journal[]>([]); // ✅ Démarrer avec un tableau vide
 
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +61,11 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
 
   // Fonction pour charger les journaux de l'utilisateur connecté
   const loadJournals = useCallback(async () => {
+    // Attendre que l'auth soit résolue
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!user?.id) {
       setJournals([]); // Si pas d'utilisateur, vider les journaux
       return;
@@ -166,7 +174,7 @@ export const JournalProvider: React.FC<JournalProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, isAuthLoading]);
 
   // Charger les journaux quand l'utilisateur change
   useEffect(() => {

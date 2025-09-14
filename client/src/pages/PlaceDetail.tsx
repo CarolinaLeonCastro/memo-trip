@@ -887,7 +887,11 @@ const PlaceDetail: React.FC = () => {
             bgcolor: 'background.paper',
           }}
         >
-          <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={600}>
+          <Typography
+            component="span"
+            variant={isMobile ? 'h6' : 'h5'}
+            fontWeight={600}
+          >
             {place?.name}
           </Typography>
           <IconButton onClick={closePlaceMap}>

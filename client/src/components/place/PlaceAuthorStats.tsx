@@ -2,7 +2,6 @@ import React from 'react';
 import { Container, Typography, Box, Avatar } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface PlaceAuthorStatsProps {
@@ -12,7 +11,6 @@ interface PlaceAuthorStatsProps {
   };
   dateVisited: string;
   likes: number;
-  comments: number;
   views: number;
   isLiked: boolean;
   onLike: () => void;
@@ -22,7 +20,6 @@ export const PlaceAuthorStats: React.FC<PlaceAuthorStatsProps> = ({
   user,
   dateVisited,
   likes,
-  comments,
   views,
   isLiked,
   onLike,
@@ -100,16 +97,6 @@ export const PlaceAuthorStats: React.FC<PlaceAuthorStatsProps> = ({
                 }}
               >
                 {likes}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CommentIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
-              <Typography
-                variant="body2"
-                fontWeight="600"
-                sx={{ color: '#6B7280', fontSize: '0.9rem' }}
-              >
-                {comments}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

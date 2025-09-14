@@ -11,7 +11,6 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import CommentIcon from '@mui/icons-material/Comment';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +32,6 @@ interface JournalCardProps {
     avatar?: { url: string };
   };
   likes: number;
-  comments: number;
   views: number;
   isLiked: boolean;
   onLike: () => void;
@@ -51,7 +49,6 @@ export const JournalCard: React.FC<JournalCardProps> = ({
   journal,
   user,
   likes,
-  comments,
   views,
   currentUserId,
 }) => {
@@ -328,21 +325,6 @@ export const JournalCard: React.FC<JournalCardProps> = ({
               }}
             >
               {likes}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
-            <CommentIcon
-              sx={{ fontSize: 16, color: theme.palette.text.secondary }}
-            />
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: '0.75rem',
-                color: theme.palette.text.secondary,
-                fontWeight: '600',
-              }}
-            >
-              {comments}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>

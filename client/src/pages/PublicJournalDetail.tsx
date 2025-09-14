@@ -206,7 +206,6 @@ const PublicJournalDetail: React.FC = () => {
     hasMore: false,
   });
   const [placesLoading, setPlacesLoading] = useState(false);
-  const [placesLoaded, setPlacesLoaded] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PublicPlace | null>(null);
   const [placeModalOpen, setPlaceModalOpen] = useState(false);
 
@@ -225,10 +224,13 @@ const PublicJournalDetail: React.FC = () => {
 
     let duration = 0;
     let distance = 0;
-    const budget = 0;
+    let budget = 0;
     let season = 'N/A';
 
     if (places.length > 0) {
+      // Calculer le budget total à partir des lieux
+      budget = places.reduce((total, place) => total + (place.budget || 0), 0);
+
       const dates = places
         .filter((place) => place.dateVisited || place.visitPeriod)
         .map((place) => {
@@ -302,19 +304,21 @@ const PublicJournalDetail: React.FC = () => {
     };
   }, [journal, places]);
 
-  // Fonction pour charger les lieux du journal
+  // Fonction pour charger les lieux additionnels (pagination uniquement)
   const loadPlaces = useCallback(
     async (page: number = 1) => {
-      if (!id) return;
+      if (!id || page === 1) return; // Ne pas recharger la page 1
       setPlacesLoading(true);
       try {
-        const response = await publicService.getPublicJournalById(id);
+        // Passer incrementViews: false pour les chargements de pagination
+        const response = await publicService.getPublicJournalById(
+          id,
+          { page, limit: 20 },
+          false
+        );
         if (response) {
-          if (page === 1) {
-            setPlaces(response.places || []);
-          } else {
-            setPlaces((prev) => [...prev, ...response.places]);
-          }
+          // Ajouter les nouveaux lieux aux existants
+          setPlaces((prev) => [...prev, ...response.places]);
           setPlacesMetadata(response.placesMetadata);
         }
       } catch (error) {
@@ -397,8 +401,12 @@ const PublicJournalDetail: React.FC = () => {
       try {
         if (!id) return;
         setLoading(true);
-        setPlacesLoaded(false);
-        const journalData = await publicService.getPublicJournalById(id);
+        // Un seul appel avec incrementViews: true pour compter la vue
+        const journalData = await publicService.getPublicJournalById(
+          id,
+          undefined,
+          true
+        );
         if (!journalData) {
           setLoading(false);
           return;
@@ -406,6 +414,10 @@ const PublicJournalDetail: React.FC = () => {
         setJournal(journalData);
         setLikesCount(journalData.likes_count || 0);
         setIsLiked(journalData.is_liked || false);
+
+        // Charger aussi les lieux directement ici pour éviter un deuxième appel
+        setPlaces(journalData.places || []);
+        setPlacesMetadata(journalData.placesMetadata);
       } catch (error) {
         console.error(
           '❌ PublicJournalDetail: Erreur lors du chargement:',
@@ -417,13 +429,6 @@ const PublicJournalDetail: React.FC = () => {
     };
     loadJournalDetails();
   }, [id]);
-
-  useEffect(() => {
-    if (journal && !loading && !placesLoaded) {
-      loadPlaces(1);
-      setPlacesLoaded(true);
-    }
-  }, [journal, loading, placesLoaded, loadPlaces]);
 
   if (loading) {
     return (
@@ -667,10 +672,13 @@ const PublicJournalDetail: React.FC = () => {
       {/* Statistiques générales */}
       <JournalStats
         stats={{
-          favorites: journal.stats?.likes || 0,
+          favorites: likesCount || 0,
           views: journal.stats?.views || 0,
           places: placesMetadata.total || 0,
-          photos: journal.stats?.photos || 0,
+          photos: places.reduce(
+            (total, place) => total + (place.photosCount || 0),
+            0
+          ),
         }}
       />
 

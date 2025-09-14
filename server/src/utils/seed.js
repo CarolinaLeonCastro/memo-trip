@@ -74,7 +74,8 @@ const seedData = async () => {
 		// Journaux de Marie Dupont (index 1)
 		{
 			title: 'Week-end romantique à Paris',
-			description: 'Trois jours magiques dans la capitale française. Visite des monuments emblématiques et promenades romantiques le long de la Seine.',
+			description:
+				'Trois jours magiques dans la capitale française. Visite des monuments emblématiques et promenades romantiques le long de la Seine.',
 			start_date: new Date('2024-06-01'),
 			end_date: new Date('2024-06-03'),
 			cover_image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?auto=format&fit=crop&q=80&w=800',
@@ -106,11 +107,12 @@ const seedData = async () => {
 				total_days: 8
 			}
 		},
-		
+
 		// Journaux de Julien Martin (index 2)
 		{
 			title: 'Aventure urbaine à Tokyo',
-			description: 'Immersion totale dans la culture japonaise moderne et traditionnelle. Exploration des quartiers emblématiques de Tokyo.',
+			description:
+				'Immersion totale dans la culture japonaise moderne et traditionnelle. Exploration des quartiers emblématiques de Tokyo.',
 			start_date: new Date('2024-09-10'),
 			end_date: new Date('2024-09-17'),
 			cover_image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800',
@@ -142,11 +144,11 @@ const seedData = async () => {
 				total_days: 15
 			}
 		},
-		
+
 		// Journaux de Sophie Bernard (index 3)
 		{
 			title: 'Les merveilles de la Toscane',
-			description: 'Circuit à travers les collines toscanes, les vignobles et les villes d\'art de la Renaissance.',
+			description: "Circuit à travers les collines toscanes, les vignobles et les villes d'art de la Renaissance.",
 			start_date: new Date('2024-04-20'),
 			end_date: new Date('2024-05-02'),
 			cover_image: 'https://images.unsplash.com/photo-1529260830199-42c24126f198?auto=format&fit=crop&q=80&w=800',
@@ -178,7 +180,7 @@ const seedData = async () => {
 				total_days: 6
 			}
 		},
-		
+
 		// Journal d'Alexandre Moreau (index 4) - privé
 		{
 			title: 'Weekend à Amsterdam',
@@ -197,11 +199,12 @@ const seedData = async () => {
 				total_days: 3
 			}
 		},
-		
+
 		// Journaux d'Emma Rousseau (index 5)
 		{
 			title: 'Voyage en Islande',
-			description: 'Road trip épique à travers les paysages lunaires de l\'Islande. Aurores boréales et sources chaudes.',
+			description:
+				"Road trip épique à travers les paysages lunaires de l'Islande. Aurores boréales et sources chaudes.",
 			start_date: new Date('2024-03-15'),
 			end_date: new Date('2024-03-25'),
 			cover_image: 'https://images.unsplash.com/photo-1498747946579-bde604cb8f44?auto=format&fit=crop&q=80&w=800',
@@ -233,7 +236,7 @@ const seedData = async () => {
 				total_days: 9
 			}
 		},
-		
+
 		// Journal de Thomas Petit (index 6)
 		{
 			title: 'Exploration de la Patagonie',
@@ -252,7 +255,7 @@ const seedData = async () => {
 				total_days: 22
 			}
 		},
-		
+
 		// Journal de Clara Garcia (index 7)
 		{
 			title: 'Les plages paradisiaques des Maldives',
@@ -281,7 +284,8 @@ const seedData = async () => {
 			user_id: users[1]._id,
 			journal_id: journals[0]._id,
 			name: 'Tour Eiffel',
-			description: 'Visite du monument emblématique de Paris au coucher du soleil. Vue panoramique exceptionnelle depuis le deuxième étage.',
+			description:
+				'Visite du monument emblématique de Paris au coucher du soleil. Vue panoramique exceptionnelle depuis le deuxième étage.',
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -311,14 +315,16 @@ const seedData = async () => {
 			tags: ['Monument', 'Culture', 'Architecture'],
 			is_favorite: true,
 			visit_duration: 180,
-			notes: 'Absolument magique au coucher du soleil. Prévoir du temps pour les photos ! Les ascenseurs peuvent avoir de la queue.',
+			notes:
+				'Absolument magique au coucher du soleil. Prévoir du temps pour les photos ! Les ascenseurs peuvent avoir de la queue.',
 			moderation_status: 'approved'
 		},
 		{
 			user_id: users[1]._id,
 			journal_id: journals[0]._id,
 			name: 'Musée du Louvre',
-			description: 'Découverte des chefs-d\'œuvre de l\'art mondial. Collections impressionnantes de la Renaissance et de l\'Antiquité.',
+			description:
+				"Découverte des chefs-d'œuvre de l'art mondial. Collections impressionnantes de la Renaissance et de l'Antiquité.",
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -355,7 +361,8 @@ const seedData = async () => {
 			user_id: users[1]._id,
 			journal_id: journals[0]._id,
 			name: 'Montmartre et Sacré-Cœur',
-			description: 'Balade dans les ruelles pittoresques de Montmartre. Ambiance bohème et vue exceptionnelle sur Paris.',
+			description:
+				'Balade dans les ruelles pittoresques de Montmartre. Ambiance bohème et vue exceptionnelle sur Paris.',
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -389,7 +396,8 @@ const seedData = async () => {
 			user_id: users[1]._id,
 			journal_id: journals[1]._id,
 			name: 'Champs de lavande de Valensole',
-			description: 'Promenade matinale dans les champs de lavande en fleurs. Parfum enivrant et couleurs exceptionnelles.',
+			description:
+				'Promenade matinale dans les champs de lavande en fleurs. Parfum enivrant et couleurs exceptionnelles.',
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -451,7 +459,8 @@ const seedData = async () => {
 			tags: ['Ville', 'Architecture', 'Culture'],
 			is_favorite: true,
 			visit_duration: 180,
-			notes: 'Architecture en pierre sèche magnifique. Vue imprenable sur la vallée du Luberon. Petit déjeuner au café du village.',
+			notes:
+				'Architecture en pierre sèche magnifique. Vue imprenable sur la vallée du Luberon. Petit déjeuner au café du village.',
 			moderation_status: 'approved'
 		},
 
@@ -460,7 +469,7 @@ const seedData = async () => {
 			user_id: users[2]._id,
 			journal_id: journals[2]._id,
 			name: 'Sanctuaire Senso-ji',
-			description: 'Temple bouddhiste traditionnel dans le quartier d\'Asakusa. Spiritualité et traditions ancestrales.',
+			description: "Temple bouddhiste traditionnel dans le quartier d'Asakusa. Spiritualité et traditions ancestrales.",
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -531,11 +540,12 @@ const seedData = async () => {
 			user_id: users[2]._id,
 			journal_id: journals[3]._id,
 			name: 'Marché de Tsukiji',
-			description: 'Découverte du plus célèbre marché aux poissons du monde. Fraîcheur exceptionnelle et ambiance authentique.',
+			description:
+				'Découverte du plus célèbre marché aux poissons du monde. Fraîcheur exceptionnelle et ambiance authentique.',
 			status: 'visited',
 			location: {
 				type: 'Point',
-				coordinates: [139.7709, 35.6650],
+				coordinates: [139.7709, 35.665],
 				address: 'Tsukiji Outer Market',
 				city: 'Tokyo',
 				country: 'Japon'
@@ -561,7 +571,8 @@ const seedData = async () => {
 			tags: ['Restaurant', 'Culture', 'Shopping'],
 			is_favorite: true,
 			visit_duration: 120,
-			notes: 'Réveil à 4h du matin mais ça vaut absolument le coup ! Les sushis pour le petit-déjeuner sont une révélation.',
+			notes:
+				'Réveil à 4h du matin mais ça vaut absolument le coup ! Les sushis pour le petit-déjeuner sont une révélation.',
 			moderation_status: 'approved'
 		},
 
@@ -570,7 +581,7 @@ const seedData = async () => {
 			user_id: users[3]._id,
 			journal_id: journals[4]._id,
 			name: 'Florence - Duomo',
-			description: 'Visite de la cathédrale emblématique de Florence. Chef-d\'œuvre de l\'architecture Renaissance.',
+			description: "Visite de la cathédrale emblématique de Florence. Chef-d'œuvre de l'architecture Renaissance.",
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -600,14 +611,15 @@ const seedData = async () => {
 			tags: ['Architecture', 'Culture', 'Monument'],
 			is_favorite: true,
 			visit_duration: 180,
-			notes: 'Architecture Renaissance à couper le souffle. L\'ascension de la coupole est sportive mais la vue vaut l\'effort !',
+			notes:
+				"Architecture Renaissance à couper le souffle. L'ascension de la coupole est sportive mais la vue vaut l'effort !",
 			moderation_status: 'approved'
 		},
 		{
 			user_id: users[3]._id,
 			journal_id: journals[4]._id,
 			name: 'Vignobles du Chianti',
-			description: 'Dégustation de vins dans les collines du Chianti. Paysages de carte postale et vins d\'exception.',
+			description: "Dégustation de vins dans les collines du Chianti. Paysages de carte postale et vins d'exception.",
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -676,14 +688,16 @@ const seedData = async () => {
 			tags: ['Nature', 'Aventure'],
 			is_favorite: true,
 			visit_duration: 90,
-			notes: 'Phénomène naturel fascinant ! Strokkur jaillit régulièrement toutes les 5-10 minutes. Prévoir des vêtements chauds.',
+			notes:
+				'Phénomène naturel fascinant ! Strokkur jaillit régulièrement toutes les 5-10 minutes. Prévoir des vêtements chauds.',
 			moderation_status: 'approved'
 		},
 		{
 			user_id: users[5]._id,
 			journal_id: journals[7]._id,
 			name: 'Aurores boréales à Reykjavik',
-			description: 'Chasse nocturne aux aurores boréales dans la campagne islandaise. Spectacle magique et inoubliable.',
+			description:
+				'Chasse nocturne aux aurores boréales dans la campagne islandaise. Spectacle magique et inoubliable.',
 			status: 'visited',
 			location: {
 				type: 'Point',
@@ -708,7 +722,8 @@ const seedData = async () => {
 			tags: ['Nature', 'Aventure'],
 			is_favorite: true,
 			visit_duration: 360,
-			notes: 'Expérience absolument magique ! Nous avons eu une chance incroyable avec la météo. Photos à couper le souffle.',
+			notes:
+				'Expérience absolument magique ! Nous avons eu une chance incroyable avec la météo. Photos à couper le souffle.',
 			moderation_status: 'approved'
 		},
 
@@ -747,7 +762,8 @@ const seedData = async () => {
 			tags: ['Nature', 'Aventure', 'Montagne'],
 			is_favorite: true,
 			visit_duration: 720,
-			notes: 'Trek exigeant mais absolument grandiose. Les paysages sont à couper le souffle. Prévoir équipement grand froid.',
+			notes:
+				'Trek exigeant mais absolument grandiose. Les paysages sont à couper le souffle. Prévoir équipement grand froid.',
 			moderation_status: 'approved'
 		},
 
@@ -786,14 +802,15 @@ const seedData = async () => {
 			tags: ['Nature', 'Plage', 'Détente'],
 			is_favorite: true,
 			visit_duration: 7200,
-			notes: 'Séjour absolument paradisiaque ! Le snorkeling est exceptionnel avec une biodiversité incroyable. Service impeccable.',
+			notes:
+				'Séjour absolument paradisiaque ! Le snorkeling est exceptionnel avec une biodiversité incroyable. Service impeccable.',
 			moderation_status: 'approved'
 		},
 		{
 			user_id: users[0]._id,
 			journal_id: journals[0]._id,
 			name: 'Musée du Louvre',
-			description: 'Visite du plus grand musée d\'art au monde',
+			description: "Visite du plus grand musée d'art au monde",
 			location: {
 				type: 'Point',
 				coordinates: [2.3376, 48.8606],

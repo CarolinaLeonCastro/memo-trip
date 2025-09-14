@@ -37,7 +37,8 @@ const journalSchema = new mongoose.Schema(
 		stats: {
 			total_places: { type: Number, default: 0 },
 			total_photos: { type: Number, default: 0 },
-			total_days: { type: Number, default: 0 }
+			total_days: { type: Number, default: 0 },
+			views: { type: Number, default: 0 }
 		}
 	},
 	{
