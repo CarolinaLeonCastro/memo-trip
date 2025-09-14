@@ -18,7 +18,6 @@ import {
   LocationOn as LocationIcon,
   Map as MapIcon,
   AdminPanelSettings as AdminIcon,
-  Favorite as FavoriteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import theme from '../../theme';
@@ -56,12 +55,12 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
       onClick: () => navigate('/journals'),
       show: true,
     },
-    {
-      icon: <FavoriteIcon />,
-      text: 'Mes favoris',
-      onClick: () => navigate('/places?filter=favorites'),
-      show: true,
-    },
+    // {
+    //   icon: <FavoriteIcon />,
+    //   text: 'Mes favoris',
+    //   onClick: () => navigate('/places?filter=favorites'),
+    //   show: true,
+    // },
     {
       icon: <AdminIcon />,
       text: 'Administration',
