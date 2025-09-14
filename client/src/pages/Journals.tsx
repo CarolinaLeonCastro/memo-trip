@@ -566,6 +566,7 @@ const Journals: React.FC = () => {
                     {/* Date Range */}
                     <Box sx={{ mb: 2.5 }}>
                       <Typography
+                        component="div"
                         variant="body2"
                         sx={{
                           fontWeight: 600,

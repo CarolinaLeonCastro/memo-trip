@@ -130,6 +130,7 @@ const PublicPlaceModal: React.FC<PublicPlaceModalProps> = ({
         }}
       >
         <Typography
+          component="span"
           variant="h5"
           fontWeight="600"
           sx={{ color: 'text.primary' }}
