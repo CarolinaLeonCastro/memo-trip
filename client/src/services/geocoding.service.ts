@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api'; // Ajustez selon votre config
+const API_BASE_URL = 'https://api-memotrip.onrender.com/api'; // Ajustez selon votre config
 
 export interface GeocodingResult {
   place_id: string;
