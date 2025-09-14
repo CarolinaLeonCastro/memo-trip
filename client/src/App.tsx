@@ -5,9 +5,10 @@ import ThemeProvider from './providers/ThemeProvider';
 import { JournalProvider } from './context/JournalContext';
 import { AuthProvider } from './context/AuthContext';
 // Components
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import LoadingSpinner from './components/skeleton/LoadingSpinner';
 // Layouts
 import Layout from './components/Layouts/Layout';
 import PublicLayout from './components/Layouts/PublicLayout';
@@ -31,21 +32,17 @@ const PublicPlaceDetail = lazy(() => import('./pages/PublicPlaceDetail'));
 const Discover = lazy(() => import('./pages/Discover'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 // Démonstration des composants Travel
 //import AuthDebug from './components/debug/AuthDebug';
 
 function App() {
   const LoadingFallback = () => (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-      }}
-    >
-      <CircularProgress />
-    </Box>
+    <LoadingSpinner
+      message="Chargement de l'application..."
+      size="large"
+      fullScreen
+    />
   );
 
   return (
@@ -102,6 +99,9 @@ function App() {
                       }
                     />
                   </Route>
+
+                  {/* Route catch-all pour les pages non trouvées */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </Router>

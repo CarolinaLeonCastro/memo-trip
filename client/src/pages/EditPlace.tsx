@@ -883,17 +883,6 @@ const EditPlace: React.FC = () => {
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Vos impressions, conseils, anecdotes..."
         />
-
-        {/* Favori */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.isFavorite}
-              onChange={(e) => handleChange('isFavorite', e.target.checked)}
-            />
-          }
-          label="⭐ Marquer comme lieu favori"
-        />
       </Stack>
     </Box>
   );
@@ -905,7 +894,7 @@ const EditPlace: React.FC = () => {
         <Typography variant="h6">Finalisation</Typography>
 
         {/* Résumé avant sauvegarde */}
-        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+        <Paper sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Résumé des modifications
           </Typography>

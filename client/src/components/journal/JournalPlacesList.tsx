@@ -115,7 +115,6 @@ export const JournalPlacesList: React.FC<JournalPlacesListProps> = ({
             border: '2px dashed',
             borderColor: 'grey.300',
             borderRadius: 2,
-            bgcolor: 'grey.50',
           }}
         >
           <LocationOnIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />

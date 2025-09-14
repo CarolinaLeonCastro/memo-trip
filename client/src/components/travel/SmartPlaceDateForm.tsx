@@ -271,6 +271,7 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
           severity={dateValidation.valid ? 'success' : 'error'}
           sx={{ mt: 2 }}
           icon={visited ? <Event /> : <Schedule />}
+          color={dateValidation.valid ? 'success' : 'error'}
         >
           <Box
             sx={{
@@ -289,7 +290,11 @@ export const SmartPlaceDateForm: React.FC<SmartPlaceDateFormProps> = ({
               label={visited ? 'Lieu visité' : 'Lieu planifié'}
               size="small"
               color={visited ? 'success' : 'info'}
-              sx={{ ml: 1 }}
+              sx={{
+                ml: 1,
+                bgcolor: visited ? '#E8F5E8' : '#FFF3E0',
+                color: visited ? '#2E7D32' : '#F57C00',
+              }}
             />
           </Box>
         </Alert>

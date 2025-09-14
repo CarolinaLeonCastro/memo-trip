@@ -44,6 +44,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import PlaceSearchInput from '../components/PlaceSearchInput';
+import LoadingSpinner from '../components/skeleton/LoadingSpinner';
 import type { GeocodingResult } from '../services/geocoding.service';
 import {
   getTravelDateConstraints,
@@ -107,6 +108,7 @@ const AddPlacePage: React.FC = () => {
   const [, setSelectedPlace] = useState<GeocodingResult | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customTag, setCustomTag] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Configuration des étapes avec couleur unifiée
   const stepperColor = '#4F86F7';
@@ -484,64 +486,68 @@ const AddPlacePage: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    let journalId = '';
-
-    // Gérer les options de journal
-    if (formData.journalOption === 'existing') {
-      if (!formData.selectedJournalId) {
-        alert('Veuillez sélectionner un journal existant');
-        return;
-      }
-      journalId = formData.selectedJournalId;
-    } else if (formData.journalOption === 'new') {
-      if (!formData.newJournalTitle.trim()) {
-        alert('Veuillez entrer un titre pour le nouveau journal');
-        return;
-      }
-      // Créer un nouveau journal (fonctionnalité à implémenter dans le contexte)
-      // Pour l'instant, on utilise le premier journal disponible
-      journalId = journals[0]?.id || '';
-    } else {
-      // Option 'none' - utiliser le premier journal disponible ou demander à l'utilisateur
-      journalId = journals[0]?.id || '';
-    }
-
-    if (!journalId) {
-      alert("Veuillez créer un journal avant d'ajouter des lieux");
-      return;
-    }
-
-    const placeData = {
-      name: formData.name.trim(),
-      city: formData.city.trim(),
-      country: formData.country.trim(),
-      description: formData.description.trim(),
-      latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-      longitude: formData.longitude
-        ? parseFloat(formData.longitude)
-        : undefined,
-      dateVisited: new Date(formData.dateVisited),
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
-      photos: formData.photos,
-      tags: formData.tags,
-      visited: formData.visited,
-      rating: formData.rating || undefined,
-      weather: formData.weather.trim(),
-      budget: formData.budget ? Number(formData.budget) : undefined,
-      visitDuration: formData.visitDuration
-        ? Number(formData.visitDuration)
-        : undefined,
-      notes: formData.notes.trim(),
-      isFavorite: formData.isFavorite,
-    };
+    setIsLoading(true);
 
     try {
+      let journalId = '';
+
+      // Gérer les options de journal
+      if (formData.journalOption === 'existing') {
+        if (!formData.selectedJournalId) {
+          alert('Veuillez sélectionner un journal existant');
+          return;
+        }
+        journalId = formData.selectedJournalId;
+      } else if (formData.journalOption === 'new') {
+        if (!formData.newJournalTitle.trim()) {
+          alert('Veuillez entrer un titre pour le nouveau journal');
+          return;
+        }
+        // Créer un nouveau journal (fonctionnalité à implémenter dans le contexte)
+        // Pour l'instant, on utilise le premier journal disponible
+        journalId = journals[0]?.id || '';
+      } else {
+        // Option 'none' - utiliser le premier journal disponible ou demander à l'utilisateur
+        journalId = journals[0]?.id || '';
+      }
+
+      if (!journalId) {
+        alert("Veuillez créer un journal avant d'ajouter des lieux");
+        return;
+      }
+
+      const placeData = {
+        name: formData.name.trim(),
+        city: formData.city.trim(),
+        country: formData.country.trim(),
+        description: formData.description.trim(),
+        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+        longitude: formData.longitude
+          ? parseFloat(formData.longitude)
+          : undefined,
+        dateVisited: new Date(formData.dateVisited),
+        startDate: new Date(formData.startDate),
+        endDate: new Date(formData.endDate),
+        photos: formData.photos,
+        tags: formData.tags,
+        visited: formData.visited,
+        rating: formData.rating || undefined,
+        weather: formData.weather.trim(),
+        budget: formData.budget ? Number(formData.budget) : undefined,
+        visitDuration: formData.visitDuration
+          ? Number(formData.visitDuration)
+          : undefined,
+        notes: formData.notes.trim(),
+        isFavorite: formData.isFavorite,
+      };
+
       await addPlace(journalId, placeData);
       navigate('/journals'); // Rediriger vers la liste des journaux
     } catch (error) {
       console.error('Erreur lors de la création de la place:', error);
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -995,17 +1001,6 @@ const AddPlacePage: React.FC = () => {
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Vos impressions, conseils, anecdotes..."
         />
-
-        {/* Favori */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formData.isFavorite}
-              onChange={(e) => handleChange('isFavorite', e.target.checked)}
-            />
-          }
-          label="⭐ Marquer comme lieu favori"
-        />
       </Stack>
     </Box>
   );
@@ -1055,7 +1050,7 @@ const AddPlacePage: React.FC = () => {
         )}
 
         {/* Résumé avant sauvegarde */}
-        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+        <Paper sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Résumé
           </Typography>
@@ -1090,6 +1085,17 @@ const AddPlacePage: React.FC = () => {
       </Stack>
     </Box>
   );
+
+  // Afficher le loading spinner pendant la sauvegarde
+  if (isLoading) {
+    return (
+      <LoadingSpinner
+        message="Sauvegarde de votre lieu..."
+        size="large"
+        fullScreen
+      />
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
