@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useJournals } from '../context/JournalContext';
 import { placeApi } from '../services/place-api';
 import type { Place as ApiPlace } from '../services/place-api';
+import LoadingSpinner from '../components/skeleton/LoadingSpinner';
 
 import { Box, Container, Typography, Button, CardMedia } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
@@ -52,6 +53,7 @@ const JournalDetail: React.FC = () => {
   const [placesDetails, setPlacesDetails] = useState<Map<string, ApiPlace>>(
     new Map()
   );
+  const [isLoading, setIsLoading] = useState(true);
   const journal = id ? getJournal(id) : undefined;
 
   // Calculs des statistiques de voyage
@@ -105,8 +107,12 @@ const JournalDetail: React.FC = () => {
   // Charger les données complètes des lieux depuis l'API
   useEffect(() => {
     const loadPlacesDetails = async () => {
-      if (!journal || journal.places.length === 0) return;
+      if (!journal || journal.places.length === 0) {
+        setIsLoading(false);
+        return;
+      }
 
+      setIsLoading(true);
       const newPlacesDetails = new Map<string, ApiPlace>();
 
       for (const place of journal.places) {
@@ -122,6 +128,7 @@ const JournalDetail: React.FC = () => {
       }
 
       setPlacesDetails(newPlacesDetails);
+      setIsLoading(false);
     };
 
     loadPlacesDetails();
@@ -141,6 +148,15 @@ const JournalDetail: React.FC = () => {
           Retour aux journaux
         </Button>
       </Container>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <LoadingSpinner
+        message="Chargement des détails du journal..."
+        size="large"
+      />
     );
   }
 

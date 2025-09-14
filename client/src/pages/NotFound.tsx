@@ -64,10 +64,10 @@ const NotFound: React.FC = () => {
               letterSpacing: 1,
             }}
           >
-            <Box component="span" sx={{ color: 'primary.main' }}>
+            <Box component="span" sx={{ color: 'error.main' }}>
               Memo
             </Box>
-            <Box component="span" sx={{ color: 'error.main' }}>
+            <Box component="span" sx={{ color: 'primary.main' }}>
               Trip
             </Box>
           </Typography>

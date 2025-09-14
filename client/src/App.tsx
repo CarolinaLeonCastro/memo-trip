@@ -5,9 +5,10 @@ import ThemeProvider from './providers/ThemeProvider';
 import { JournalProvider } from './context/JournalContext';
 import { AuthProvider } from './context/AuthContext';
 // Components
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import LoadingSpinner from './components/skeleton/LoadingSpinner';
 // Layouts
 import Layout from './components/Layouts/Layout';
 import PublicLayout from './components/Layouts/PublicLayout';
@@ -37,16 +38,11 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
   const LoadingFallback = () => (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-      }}
-    >
-      <CircularProgress />
-    </Box>
+    <LoadingSpinner
+      message="Chargement de l'application..."
+      size="large"
+      fullScreen
+    />
   );
 
   return (
