@@ -414,7 +414,7 @@ const PublicJournalDetail: React.FC = () => {
         setJournal(journalData);
         setLikesCount(journalData.likes_count || 0);
         setIsLiked(journalData.is_liked || false);
-        
+
         // Charger aussi les lieux directement ici pour éviter un deuxième appel
         setPlaces(journalData.places || []);
         setPlacesMetadata(journalData.placesMetadata);

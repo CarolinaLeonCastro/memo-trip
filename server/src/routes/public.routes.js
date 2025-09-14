@@ -151,7 +151,14 @@ export const getPublicJournalById = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const { q, tag, sort = 'recent', page = 1, limit = 20, increment_views = 'true' } = req.query;
-		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', { q, tag, sort, page, limit, increment_views });
+		console.log('🔎 API getPublicJournalById appelée pour ID:', id, 'avec filtres:', {
+			q,
+			tag,
+			sort,
+			page,
+			limit,
+			increment_views
+		});
 
 		// D'abord récupérer le journal de base
 		const journal = await Journal.findOne({
@@ -186,7 +193,7 @@ export const getPublicJournalById = async (req, res) => {
 					console.warn("⚠️ Erreur lors de l'incrémentation des vues:", err);
 				});
 		} else {
-			console.log('🚫 Pas d\'incrémentation des vues pour journal:', id, '(increment_views=false)');
+			console.log("🚫 Pas d'incrémentation des vues pour journal:", id, '(increment_views=false)');
 		}
 
 		// Créer le filtre pour les lieux

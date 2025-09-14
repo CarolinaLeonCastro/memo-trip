@@ -164,12 +164,12 @@ class PublicService {
         'incrementViews:',
         incrementViews
       );
-      
+
       const params = {
         ...filters,
         increment_views: incrementViews ? 'true' : 'false',
       };
-      
+
       const response = await api.get(`/api/public/journals/${id}`, {
         params: params,
       });

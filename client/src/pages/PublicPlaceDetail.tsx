@@ -142,7 +142,7 @@ const PublicPlaceDetail: React.FC = () => {
         is_liked: newIsLiked,
       });
       setIsLiked(newIsLiked);
-      
+
       // Afficher un toast pour le like/unlike
       if (newIsLiked) {
         showSuccess(`Vous aimez maintenant "${place.name}"`);
