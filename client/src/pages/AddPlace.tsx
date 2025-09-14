@@ -995,7 +995,6 @@ const AddPlacePage: React.FC = () => {
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Vos impressions, conseils, anecdotes..."
         />
-
       </Stack>
     </Box>
   );

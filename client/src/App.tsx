@@ -31,6 +31,7 @@ const PublicPlaceDetail = lazy(() => import('./pages/PublicPlaceDetail'));
 const Discover = lazy(() => import('./pages/Discover'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 // Démonstration des composants Travel
 //import AuthDebug from './components/debug/AuthDebug';
 
@@ -102,6 +103,9 @@ function App() {
                       }
                     />
                   </Route>
+
+                  {/* Route catch-all pour les pages non trouvées */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </Router>
