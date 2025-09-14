@@ -505,6 +505,48 @@ export async function getUserActivity(req, res, next) {
 	}
 }
 
+// DELETE /api/users/account - Supprimer son propre compte
+export async function deleteOwnAccount(req, res, next) {
+	try {
+		const userId = req.user.id;
+
+		logger.info(`🗑️ Début de la suppression du compte utilisateur: ${userId}`);
+
+		// 1. Supprimer tous les journaux de l'utilisateur
+		const journalsDeleted = await Journal.deleteMany({ userId });
+		logger.info(`📔 ${journalsDeleted.deletedCount} journaux supprimés`);
+
+		// 2. Supprimer tous les lieux créés par l'utilisateur
+		const placesDeleted = await Place.deleteMany({ createdBy: userId });
+		logger.info(`📍 ${placesDeleted.deletedCount} lieux supprimés`);
+
+		// 3. Supprimer l'utilisateur lui-même
+		const userDeleted = await User.deleteOne({ _id: userId });
+
+		if (userDeleted.deletedCount === 0) {
+			return res.status(404).json({
+				success: false,
+				message: 'Utilisateur non trouvé'
+			});
+		}
+
+		logger.info(`👤 Compte utilisateur ${userId} supprimé avec succès`);
+
+		// 4. Réponse de succès
+		res.json({
+			success: true,
+			message: 'Compte supprimé définitivement',
+			data: {
+				journalsDeleted: journalsDeleted.deletedCount,
+				placesDeleted: placesDeleted.deletedCount
+			}
+		});
+	} catch (err) {
+		logger.error('❌ Erreur lors de la suppression du compte:', err);
+		next(err);
+	}
+}
+
 // Fonction utilitaire pour calculer le temps relatif
 function getRelativeTimeString(date) {
 	const now = new Date();

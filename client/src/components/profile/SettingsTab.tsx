@@ -23,9 +23,11 @@ import {
 } from '@mui/icons-material';
 import { userService } from '../../services/user.service';
 import { useThemeMode } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const SettingsTab: React.FC = () => {
   const { isDarkMode, toggleDarkMode } = useThemeMode();
+  const { logout } = useAuth();
 
   const [settings, setSettings] = useState({
     journalPublic: false,
@@ -39,6 +41,7 @@ const SettingsTab: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Charger les paramètres utilisateur au montage du composant
   useEffect(() => {
@@ -77,7 +80,7 @@ const SettingsTab: React.FC = () => {
     };
 
     loadSettings();
-  }, [isDarkMode]); // Ajouter isDarkMode comme dépendance
+  }, [isDarkMode, updating]); // Ajouter updating comme dépendance
 
   // Synchroniser le state local quand le contexte de thème change
   useEffect(() => {
@@ -144,12 +147,31 @@ const SettingsTab: React.FC = () => {
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (deleteConfirmation === 'SUPPRIMER') {
-      // Logique pour supprimer le compte
-      console.log('Suppression du compte');
-      setShowDeleteDialog(false);
-      setDeleteConfirmation('');
+      try {
+        setDeleting(true);
+        setError('');
+
+        console.log('🗑️ Début de la suppression du compte');
+
+        // Supprimer le compte côté serveur
+        await userService.deleteAccount();
+
+        console.log('✅ Compte supprimé, déconnexion en cours...');
+
+        // Déconnecter l'utilisateur et rediriger
+        await logout();
+
+        // Note: La redirection sera gérée automatiquement par le contexte d'auth
+      } catch (err) {
+        console.error('❌ Erreur lors de la suppression du compte:', err);
+        setError('Erreur lors de la suppression du compte');
+      } finally {
+        setDeleting(false);
+        setShowDeleteDialog(false);
+        setDeleteConfirmation('');
+      }
     }
   };
 
@@ -308,11 +330,14 @@ const SettingsTab: React.FC = () => {
                 <Button
                   variant="outlined"
                   color="error"
-                  startIcon={<DeleteIcon />}
+                  startIcon={
+                    deleting ? <CircularProgress size={16} /> : <DeleteIcon />
+                  }
                   onClick={() => setShowDeleteDialog(true)}
+                  disabled={deleting}
                   sx={{ ml: 2 }}
                 >
-                  Supprimer
+                  {deleting ? 'Suppression...' : 'Supprimer'}
                 </Button>
               </Box>
             </Box>
@@ -348,14 +373,20 @@ const SettingsTab: React.FC = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowDeleteDialog(false)}>Annuler</Button>
+          <Button
+            onClick={() => setShowDeleteDialog(false)}
+            disabled={deleting}
+          >
+            Annuler
+          </Button>
           <Button
             onClick={handleDeleteAccount}
             color="error"
             variant="contained"
-            disabled={deleteConfirmation !== 'SUPPRIMER'}
+            disabled={deleteConfirmation !== 'SUPPRIMER' || deleting}
+            startIcon={deleting ? <CircularProgress size={16} /> : undefined}
           >
-            Supprimer définitivement
+            {deleting ? 'Suppression en cours...' : 'Supprimer définitivement'}
           </Button>
         </DialogActions>
       </Dialog>
