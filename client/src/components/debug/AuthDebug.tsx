@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, Button, Alert } from '@mui/material';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import { authCookieService } from '../../services/auth-cookie.service';
 
 const AuthDebug: React.FC = () => {
