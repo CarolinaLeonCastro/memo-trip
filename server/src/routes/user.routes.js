@@ -20,6 +20,9 @@ router.put('/settings', authenticateToken, validateUserSettings, userCtrl.update
 // Route pour l'activité récente de l'utilisateur
 router.get('/activity', authenticateToken, userCtrl.getUserActivity);
 
+// Route pour supprimer son propre compte
+router.delete('/account', authenticateToken, userCtrl.deleteOwnAccount);
+
 // CRUD pour les utilisateurs (routes protégées)
 router.post('/', authenticateToken, validateUserCreate, userCtrl.createUser);
 router.get('/', authenticateToken, userCtrl.getUsers);

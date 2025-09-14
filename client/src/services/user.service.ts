@@ -107,6 +107,18 @@ class UserService {
       return [];
     }
   }
+
+  // Supprimer définitivement son propre compte
+  async deleteAccount(): Promise<void> {
+    try {
+      console.log('🗑️ Suppression du compte en cours...');
+      const response = await api.delete('/api/users/account');
+      console.log('✅ Compte supprimé avec succès:', response.data);
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression du compte:', error);
+      throw error;
+    }
+  }
 }
 
 export const userService = new UserService();

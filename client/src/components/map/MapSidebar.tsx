@@ -19,7 +19,7 @@ import {
   Map as MapIcon,
   AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import theme from '../../theme';
 
 interface PlaceWithJournal {
@@ -55,12 +55,6 @@ const MapSidebar: React.FC<MapSidebarProps> = ({ places, onPlaceClick }) => {
       onClick: () => navigate('/journals'),
       show: true,
     },
-    // {
-    //   icon: <FavoriteIcon />,
-    //   text: 'Mes favoris',
-    //   onClick: () => navigate('/places?filter=favorites'),
-    //   show: true,
-    // },
     {
       icon: <AdminIcon />,
       text: 'Administration',

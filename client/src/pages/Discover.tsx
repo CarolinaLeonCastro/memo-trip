@@ -14,7 +14,7 @@ import {
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import { useDebounce } from '../hooks/useDebounce';
 
 // Import des nouveaux composants
@@ -227,7 +227,6 @@ const Discover: React.FC = () => {
         journal={journal}
         user={user}
         likes={post.likes}
-        comments={post.comments}
         views={post.views}
         isLiked={post.is_liked}
         onLike={() => handleLike(post._id, 'journal')}

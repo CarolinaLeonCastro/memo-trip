@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 // Import des nouveaux composants
 import {
@@ -47,7 +48,6 @@ interface PublicPlace {
   user: User;
   likes: number;
   views: number;
-  comments: number;
   is_liked: boolean;
   practical_info?: PracticalInfo;
   date_visited: string;
@@ -55,59 +55,11 @@ interface PublicPlace {
 
 const PublicPlaceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { showError, showSuccess } = useToast();
   const [place, setPlace] = useState<PublicPlace | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Données mockées pour le développement
-  const mockPlace: PublicPlace = useMemo(
-    () => ({
-      _id: '1',
-      name: 'Coliseum',
-      description:
-        'The Colosseum is an ancient amphitheatre in the centre of Rome, built of travertine limestone, tuff, and brick-faced concrete. It is the largest amphitheatre ever built and could hold 50,000 to 80,000 spectators.',
-      city: 'Rome',
-      country: 'Italy',
-      address: 'Piazza del Colosseo, 1, 00184 Roma RM, Italy',
-      coordinates: '41.8902° N, 12.4922° E',
-      photos: [
-        {
-          url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800',
-          caption: 'Vue extérieure du Colisée',
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?auto=format&fit=crop&q=80&w=800',
-          caption: "Intérieur de l'amphithéâtre",
-        },
-        {
-          url: 'https://images.unsplash.com/photo-1529260830199-42c24126f198?auto=format&fit=crop&q=80&w=800',
-          caption: 'Vue nocturne',
-        },
-      ],
-      tags: ['Historic', 'Architecture', 'UNESCO', 'Ancient Rome', 'Monument'],
-      user: {
-        _id: 'user1',
-        name: 'Marco Rossi',
-        avatar: { url: '/api/placeholder/40/40' },
-      },
-      likes: 124,
-      views: 892,
-      comments: 18,
-      is_liked: false,
-      practical_info: {
-        best_time_to_visit:
-          "Tôt le matin ou en fin d'après-midi pour éviter les foules",
-        average_cost:
-          "16€ pour l'entrée standard, 22€ avec accès aux étages supérieurs",
-        opening_hours: '8h30 - 19h00 (varie selon la saison)',
-        website: 'https://www.coopculture.it',
-        recommendations:
-          "Réservez à l'avance en ligne. Portez des chaussures confortables. Prenez de l'eau.",
-      },
-      date_visited: '2024-01-15',
-    }),
-    []
-  );
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPlaceDetails = async () => {
@@ -122,12 +74,9 @@ const PublicPlaceDetail: React.FC = () => {
 
         // Vérifier que les données existent
         if (!placeData) {
-          console.error(
-            '❌ PublicPlaceDetail: Aucune donnée reçue, utilisation des données mockées'
-          );
-          // Utiliser les données mockées en fallback
-          setPlace(mockPlace);
-          setIsLiked(mockPlace.is_liked);
+          console.error('❌ PublicPlaceDetail: Aucune donnée reçue');
+          setError('Lieu non trouvé');
+          showError('Lieu non trouvé');
           setLoading(false);
           return;
         }
@@ -152,7 +101,6 @@ const PublicPlaceDetail: React.FC = () => {
           },
           likes: 0, // À implémenter avec le système de likes
           views: 0, // À implémenter avec le système de vues
-          comments: 0, // À implémenter avec le système de commentaires
           is_liked: false, // À implémenter avec le système de likes
           practical_info: {
             best_time_to_visit: '',
@@ -169,30 +117,38 @@ const PublicPlaceDetail: React.FC = () => {
         console.log('✅ PublicPlaceDetail: Lieu adapté:', adaptedPlace);
         setPlace(adaptedPlace);
         setIsLiked(adaptedPlace.is_liked);
+        showSuccess(`Lieu "${adaptedPlace.name}" chargé avec succès`);
       } catch (error) {
         console.error(
           '❌ PublicPlaceDetail: Erreur lors du chargement:',
           error
         );
-        // En cas d'erreur, utiliser les données mockées
-        setPlace(mockPlace);
-        setIsLiked(mockPlace.is_liked);
+        setError('Erreur lors du chargement du lieu');
+        showError('Erreur lors du chargement du lieu');
       } finally {
         setLoading(false);
       }
     };
 
     loadPlaceDetails();
-  }, [id]);
+  }, [id, showError, showSuccess]);
 
   const handleLike = () => {
     if (place) {
+      const newIsLiked = !isLiked;
       setPlace({
         ...place,
         likes: isLiked ? place.likes - 1 : place.likes + 1,
-        is_liked: !isLiked,
+        is_liked: newIsLiked,
       });
-      setIsLiked(!isLiked);
+      setIsLiked(newIsLiked);
+
+      // Afficher un toast pour le like/unlike
+      if (newIsLiked) {
+        showSuccess(`Vous aimez maintenant "${place.name}"`);
+      } else {
+        showSuccess(`Vous n'aimez plus "${place.name}"`);
+      }
     }
   };
 
@@ -200,6 +156,16 @@ const PublicPlaceDetail: React.FC = () => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress size={50} sx={{ color: '#4F86F7' }} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
       </Box>
     );
   }
@@ -229,7 +195,6 @@ const PublicPlaceDetail: React.FC = () => {
         user={place.user}
         dateVisited={place.date_visited}
         likes={place.likes}
-        comments={place.comments}
         views={place.views}
         isLiked={isLiked}
         onLike={handleLike}

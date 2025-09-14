@@ -39,6 +39,7 @@ export interface PublicPlace {
   }>;
   photosCount: number;
   rating?: number;
+  budget?: number;
   dateVisited?: string;
   visitPeriod?: {
     start: string;

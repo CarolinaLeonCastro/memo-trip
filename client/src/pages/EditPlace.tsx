@@ -253,7 +253,7 @@ const EditPlace: React.FC = () => {
         setFormData(newFormData);
       } catch (error) {
         console.error('❌ [EditPlace] Erreur lors du chargement:', error);
-        navigate('/places');
+        navigate('/');
       }
     };
 
